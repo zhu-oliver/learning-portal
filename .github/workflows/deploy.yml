@@ -35,6 +35,24 @@ jobs:
           for file in server.js node_modules/mssql/package.json \
             src/games/math-army/index.html src/games/math-kart/index.html \
             src/games/spelling-snake/index.html src/games/code-commander/index.html \
+            src/games/ecosystem-island/index.html src/games/fraction-factory/index.html \
+            src/games/typing-ninja/index.html src/games/time-traveler/index.html \
+            src/games/map-quest/index.html \
+            src/games/planet-hopper/index.html \
+            public/games/planet-hopper/explorer.js public/games/planet-hopper/explorer.css \
+            public/games/planet-hopper/object-details.js public/games/planet-hopper/object-images.js \
+            public/games/planet-hopper/textures/earth.jpg public/games/planet-hopper/textures/mercury.jpg \
+            public/games/planet-hopper/textures/mars.jpg public/games/planet-hopper/textures/jupiter.jpg \
+            public/games/planet-hopper/textures/moon.jpg \
+            public/games/map-quest/assets/earth-texture.js \
+            public/games/map-quest/assets/country-borders.js \
+            public/games/map-quest/assets/wikipedia-descriptions.js \
+            public/games/map-quest/assets/place-media.js \
+            public/games/vendor/three-0.160.0/lines/LineSegments2.js \
+            public/games/vendor/three-0.160.0/lines/LineSegmentsGeometry.js \
+            public/games/vendor/three-0.160.0/lines/LineMaterial.js \
+            public/games/vendor/three-0.160.0/three.module.js \
+            public/games/vendor/three-0.160.0/LICENSE \
             public/games/math-army/vendor/build/three.module.js \
             public/games/math-army/vendor/utils/BufferGeometryUtils.js \
             public/games/math-army/vendor/geometries/RoundedBoxGeometry.js \

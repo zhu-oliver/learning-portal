@@ -5,5 +5,5 @@ import nextTs from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores([".next/**", "next-env.d.ts", "public/games/math-army/vendor/**"]),
+  globalIgnores([".next/**", "next-env.d.ts", "public/games/math-army/vendor/**", "public/games/vendor/**", "public/games/map-quest/assets/**", "public/games/planet-hopper/**"]),
 ]);

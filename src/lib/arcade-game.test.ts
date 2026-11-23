@@ -7,7 +7,7 @@ vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
 beforeEach(() => vi.clearAllMocks());
 
 describe("shared arcade game delivery", () => {
-  it.each(["math-army", "math-kart", "spelling-snake", "code-commander"] as const)("reports a missing %s deployment explicitly", async (slug) => {
+  it.each(["math-army", "math-kart", "spelling-snake", "code-commander", "ecosystem-island", "fraction-factory", "typing-ninja", "time-traveler", "map-quest", "planet-hopper"] as const)("reports a missing %s deployment explicitly", async (slug) => {
     mocks.user.mockResolvedValue({ id: "owner" });
     mocks.read.mockRejectedValue(new Error("missing"));
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -16,7 +16,7 @@ describe("shared arcade game delivery", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     const message = await response.text();
     expect(message).toContain("could not be loaded");
-    expect(message).toContain(slug === "spelling-snake" ? "Return to Language & Reading" : "Return to Math");
+    expect(message).toContain(slug === "spelling-snake" || slug === "typing-ninja" ? "Return to Language & Reading" : ["ecosystem-island", "time-traveler", "map-quest", "planet-hopper"].includes(slug) ? "Return to Science" : "Return to Math");
     expect(log).toHaveBeenCalled();
     log.mockRestore();
   });

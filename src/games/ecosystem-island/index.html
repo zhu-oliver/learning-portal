@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#123c35"><link rel="icon" href="data:,"><title>Ecosystem Island</title>
+<script type="importmap">{"imports":{"three":"/games/vendor/three-0.160.0/three.module.js"}}</script>
+<style>
+:root{color-scheme:light;--ink:#153d34;--muted:#526f63;--cream:#f7f8ee;--line:#dce6d8;--green:#217552;--mint:#e5f3de;--gold:#ffd16b;--shadow:0 4px 0 #cadad0; font-family:Nunito,'Segoe UI',system-ui,sans-serif;color:var(--ink)}*{box-sizing:border-box}body{margin:0;background:#edf1e6;min-width:300px}button{font:inherit;font-weight:800;color:inherit;cursor:pointer;border:0;touch-action:manipulation}button:focus-visible{outline:3px solid #27a6d9;outline-offset:2px}button:disabled{opacity:.53;cursor:not-allowed}button:active:not(:disabled){transform:translateY(2px)}[hidden]{display:none!important}h1,h2,h3,p{margin:0}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.muted{color:var(--muted)}
+header{height:70px;background:#123c35;color:#f6fff0;display:flex;align-items:center;gap:12px;padding:0 24px;border-bottom:4px solid #2b6251}.mark{height:40px;width:40px;display:grid;place-items:center;background:#d7ef9e;color:#174e3e;border-radius:13px;font-size:23px;box-shadow:0 3px #0c2925}.brand{font-weight:900;font-size:21px;line-height:1.03;letter-spacing:-.035em}.brand small{display:block;font-size:9px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#bfe3be;margin-top:5px}.top-actions{display:flex;gap:7px;margin-left:auto}.top-actions button{padding:9px 12px;border-radius:10px;background:#285448;color:#f5fbef;box-shadow:0 3px #0d302a;font-size:13px}.top-actions button:last-child{background:#e9f4d8;color:#163e34}
+#layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:15px;height:calc(100dvh - 70px);min-height:565px;padding:15px}.playfield{position:relative;isolation:isolate;overflow:hidden;border-radius:21px;background:#90d7eb;box-shadow:0 0 0 1px #b4d7c9,0 5px 13px #153d3420}#world{position:absolute;inset:0;touch-action:none;cursor:grab}#world:active{cursor:grabbing}#world.place{cursor:crosshair}#world canvas{display:block;width:100%;height:100%}.hud{position:absolute;inset:14px 14px auto;display:flex;justify-content:space-between;gap:7px;pointer-events:none}.slab{background:#f9fff3f5;border:1px solid #fff;padding:9px 13px;border-radius:13px;box-shadow:0 3px 10px #13495328;font-size:13px;font-weight:800;white-space:nowrap}.slab small{display:block;color:#4d7060;font-size:10px}.slab b{font-size:19px}.maptag{position:absolute;top:79px;left:15px;pointer-events:none;color:#113e43;background:#e2fcf4d9;border:1px solid #fff9;border-radius:30px;padding:5px 10px;font-size:10px;font-weight:900;letter-spacing:.09em}.camera{position:absolute;right:14px;top:79px;display:grid;gap:5px}.camera button{background:#f9fff3ed;border-radius:9px;width:36px;height:34px;font-size:17px;box-shadow:0 2px 4px #174b4c30}.notice{position:absolute;left:50%;transform:translateX(-50%);top:81px;width:max-content;max-width:72%;text-align:center;background:#ffefbb;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:900;box-shadow:0 3px 8px #0002;pointer-events:none;z-index:4}
+.tray{position:absolute;inset:auto 12px 12px;background:#f8fbf1f7;border:1px solid #fff;border-radius:16px;padding:9px 10px;box-shadow:0 4px 15px #144b5450}.traytop{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px}.tabs{display:flex;gap:4px;max-width:100%}.tabs button,.timebuttons button{border-radius:8px;background:#e8efe2;padding:7px 9px;font-size:12px;white-space:nowrap}.tabs button[aria-pressed=true],.timebuttons button[aria-pressed=true]{background:#236c51;color:white}.trayhint{font-size:11px;font-weight:750;color:#4f6a5d;text-align:right}.tiles{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 5px;scrollbar-width:thin}.tile{flex:0 0 auto;min-width:66px;padding:5px 6px 4px;background:#edf3e5;border:2px solid transparent;border-radius:11px;box-shadow:0 2px #cfdcd0;font-size:11px;line-height:1.12}.tile span,.tile small{display:block}.tile span{font-size:21px;margin-bottom:4px}.tile small{color:#526b5f;font-size:10px;margin-top:3px}.tile[aria-pressed=true]{border-color:#278760;background:#d6efcf}.tile.poor{background:#efeee7}.tile.inspect{background:#e5eff0}.timebuttons{display:flex;gap:5px;margin-top:8px;align-items:center}.timebuttons button{min-width:39px}.timebuttons .primary{background:#ffcf63;color:#302009;padding-inline:11px;box-shadow:0 3px #d7a44a}.controls-help{margin-left:auto;font-size:11px;color:var(--muted);font-weight:750;text-align:right}
+.journal{display:flex;flex-direction:column;gap:10px;min-width:0;overflow:auto;scrollbar-width:thin;padding:0 2px 5px}.section{background:#fcfcf5;border:1px solid var(--line);border-radius:17px;padding:13px;box-shadow:0 2px 0 #dce6d8}.mission{border-top:4px solid #6aaf7a}.section h2{font-size:19px;line-height:1.14;margin:5px 0 6px;letter-spacing:-.025em}.section p{font-size:13px;line-height:1.37}.goalrow{display:flex;justify-content:space-between;gap:5px;font-size:11px;font-weight:850;margin-top:9px}.goalrow span:last-child{text-align:right}.bar{height:7px;background:#e1eadb;border-radius:8px;margin-top:5px;overflow:hidden}.bar i{height:100%;display:block;background:linear-gradient(90deg,#29825c,#7abd6f);border-radius:8px}.tip{background:#edf3df;border-radius:9px;margin-top:9px;padding:7px 8px;color:#3c604e;font-weight:700;font-size:11px!important}.reset{border-radius:8px;background:#e7eee2;padding:5px 8px;font-size:11px}.sectionheader{display:flex;align-items:center;justify-content:space-between;gap:5px}.sectionheader h2{margin:0;font-size:16px}.live{background:#def0da;border-radius:30px;padding:3px 7px;font-size:9px;font-weight:900;color:#276449;letter-spacing:.05em}.keys{display:flex;gap:4px 9px;flex-wrap:wrap;margin:5px 0 0;font-size:10px;font-weight:800}.keys b{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.stats div{background:#eef3e8;border-radius:8px;text-align:center;padding:5px 2px;font-size:9px;color:#4a6959;font-weight:850}.stats strong{display:block;font-size:14px;color:var(--ink)}#graph{width:100%;height:107px;display:block;margin-top:6px}#field{min-height:90px}#field h3{margin:6px 0 4px;font-size:15px}#field .sectionheader button{background:#e7eee2;border-radius:6px}.web{margin-top:7px;display:grid;gap:4px;font-size:11px;font-weight:800}.web div{background:#ecf2e6;border-radius:7px;padding:5px 7px}.web strong{color:#276548}.speciesStats{font-size:11px!important;font-weight:800;color:#3c6352;margin-top:5px}.lore{font-weight:800}.divider{margin-block:7px;border:0;border-top:1px solid var(--line)}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:#0e3f447a;padding:15px;overflow:auto;backdrop-filter:blur(2px)}.card{margin:auto;width:min(100%,560px);max-height:100%;overflow:auto;background:#fcfff2;border:1px solid white;border-radius:24px;box-shadow:0 7px 0 #123e39,0 22px 70px #062b446b;padding:24px;text-align:center}.card.wide{width:min(100%,680px)}.hero{background:radial-gradient(ellipse at 50% 120%,#eef6be 22%,transparent 66%),linear-gradient(135deg,#d3f1c8,#bde8e7);border-radius:17px;padding:18px 10px 16px;margin-bottom:15px;position:relative}.hero .eyebrow{color:#276755}.hero h1{font-size:clamp(33px,7vw,59px);line-height:1;font-weight:950;letter-spacing:-.07em;margin:6px 0 4px}.hero-icon{font-size:36px;line-height:1.12}.card h2{font-size:clamp(23px,5vw,33px);letter-spacing:-.04em;margin:5px 0 8px}.card p{font-size:14px;line-height:1.45;color:#3e6555}.card .sub{max-width:405px;margin:auto}.pillrow{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:14px 0}.pillrow span{padding:5px 9px;border-radius:30px;background:#e6f0dd;font-size:11px;font-weight:850}.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:15px}.actions button,.level{background:#e5efe0;border-radius:11px;padding:10px 14px;box-shadow:var(--shadow)}.actions button.big{color:white;background:#217552;box-shadow:0 4px #14563d}.actions .sun{background:#ffd16b;box-shadow:0 4px #c8993e}.levelgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:13px 0}.level{text-align:left;padding:8px 9px;font-size:12px;line-height:1.2;min-height:68px}.level span,.level strong,.level small{display:block}.level span{font-size:16px}.level small{color:#70551f;margin-top:3px}.lesson{background:#e8f3d9;padding:11px;border-radius:12px;margin:12px 0 0;text-align:left}.stars{color:#97660c;font-size:26px;font-weight:900;letter-spacing:4px}.boot{position:absolute;inset:0;display:grid;place-items:center;background:#c8eef0;z-index:6;text-align:center;padding:25px}.boot p{background:#f8fff0;padding:15px;border-radius:15px;font-weight:800}
+@media(max-width:1100px){#layout{grid-template-columns:minmax(0,1fr) 271px;gap:10px;padding:11px}.trayhint{display:none}}
+@media(max-width:740px){header{height:55px;padding:0 9px;gap:6px}.brand{font-size:16px}.brand small{font-size:8px}.mark{height:33px;width:33px;font-size:18px}.top-actions{gap:4px}.top-actions button{padding:7px;font-size:11px}#layout{height:auto;min-height:0;display:flex;flex-direction:column;padding:7px;gap:8px}.playfield{height:clamp(410px,62dvh,555px);border-radius:15px}.hud{inset:7px 7px auto}.slab{padding:5px 8px;font-size:11px}.slab b{font-size:16px}.slab small{font-size:9px}.maptag{top:57px;left:8px;font-size:8px}.camera{top:55px;right:7px}.camera button{width:34px;height:32px}.notice{top:56px;max-width:63%}.tray{inset:auto 6px 6px;padding:6px}.tabs button{padding:6px 7px;font-size:11px}.traytop{margin-bottom:4px}.tile{min-width:59px}.timebuttons{margin-top:5px}.timebuttons button{padding:6px;min-width:31px}.controls-help{font-size:9px;max-width:106px}.journal{overflow:visible;padding:0;gap:8px}.section{padding:10px 11px}.section h2{font-size:16px}.section p{font-size:12px}.tip{margin-top:5px}.goalrow{margin-top:6px}.card{padding:16px}.levelgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.level{min-height:57px}.actions button{padding:9px 11px}}
+@media(max-width:365px){.brand small{display:none}.tabs button{padding-inline:5px}.controls-help{display:none}}
+</style></head><body>
+<header><div class="mark" aria-hidden="true">🌿</div><div class="brand">Ecosystem Island<small>Junior field lab</small></div><nav class="top-actions" aria-label="Game settings"><button id="graphics" title="Graphics quality">⚙ Auto</button><button id="sound" title="Toggle sound" aria-label="Toggle sound">🔊</button><button id="levels">☰ Levels</button></nav></header>
+<main id="layout"><section class="playfield" aria-label="Island playfield"><div id="world" aria-label="Interactive island"></div><div class="hud"><div class="slab" id="day"></div><div class="slab" id="points"></div></div><span class="maptag" id="maptag">● &nbsp; ISLAND HABITAT</span><div class="camera" aria-label="Camera controls"><button id="zoomIn" title="Zoom in" aria-label="Zoom in">＋</button><button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button><button id="homeCam" title="Reset camera" aria-label="Reset camera">⌂</button></div><div id="notice" class="notice" role="status" hidden></div>
+<div class="tray"><div class="traytop"><nav class="tabs" id="tabs" aria-label="Placement categories"></nav><span class="trayhint" id="trayhint"></span></div><div class="tiles" id="tiles"></div><div class="timebuttons"><button class="primary" id="run">▶ Start</button><button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button><span class="controls-help">Tap to place · Drag to orbit · Pinch to zoom</span></div></div><div id="boot" class="boot"><p>🌱 Getting the island ready…</p></div></section>
+<aside class="journal" aria-label="Field journal"><section class="section mission"><div class="sectionheader"><div class="eyebrow muted" id="chapter"></div><button class="reset" id="reset">↻ Reset</button></div><h2 id="mission"></h2><p id="goal"></p><div class="goalrow" id="goalrow"><span>Progress</span><span id="progress"></span></div><div class="bar" id="goalbar"><i id="fill"></i></div><p class="tip" id="tip"></p></section><section class="section"><div class="sectionheader"><h2>📈 Population lab</h2><span class="live" id="live">READY</span></div><canvas id="graph" aria-label="Population history line chart" role="img"></canvas><div id="keys" class="keys"></div><div id="stats" class="stats"></div></section><section class="section" id="field"><div class="sectionheader"><h2>🔎 Field guide</h2><button id="clearInspect" aria-label="Close creature details" hidden>✕</button></div><div id="species"></div></section></aside></main>
+<div class="overlay" id="overlay" hidden><section class="card" id="card" role="dialog" aria-modal="true" aria-label="Ecosystem Island menu"></section></div>
+<script>setTimeout(()=>{if(!window.__game)document.querySelector('#boot p').textContent='🌱 The island could not load. Refresh or ask a parent to check the game deployment.'},12000)</script>
+<script type="module">
+import * as THREE from 'three';
+
+const DAY=20, STEP=.25, R=17, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const kinds={
+ grass:['🌱','Grass',3,'Plants','#65b74b','A fast-growing producer. Grazers eat its leaves.'], bush:['🌿','Bush',6,'Plants','#469e68','A producer with leafy food for deer and rabbits.'], tree:['🌳','Tree',8,'Plants','#238363','A slow-growing producer that needs room to spread.'], flower:['🌼','Flower',4,'Plants','#ecad39','Its nectar feeds bees. Pollinated flowers can spread faster.'],
+ rabbit:['🐇','Rabbit',10,'Animals','#bb78e5','A small herbivore that eats grass, bushes and flowers.'], deer:['🦌','Deer',14,'Animals','#ba7950','An herbivore that browses shrubs and trees.'], bee:['🐝','Bee',8,'Animals','#efb627','A nectar drinker that carries pollen between flowers.'], fox:['🦊','Fox',17,'Hunters','#f07955','A carnivore that hunts rabbits.'], wolf:['🐺','Wolf',22,'Hunters','#6578bd','A carnivore that hunts deer and rabbits.'], hawk:['🦅','Hawk',18,'Hunters','#994f67','A bird of prey that hunts rabbits.'],
+ mushroom:['🍄','Mushroom',6,'Care','#e55b6c','A fungus that breaks down dead material and returns nutrients to soil.'], worm:['🪱','Worm',5,'Care','#d38691','A detritivore: it eats dead material and mixes nutrients into soil.'], pond:['💧','Pond',12,'Care','#46aeeb','Fresh water for animals and nearby plants. The ocean is salty!'], goat:['🐐','Goat',10,'Animals','#83829b','An introduced grazer that reproduces fast and competes with native herbivores.'], relocate:['🧺','Relocate',0,'Care','#707989','Tap an introduced goat to move it to a sanctuary.']
+};
+const plans=[
+ ['🐇','Rabbit rescue','Keep at least 2 rabbits alive for 3 days.','Add rabbits first. Grass and a freshwater pond are already here.','Plants make their own food using light. Animals get their energy by eating plants or other animals.',{grass:31,bush:6,flower:5,tree:9,pond:1},['grass','bush','rabbit','pond'],60,7],
+ ['🌳','Room to grow','Keep 20 living trees, including 3 naturally grown saplings, for 1 day.','Start the simulation and give trees open space to spread. Ponds help nearby plants stay healthy.','A habitat can only support as many living things as its space, food and water allow. That limit is called carrying capacity.',{grass:23,bush:8,tree:11,pond:2},['grass','tree','pond'],95,6],
+ ['🐝','Pollen express','Have bees pollinate 30 different flowers.','Start with several bees and add some flowers. One bee can visit many blooms.','Bees move pollen between flowers as they collect nectar. That helps many plants make seeds.',{grass:14,flower:24,tree:8,pond:2},['flower','bee','pond'],88,8],
+ ['🦊','Fox & hare','Keep at least 3 rabbits and 1 fox alive together for 5 days.','Start with one fox. Make sure rabbits outnumber foxes and have enough grass.','When prey is plentiful, predators can grow in number. As prey gets scarce, predator numbers can fall too.',{grass:43,bush:10,tree:10,rabbit:15,pond:2},['grass','rabbit','fox','pond'],75,10],
+ ['🍄','Nature’s recyclers','Recycle 18 pieces of leaf litter or other remains.','Look for brown leaf piles. Place mushrooms and worms nearby.','Decomposers don’t create new nutrients. They return nutrients from dead things to the soil.',{grass:22,bush:6,tree:14,pond:2},['tree','worm','mushroom','pond'],75,7],
+ ['☀️','The dry spell','Reach day 5 with at least 3 deer and 16 plants.','The drought lasts from the start of day 2 to the start of day 5. Add ponds around the island before it hits.','Drought can lower carrying capacity. Many animals feel it twice: there is less water to drink and less food to eat.',{grass:21,bush:12,tree:12,deer:6,pond:1},['pond','grass','bush','deer'],95,5],
+ ['🦌','On the wild side','Keep at least 6 deer and 1 wolf alive together for 4 days.','Add one wolf. Give the deer a mix of bushes, trees and fresh water.','A food web is a set of connected food chains. A wolf can eat more than one kind of prey.',{grass:18,bush:26,tree:20,deer:13,pond:2},['deer','wolf','bush','tree','pond'],84,9],
+ ['🐐','Goats on the loose','After the goats arrive, relocate all of them and recover to 25 plants with 3 rabbits.','Goats arrive at the start of day 2. Select Relocate and tap each goat. Replant if needed.','An introduced species becomes invasive when it spreads and causes harm. Relocation here represents a managed response, not something to try yourself.',{grass:24,bush:9,tree:9,rabbit:7,pond:2},['relocate','grass','bush','rabbit','pond'],74,8],
+ ['🦅','Wings over the island','Keep 3 rabbits, 1 hawk and 2 bees for 3 days, and pollinate 12 flowers.','Add a hawk and a few bees. Protect the bottom of the food web with grass and flowers.','Hawks depend on plants indirectly: the plants feed the prey that the hawks eat.',{grass:35,flower:21,bush:6,tree:8,rabbit:13,pond:2},['hawk','bee','rabbit','flower','grass','pond'],88,9],
+ ['🌈','Island of plenty','For 3 days, keep 30 plants, 5 herbivores, 1 hunter and 3 recyclers.','Try rabbits or deer, just one hunter, and several recyclers. Use the graph to watch for declines.','Biodiversity is the variety of life in a place. Different species can play very different roles in the same ecosystem.',{grass:23,flower:9,bush:12,tree:13,rabbit:7,deer:6,pond:2},['grass','bush','tree','flower','rabbit','deer','bee','fox','wolf','hawk','worm','mushroom','pond'],110,9]
+];
+const sandbox=['🏝️','Open island','Build any food web you can imagine.','Try changing one thing at a time and watching the graph.','Small changes can ripple through a food web.',{grass:23,bush:8,tree:14,flower:9,rabbit:4,pond:2},Object.keys(kinds),150,Infinity];
+const plant=['grass','bush','tree','flower'], grazers=['rabbit','deer','goat'], hunters=['fox','wolf','hawk'], recyclers=['mushroom','worm'];
+const diet={rabbit:['grass','bush','flower'],deer:['bush','tree','grass'],goat:plant,bee:['flower'],fox:['rabbit'],wolf:['deer','rabbit'],hawk:['rabbit']};
+const velocity={rabbit:2,deer:1.63,goat:1.9,bee:2.6,fox:2.45,wolf:2.2,hawk:3.1,worm:.58};
+const lifespan={rabbit:290,deer:450,goat:225,bee:240,fox:380,wolf:440,hawk:380,worm:420,mushroom:450};
+function makeSim(level,low=false){
+ const plan=plans[level-1]||sandbox;
+ let seed=(7477+level*313)>>>0,id=0;
+ const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+ const state={level,time:0,points:plan[7],entities:[],litter:[],status:'ready',history:[],pollinated:0,recycled:0,relocated:0,streak:0,nutrients:55,stars:0,drought:false,invaded:false,spent:0,reason:'',extinct:{},selected:null};
+ let budgetTime=0;
+ const byType=(type)=>state.entities.filter(e=>!e.dead&&e.type===type);
+ const counts=()=>{const out=Object.fromEntries(Object.keys(kinds).filter(k=>k!=='relocate').map(k=>[k,0])); for(const e of state.entities)if(!e.dead)out[e.type]++;return out};
+ const sum=(c,types)=>types.reduce((n,t)=>n+c[t],0);
+ const randomSpot=r=>{const a=rand()*Math.PI*2,d=Math.sqrt(rand())*r;return [Math.cos(a)*d,Math.sin(a)*d]};
+ const dist=(a,b)=>(a.x-b.x)**2+(a.z-b.z)**2;
+ function add(type,x,z,initial=false,natural=false){const heading=rand()*Math.PI*2,e={id:++id,type,x,z,heading,prevX:x,prevZ:z,prevHeading:heading,natural,age:initial?rand()*12:0,food:75+rand()*20,water:90,vital:80+rand()*20,clock:rand()*7,breed:7+rand()*14,goal:0,target:null,pollen:null,pollinated:false,action:'Settling in'};state.entities.push(e);return e}
+ function scatter(type,n){for(let i=0;i<n;i++){const [x,z]=type==='pond'?(i===0?[1,1]:[-8,5]):randomSpot(14.9);add(type,x,z,true)}}
+ for(const [type,n] of Object.entries(plan[5]))scatter(type,n);
+ const litter=(x,z)=>{if(state.litter.length<65)state.litter.push({x,z,ttl:0})};
+ for(let i=0;i<(level===5?30:9);i++)litter(...randomSpot(level===5?10:14));
+ const caps=()=>low?{all:255,plants:164,animal:74,pond:14,dec:26}:{all:350,plants:216,animal:105,pond:18,dec:36};
+ function room(type,c){const cap=caps();return sum(c,Object.keys(c))<cap.all&&(plant.includes(type)?sum(c,plant)<cap.plants:type==='pond'?c.pond<cap.pond:recyclers.includes(type)?sum(c,recyclers)<cap.dec:sum(c,[...grazers,...hunters,'bee'])<cap.animal)}
+ function place(type,x,z){
+  if(!['ready','running'].includes(state.status))return {ok:false,msg:'This mission has ended.'};
+  if(!plan[6].includes(type))return {ok:false,msg:'Not available in this mission.'};
+  if(!Number.isFinite(x)||!Number.isFinite(z)||Math.hypot(x,z)>R)return {ok:false,msg:'Choose a spot on the island.'};
+  if(type==='relocate'){
+   const goat=nearest({x,z},byType('goat'),2.1);if(!goat)return {ok:false,msg:'Tap close to an introduced goat.'};goat.dead=true;state.relocated++;return {ok:true,msg:'Goat moved to a sanctuary!'};
+  }
+  const def=kinds[type];if(state.points<def[2])return {ok:false,msg:'Not enough nature points yet.'};
+  if(!room(type,counts()))return {ok:false,msg:'The island is full for this kind of life.'};
+  if(type==='pond'&&Math.hypot(x,z)>14.5)return {ok:false,msg:'Put ponds farther from the shoreline.'};
+  if(type==='pond'&&nearest({x,z},byType('pond'),3.3))return {ok:false,msg:'Leave more room between ponds.'};
+  if(type!=='pond'&&nearest({x,z},byType('pond'),1.15))return {ok:false,msg:'Choose dry land beside the pond.'};
+  if(plant.includes(type)&&nearest({x,z},state.entities.filter(e=>plant.includes(e.type)&&!e.dead),.48))return {ok:false,msg:'Leave a little room for roots.'};
+  state.points-=def[2];state.spent+=def[2];return {ok:true,id:add(type,x,z).id};
+ }
+ function nearest(from,list,max=Infinity,test){let best=null,d=max*max;for(const e of list){if(e.dead||from===e)continue;const n=dist(from,e);if(n<d&&(!test||test(e))){d=n;best=e}}return best}
+ function die(e){e.dead=true;litter(e.x,e.z)}
+ function chart(c){return {t:state.time,plants:sum(c,plant),grazers:sum(c,grazers),hunters:sum(c,hunters),bees:c.bee,recyclers:sum(c,recyclers)}}
+ state.history.push(chart(counts()));
+ function tick(){
+  if(state.status!=='running')return;
+  for(const e of state.entities){e.prevX=e.x;e.prevZ=e.z;e.prevHeading=e.heading}
+  state.time+=STEP;
+  state.drought=(level===6&&state.time>=DAY&&state.time<DAY*4)||(level===0&&state.time%(DAY*9)>=DAY*6&&state.time%(DAY*9)<DAY*8);
+  if(level===8&&!state.invaded&&state.time>=DAY){state.invaded=true;scatter('goat',7)}
+  budgetTime+=STEP;if(budgetTime>=3){budgetTime-=3;state.points=Math.min(250,state.points+4)}
+  const group={};for(const e of state.entities)if(!e.dead)(group[e.type]??=[]).push(e);
+  const c=counts(), allPlants=plant.flatMap(t=>group[t]||[]), ponds=group.pond||[];
+  const daylight=.25+.75*Math.max(0,Math.sin(Math.PI*(state.time%DAY)/DAY));
+  const carry=clamp(Math.floor(sum(c,plant)*.6+ponds.length*4),4,52);
+  for(const e of state.entities.slice()){
+   if(e.dead)continue;
+   const t=e.type, water=()=>nearest(e,ponds,7.2), nearPond=t==='pond'?null:water();
+   e.age+=STEP;e.clock-=STEP;e.breed-=STEP;
+   if(t==='pond')continue;
+   if(plant.includes(t)){
+    e.vital=clamp(e.vital+STEP*(state.drought&&!nearPond?-1.95:daylight*(.55+state.nutrients/90+(nearPond?.55:0))),0,100);
+    e.action=state.drought&&!nearPond?'Wilting':'Growing in sunlight';if(e.vital<=0){die(e);c[t]--;continue}
+    if(e.clock<=0){e.clock=5+rand()*8;
+     const odds=({grass:.40,bush:.21,tree:.085,flower:e.pollinated?.52:.11})[t]*daylight*(.6+state.nutrients/100);
+     if(e.age>6&&e.vital>66&&(!state.drought||nearPond)&&room(t,c)&&rand()<odds){
+      const a=rand()*6.283,d=1.35+rand()*2.15,x=e.x+Math.cos(a)*d,z=e.z+Math.sin(a)*d,pos={x,z};
+      if(Math.hypot(x,z)<R-.5&&!nearest(pos,allPlants,1.18)&&!nearest(pos,ponds,1.35)){allPlants.push(add(t,x,z,false,true));c[t]++;state.nutrients=Math.max(12,state.nutrients-.36)}
+     }
+     if(t==='tree'&&rand()<.11)litter(e.x,e.z);
+    }continue;
+   }
+   if(recyclers.includes(t)){
+    const scraps=nearest(e,state.litter,t==='worm'?9:4.6);
+    e.action=scraps?'Recycling leaf litter':'Waiting for remains';
+    if(e.clock<=0&&scraps&&(t==='mushroom'||dist(e,scraps)<1.4)){
+     state.litter.splice(state.litter.indexOf(scraps),1);state.nutrients=Math.min(100,state.nutrients+2.8);state.recycled++;e.clock=3+rand()*3;
+     if(e.breed<=0&&room(t,c)&&rand()<.28){const x=e.x+(rand()-.5)*2,z=e.z+(rand()-.5)*2;if(Math.hypot(x,z)<R){add(t,x,z);c[t]++;e.breed=19}}
+    }
+    if(t==='worm'&&scraps)move(e,scraps,velocity[t]);if(e.age>lifespan[t]){die(e);c[t]--}continue;
+   }
+   const thirst=state.drought?3.25:.85;
+   e.water=Math.max(0,e.water-STEP*thirst);e.food=Math.max(0,e.food-STEP*(t==='bee'?1.8:hunters.includes(t)?1.38:t==='goat'?2.7:2.05));
+   if(!state.drought&&e.water<42&&!ponds.length)e.water=Math.min(48,e.water+STEP*1.35);
+   if(e.age>lifespan[t]||e.food<=0||e.water<=0){die(e);c[t]--;continue}
+   if(e.goal<=state.time||e.target?.dead){
+    e.goal=state.time+1.5+rand()*1.8;e.target=null;e.action='Exploring';
+    if(e.water<(state.drought?80:58)&&ponds.length){e.target=nearest(e,ponds);e.action='Looking for water'}
+    else if(e.food<(t==='bee'?99:hunters.includes(t)?38:76)){
+     const foods=diet[t].flatMap(k=>group[k]||[]);
+     e.target=nearest(e,foods,Infinity,f=>plant.includes(f.type)?f.vital>18&&(t!=='bee'||f.id!==e.pollen):true);
+     if(e.target)e.action=t==='bee'?'Visiting flowers':hunters.includes(t)?'Tracking prey':'Looking for food';
+    }
+    let danger=null;if(t==='rabbit'||t==='deer')danger=nearest(e,hunters.flatMap(k=>group[k]||[]),2.65,h=>h.target===e);
+    if(danger&&e.food>14&&e.water>18){const dx=e.x-danger.x,dz=e.z-danger.z;e.target={x:e.x+dx*2,z:e.z+dz*2};e.action='Dodging a hunter'}
+    if(!e.target){const [x,z]=randomSpot(14.7);e.target={x,z}}
+   }
+   const target=e.target;
+   if(target&&!target.dead){
+    const d=dist(e,target), reach=target.type==='pond'?1.95:t==='bee'?.86:1.02;
+    if(d>reach*reach)move(e,target,velocity[t]*(e.action==='Dodging a hunter'?1.05:1));
+    else if(target.type==='pond'){e.water=100;e.action='Drinking';e.goal=0}
+    else if(diet[t].includes(target.type)&&e.clock<=0){
+     if(t==='bee'){if(e.pollen!==null&&e.pollen!==target.id&&!target.pollinated){target.pollinated=true;state.pollinated++}e.pollen=target.id;e.food=Math.min(100,e.food+21);e.action='Collecting nectar';e.clock=.85}
+     else if(plant.includes(target.type)){target.vital-=t==='goat'?58:t==='deer'?27:24;e.food=Math.min(100,e.food+38);if(target.vital<=14){die(target);c[target.type]--}e.action='Eating leaves';e.clock=2.5}
+     else{die(target);c[target.type]--;e.food=100;e.action='Caught prey';e.clock=7}
+     e.goal=0;
+    }
+   }
+   const breedLimit=t==='bee'?Math.max(4,Math.ceil(c.flower*.34)):hunters.includes(t)?Math.floor(sum(c,grazers)/12):t==='goat'?17:carry;
+   const pop=hunters.includes(t)?sum(c,hunters):grazers.includes(t)&&t!=='goat'?sum(c,['rabbit','deer']):c[t];
+   if(e.age>12&&e.breed<=0&&e.food>69&&e.water>47&&pop<breedLimit&&room(t,c)){
+    e.breed=({rabbit:24,deer:42,goat:19,bee:38,fox:54,wolf:60,hawk:60})[t]*(.85+rand()*.45);
+    if(rand()<.58&&nearest(e,group[t]||[],t==='bee'?12:11)){const x=e.x+(rand()-.5)*1.2,z=e.z+(rand()-.5)*1.2;if(Math.hypot(x,z)<R){add(t,x,z);c[t]++;e.food-=13}}
+   }
+  }
+  for(const l of state.litter)l.ttl+=STEP;
+  state.litter=state.litter.filter(l=>{if(l.ttl>110){state.nutrients=Math.min(100,state.nutrients+.5);return false}return true});
+  state.entities=state.entities.filter(e=>!e.dead);
+  if(state.time%2===0){state.history.push(chart(c));if(state.history.length>91)state.history.shift()}
+  judge(c);
+ }
+ function move(e,target,speed){const dx=target.x-e.x,dz=target.z-e.z,d=Math.hypot(dx,dz);if(d<.04)return;const step=Math.min(d,speed*STEP);e.x+=step*dx/d;e.z+=step*dz/d;const len=Math.hypot(e.x,e.z);if(len>R){e.x*=R/len;e.z*=R/len;e.goal=0}e.heading=Math.atan2(dx,dz)}
+ function judge(c){
+  const p=sum(c,plant), h=sum(c,hunters), g=sum(c,grazers), d=sum(c,recyclers);
+  let good=false, hold=0, required=[];
+  switch(level){
+   case 1:good=c.rabbit>=2;hold=3;required=['rabbit'];break;
+   case 2:good=c.tree>=20&&byType('tree').filter(e=>e.natural).length>=3;hold=1;break;
+   case 3:good=state.pollinated>=30;break;
+   case 4:good=c.rabbit>=3&&c.fox>=1;hold=5;required=['rabbit','fox'];break;
+   case 5:good=state.recycled>=18;break;
+   case 6:good=state.time>=DAY*4&&c.deer>=3&&p>=16;required=['deer'];break;
+   case 7:good=c.deer>=6&&c.wolf>=1;hold=4;required=['deer','wolf'];break;
+   case 8:good=state.invaded&&c.goat===0&&p>=25&&c.rabbit>=3;required=['rabbit'];break;
+   case 9:good=c.rabbit>=3&&c.hawk>=1&&c.bee>=2;hold=3;required=['rabbit','hawk','bee'];break;
+   case 10:good=p>=30&&g>=5&&h>=1&&d>=3;hold=3;break;
+  }
+  if(!level)return;
+  state.streak=good?state.streak+STEP:0;
+  for(const t of required){if(c[t])state.extinct[t]=true;else if(state.extinct[t]){state.status='lost';state.reason=`No ${kinds[t][1].toLowerCase()} survived. Try giving them more food, water or space.`;return}}
+  if(good&&state.streak>=hold*DAY&&(level!==9||state.pollinated>=12)){
+   const ratio=state.time/(plan[8]*DAY);state.stars=ratio<=(level===6?.81:.68)&&state.spent<=plan[7]*.92?3:ratio<=.87?2:1;state.status='won';
+  }else if(state.time>=plan[8]*DAY){state.status='lost';state.reason='Time ran out before the goal was met.'}
+ }
+ return {state,counts,place,tick,setLow:v=>{low=v}};
+}
+
+
+
+const $=s=>document.querySelector(s), world=$('#world');
+const store={get(k,f){try{return JSON.parse(localStorage.getItem('ecoIsland.v1.'+k))??f}catch{return f}},set(k,v){try{localStorage.setItem('ecoIsland.v1.'+k,JSON.stringify(v))}catch{}}};
+let gfx=store.get('graphics','Auto'), mute=store.get('mute',false), best=store.get('stars',{});
+const weak=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
+const isLow=()=>gfx==='Low'||(gfx==='Auto'&&weak);
+let renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'low-power'});}catch{ $('#boot p').textContent='🌱 This island needs WebGL. Try a browser with hardware acceleration enabled.';throw new Error('WebGL unavailable'); }
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.type=THREE.PCFSoftShadowMap;world.append(renderer.domElement);
+const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(41,1,.2,320), aim=new THREE.Vector3();
+scene.background=new THREE.Color('#ace4ef');scene.fog=new THREE.FogExp2('#ace4ef',.009);
+const hemi=new THREE.HemisphereLight('#fff9db','#779ca4',2.25);scene.add(hemi);
+const sun=new THREE.DirectionalLight('#fff4c7',2.5);sun.position.set(-30,45,25);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-23,right:23,top:23,bottom:-23,near:1,far:100});sun.shadow.normalBias=.13;scene.add(sun);
+const mesh=(g,m,x,y,z,sx=1,sy=1,sz=1,parent=scene)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);parent.add(o);return o};
+const matte=(color,extra={})=>new THREE.MeshStandardMaterial({color,roughness:.92,flatShading:true,...extra});
+const hash=n=>{const v=Math.sin(n*127.1+51.7)*43758.5453;return v-Math.floor(v)};
+function ground(x,z){const r=Math.hypot(x,z), hills=.20+Math.sin(x*.23+z*.19)*.55+Math.cos(z*.34-x*.14)*.35;return hills*clamp((17.9-r)/4.7,0,1)-.48*clamp((r-17)/2,0,1)}
+function island(){
+ const rings=[.02,3.2,6,8.9,11.7,14.4,17.1,18.5,19.25], count=42, points=[];
+ rings.forEach((rad,j)=>{const ring=[];for(let i=0;i<count;i++){const a=(i+(j%2)*.42)*Math.PI*2/count, r=rad+(hash(i*19+j*39)-.5)*(j<7?.95:1.4),x=Math.cos(a)*r,z=Math.sin(a)*r;ring.push([x,j>=8?-.99:ground(x,z),z])}points.push(ring)});
+ const pos=[],cols=[],greens=['#84b954','#9bc65e','#92c45a','#77ad54','#a4cb66','#8abd61'], beach=['#ead795','#f7df9f','#e5c684','#f1d59a'];let i=0;
+ function tri(a,b,c,pal){pos.push(...a,...b,...c);const k=new THREE.Color(pal[Math.floor(hash(++i)*pal.length)]);for(let j=0;j<3;j++)cols.push(k.r,k.g,k.b)}
+ for(let j=0;j<rings.length-1;j++)for(let t=0;t<count;t++){const n=(t+1)%count,A=points[j],B=points[j+1],pal=j>=6?beach:greens;tri(A[t],A[n],B[t],pal);tri(A[n],B[n],B[t],pal)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));g.computeVertexNormals();const land=mesh(g,matte('#fff',{vertexColors:true,side:THREE.DoubleSide}),0,0,0);land.receiveShadow=true;
+}
+island();
+const ocean=new THREE.ShaderMaterial({uniforms:{time:{value:0},night:{value:0}},vertexShader:`varying vec2 loc;void main(){loc=(modelMatrix*vec4(position,1.)).xz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec2 loc;uniform float time;uniform float night;
+void main(){float r=length(loc); vec3 deep=vec3(.18,.64,.77), shallow=vec3(.34,.83,.79);float ripple=sin(loc.x*.87+loc.y*.58+sin(loc.y*.42)*.75-time*.58);float foam=pow(max(0.,sin((r+sin(atan(loc.y,loc.x)*8.)*.33)*3.6-time*.47)),14.);vec3 c=mix(shallow,deep,smoothstep(18.5,40.,r));c+=max(0.,ripple)*.034+foam*.22*(1.-smoothstep(19.,25.,r));c=mix(c,vec3(.115,.24,.42),night*.8);c=mix(c,mix(vec3(.68,.87,.91),vec3(.19,.29,.44),night),smoothstep(42.,180.,r));gl_FragColor=vec4(c,1.);}`});
+const oceanPlane=mesh(new THREE.PlaneGeometry(480,480),ocean,0,-.85,0);oceanPlane.rotation.x=-Math.PI/2;
+const bodyShapes={orb:new THREE.IcosahedronGeometry(1,1),gem:new THREE.IcosahedronGeometry(1,0),box:new THREE.BoxGeometry(2,2,2),cone:new THREE.ConeGeometry(1,2,6),log:new THREE.CylinderGeometry(.77,1,2,6),disk:new THREE.CylinderGeometry(1,1,2,19)};
+const detail=new THREE.Group(), basics=new THREE.Group();scene.add(detail,basics);
+const rock=matte('#b4b6ab'), darkRock=matte('#8b9d91'), farIsland=matte('#6bbbac'), cloud=matte('#ecfbff');
+for(let i=0;i<37;i++){const a=hash(i+387)*6.28, r=16.6+hash(i+501)*1.8,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.12+hash(i+600)*.60;const o=mesh(bodyShapes.gem,i%3?rock:darkRock,x,ground(x,z)+.08,z,s*1.4,s*.63,s,i<14?basics:detail);o.rotation.y=i*1.36;o.castShadow=true}
+for(let i=0;i<8;i++){const a=i*.785+1.37,x=Math.cos(a)*62,z=Math.sin(a)*62;for(let j=0;j<3;j++)mesh(bodyShapes.gem,farIsland,x+j*5,-1.5,z+j*2,6,2.6+j*.8,5,j===1?basics:detail)}
+const clouds=[];for(let i=0;i<8;i++){const a=i*.785; const g=new THREE.Group();g.position.set(Math.cos(a)*47,8+hash(i+20)*8,Math.sin(a)*47);for(let j=0;j<4;j++)mesh(bodyShapes.orb,cloud,j*2-.4,hash(j+i)*.85,hash(j)*1.5,2.2+hash(i+j)*1.9,.85+hash(i+j+7),1.7,g);(i%2?detail:basics).add(g);clouds.push([g,g.position.x])}
+const shoreline=matte('#fff0c4'), wildflower=matte('#f8df99');
+for(let i=0;i<65;i++){const a=hash(i+740)*Math.PI*2,r=15.8+hash(i+841)*1.5,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.045+hash(i+945)*.065;mesh(bodyShapes.orb,i%4?shoreline:wildflower,x,ground(x,z)+.07,z,s*1.6,s,s,detail)}
+const templates={};
+const part=(shape,color,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0)=>({shape,color:new THREE.Color(color),x,y,z,sx,sy,sz,rx,ry,rz});
+const o=(...a)=>part('orb',...a), g=(...a)=>part('gem',...a), b=(...a)=>part('box',...a), t=(...a)=>part('cone',...a), d=(...a)=>part('disk',...a), log=(...a)=>part('log',...a);
+templates.grass=[t('#568e3d',0,.27,0,.14,.36,.10,0,0,.19),t('#78a945',.19,.22,.02,.13,.29,.1,0,0,-.46),t('#a6c85c',-.19,.19,-.04,.11,.28,.08,0,0,.52)];
+templates.bush=[o('#3e8648',0,.43,0,.58,.5,.50),g('#62a950',.27,.54,.21,.44,.38,.34),g('#91ba51',-.3,.53,.18,.38,.42,.32),o('#d8a166',.16,.61,.51,.075,.075,.075)];
+templates.tree=[log('#95664a',0,.71,0,.17,.75,.17),t('#367e50',0,1.45,0,.93,.89,.90),t('#4e9e5e',.05,2.03,0,.75,.80,.74),t('#78bc6c',-.03,2.59,0,.51,.62,.52),g('#8acb77',-.28,1.92,.48,.20,.25,.16),g('#65b66b',.37,1.48,.58,.23,.22,.15)];
+templates.flower=[log('#58864c',0,.25,0,.055,.23,.055),g('#75a74a',-.13,.19,0,.16,.065,.085,0,0,.31),g('#ffca48',0,.51,0,.15,.12,.15),...Array.from({length:5},(_,i)=>{const a=i*6.283/5;return o('#fff3b8',Math.cos(a)*.17,.49,Math.sin(a)*.17,.113,.065,.112)})];
+templates.mushroom=[log('#ede5ba',0,.19,0,.11,.20,.11),o('#d85c5d',0,.43,0,.37,.21,.35),g('#ffe6be',.13,.55,.12,.07,.043,.066),g('#ffe6be',-.16,.52,.02,.064,.043,.061)];
+templates.worm=[o('#cf6878',0,.12,-.26,.11,.10,.16),o('#e4899a',0,.14,-.03,.114,.12,.17),o('#c95875',.04,.18,.17,.12,.14,.15)];
+templates.pond=[d('#bed696',0,.015,0,1.69,.05,1.54),d('#63cbdc',0,.068,0,1.51,.035,1.36),d('#a0e5df',-.25,.11,.40,.75,.012,.16,0,.5),g('#a7af9e',1.38,.15,.11,.24,.16,.28),g('#e1d4ad',-1.47,.12,-.21,.24,.14,.22)];
+templates.litter=[g('#95603c',0,.055,0,.32,.075,.23,0,.6),g('#bc8b53',.21,.055,.12,.20,.069,.19,0,.3)];
+const legs=(c,x,y,z,sy)=>[-1,1].flatMap(j=>[-1,1].map(k=>b(c,x*j,y,z*k,.085,sy,.085)));
+const eyes=(y,z,x=.18)=>[-1,1].map(k=>o('#222d32',k*x,y,z,.046,.05,.04));
+templates.rabbit=[o('#f6ece1',0,.38,-.05,.31,.30,.40),o('#fff9ed',0,.55,.25,.25,.23,.23),o('#fff',0,.43,-.40,.13,.13,.13),...[-1,1].flatMap(k=>[o('#fff6e5',k*.115,.87,.22,.083,.30,.075,.06,0,-k*.14),o('#eca8a3',k*.135,.89,.274,.041,.23,.031,0,0,-k*.14)]),...eyes(.61,.425,.145)];
+templates.deer=[o('#bc7547',0,.82,-.06,.34,.40,.63),o('#dca36c',0,1.06,.34,.23,.38,.29,.46),o('#c88552',0,1.35,.57,.25,.23,.29),o('#f3d8b4',0,1.23,.74,.18,.14,.15),...legs('#874e36',.19,.34,.37,.34),...eyes(1.41,.76),...[-1,1].flatMap(k=>[g('#df985e',k*.26,1.56,.49,.19,.10,.11,0,0,k*.5),log('#c3a482',k*.14,1.79,.47,.035,.30,.038,0,0,-k*.26),log('#c3a482',k*.23,1.85,.47,.029,.16,.032,0,0,-k*.65)])];
+function canine(c,light,dark){return [o(c,0,.58,-.08,.34,.32,.59),o(c,0,.79,.39,.30,.29,.30),o(light,0,.7,.58,.23,.15,.27),o(dark,0,.73,.79,.105,.08,.085),o(c,0,.53,-.68,.21,.20,.40,.38),o(light,0,.62,-.96,.16,.14,.19,.39),...legs(dark,.19,.24,.32,.24),...eyes(.85,.58),...[-1,1].map(k=>t(c,k*.20,1.08,.40,.13,.24,.12,0,0,-k*.20))]}
+templates.fox=canine('#d16c38','#ffe9bc','#52423a');templates.wolf=canine('#778994','#cbdcd9','#475861');
+templates.goat=[o('#e8dbc0',0,.63,-.11,.34,.34,.54),o('#ddd0b7',0,.94,.38,.26,.27,.26),g('#e0ccb0',0,.73,.58,.11,.20,.12),...legs('#716960',.18,.26,.31,.26),...eyes(.99,.56),...[-1,1].map(k=>t('#9a8d77',k*.15,1.25,.34,.075,.29,.072,-.42,0,-k*.12))];
+templates.bee=[o('#f4bd46',0,0,0,.20,.19,.30),o('#423831',0,0,-.06,.205,.195,.073),o('#44362b',0,0,.19,.155,.15,.15),...[-1,1].map(k=>o('#dcf6f3',k*.21,.15,-.09,.24,.058,.15,0,0,k*.29))];
+templates.hawk=[o('#8c5a3c',0,0,0,.26,.21,.55),o('#e5c99e',0,.11,.36,.20,.17,.23),g('#e9a746',0,.05,.54,.088,.079,.15),...eyes(.17,.47,.14),...[-1,1].map(k=>g('#725144',k*.50,.02,-.10,.58,.094,.36,0,k*.32,k*.14))];
+const chunks={};for(const [shape,geom] of Object.entries(bodyShapes)){const inst=new THREE.InstancedMesh(geom,matte('#fff'),shape==='orb'?2900:1850);inst.count=0;inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);inst.frustumCulled=false;inst.castShadow=shape!=='disk';inst.receiveShadow=true;scene.add(inst);chunks[shape]=inst}
+const marker=mesh(new THREE.TorusGeometry(.72,.052,6,28),new THREE.MeshBasicMaterial({color:'#fff2a4'}),0,0,0);marker.rotation.x=-Math.PI/2;marker.visible=false;
+const parent=new THREE.Object3D(), local=new THREE.Object3D(), mat=new THREE.Matrix4(), shade=new THREE.Color();
+function drawEntities(state,clock,alpha){
+ const cursor=Object.fromEntries(Object.keys(chunks).map(k=>[k,0]));
+ function draw(e,type){const fly=type==='bee'?1.42:type==='hawk'?3.0:0, animal=type in velocity&&type!=='worm',walking=animal&&!fly&&!paused&&!screen&&state.status==='running'&&Math.hypot(e.x-e.prevX,e.z-e.prevZ)>.01;let scale=type==='litter'?1:.85+hash(e.id+17)*.28;if(type==='wolf'||type==='deer'||type==='hawk')scale*=1.16;const bob=fly?Math.sin(clock*(type==='bee'?7:3)+(e.id||0))*.15:walking?Math.abs(Math.sin(clock*6+e.id))*.06:0;
+ const moving=type in velocity,x=moving?THREE.MathUtils.lerp(e.prevX,e.x,alpha):e.x,z=moving?THREE.MathUtils.lerp(e.prevZ,e.z,alpha):e.z,turn=moving?Math.atan2(Math.sin(e.heading-e.prevHeading),Math.cos(e.heading-e.prevHeading)):0;
+ parent.position.set(x,ground(x,z)+fly+bob,z);parent.rotation.set(0,animal?e.prevHeading+turn*alpha:type==='pond'?0:(e.id||e.x)*2.2,0);parent.scale.setScalar(scale);parent.updateMatrix();
+ for(const p of templates[type]){const inst=chunks[p.shape],i=cursor[p.shape]++;if(i>=inst.instanceMatrix.count)continue;const wing=type==='bee'&&p.shape==='orb'&&p.sy===.058||type==='hawk'&&p.shape==='gem'&&p.sx===.58,leg=walking&&p.shape==='box'&&p.sx===.085;local.position.set(p.x,p.y,p.z);local.rotation.set(p.rx+(leg?Math.sin(clock*8+e.id)*Math.sign(p.x*p.z)*.35:0),p.ry,p.rz+(wing?Math.sign(p.x)*Math.sin(clock*(type==='bee'?25:7))*.28:0));local.scale.set(p.sx,p.sy,p.sz);local.updateMatrix();mat.multiplyMatrices(parent.matrix,local.matrix);inst.setMatrixAt(i,mat);shade.copy(e.pollinated&&type==='flower'&&p.y>.47&&p.sx<.13?new THREE.Color('#ffc5e2'):p.color);if(plant.includes(type)&&e.vital<58)shade.lerp(new THREE.Color('#bca067'),(58-e.vital)/65);inst.setColorAt(i,shade);}}
+ for(const e of state.entities)if(!e.dead)draw(e,e.type);for(const e of state.litter)draw(e,'litter');
+ for(const [k,inst] of Object.entries(chunks)){inst.count=Math.min(inst.instanceMatrix.count,cursor[k]);inst.instanceMatrix.needsUpdate=true;if(inst.instanceColor)inst.instanceColor.needsUpdate=true}
+ const pick=state.entities.find(e=>e.id===state.selected&&!e.dead);marker.visible=Boolean(pick);if(pick)marker.position.set(pick.x,ground(pick.x,pick.z)+.13,pick.z);
+}
+let yaw=.64,pitch=.96,zoom=1,panX=0,panZ=0;
+function resize(){const w=world.clientWidth,h=world.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();setCamera()}
+function setCamera(){const narrow=camera.aspect<1.05, radius=(narrow?56/Math.max(camera.aspect,.72):59)*zoom;aim.set(panX,0,panZ);camera.position.set(panX+Math.sin(yaw)*Math.cos(pitch)*radius,Math.sin(pitch)*radius,panZ+Math.cos(yaw)*Math.cos(pitch)*radius);camera.lookAt(aim);camera.setViewOffset(world.clientWidth,world.clientHeight,0,narrow?33:47,world.clientWidth,world.clientHeight);camera.updateMatrixWorld()}
+function zoomBy(f){zoom=clamp(zoom*f,.48,1.5);setCamera()}
+function resetCamera(){yaw=.64;pitch=.96;zoom=1;panX=panZ=0;setCamera()}
+const skyDay=new THREE.Color('#a8e0eb'),skyDusk=new THREE.Color('#ffcba0'),skyNight=new THREE.Color('#293f67');
+function atmosphere(state,clock){const turn=(state.time%DAY)/DAY,night=clamp((turn-.62)*5,0,1)*(1-clamp((turn-.91)*11,0,1));const dusk=Math.max(0,1-Math.abs(turn-.64)*8);scene.background.copy(skyDay).lerp(skyDusk,dusk*.69).lerp(skyNight,night);scene.fog.color.copy(scene.background);ocean.uniforms.night.value=night;ocean.uniforms.time.value=clock;hemi.intensity=2.0-night*1.22;sun.intensity=2.1-night*1.8;for(const [g,x] of clouds)g.position.x=x+Math.sin(clock*.12+x)*2.5}
+function quality(){const low=isLow();renderer.setPixelRatio(low?1:Math.min(devicePixelRatio||1,1.75));renderer.shadowMap.enabled=!low;detail.visible=!low;sim?.setLow(low);$('#graphics').textContent='⚙ '+gfx;$('#graphics').title=`Graphics: ${gfx}${gfx==='Auto'?' ('+(low?'Low':'High')+')':''}`;resize()}
+
+
+let sim, tab='Plants', tool='inspect', speed=1, paused=true, screen='', accumulator=0, clock=0, toastTimer, audio, lastInspect='', notices={};
+const icons={Plants:'🌱',Animals:'🐾',Hunters:'🦊',Care:'💧'};
+const getPlan=()=>plans[sim.state.level-1]||sandbox;
+const unlocked=()=>{let n=1;while(n<plans.length&&best[n])n++;return n};
+const trophy=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+function ping(note='place'){
+ if(mute)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ try{audio??=new AC();if(audio.state==='suspended')audio.resume().catch(()=>{});const now=audio.currentTime;
+ const sequence={place:[523,659],run:[392,523],win:[523,659,784,1047],lose:[392,330,262],warn:[317],select:[555]}[note]||[550];
+ sequence.forEach((hz,i)=>{const osc=audio.createOscillator(),amp=audio.createGain(),t=now+.075*i;osc.type='sine';osc.frequency.value=hz;amp.gain.setValueAtTime(.001,t);amp.gain.exponentialRampToValueAtTime(.11,t+.015);amp.gain.exponentialRampToValueAtTime(.001,t+.18);osc.connect(amp).connect(audio.destination);osc.start(t);osc.stop(t+.19)});
+ }catch{}
+}
+function toast(text){clearTimeout(toastTimer);$('#notice').textContent=text;$('#notice').hidden=false;toastTimer=setTimeout(()=>$('#notice').hidden=true,2750)}
+const overlay=$('#overlay'), card=$('#card');
+function show(mode){
+ screen=mode;overlay.hidden=!mode;$('#layout').inert=!!mode;$('header').inert=!!mode;if(!mode)return;
+ const s=sim.state,P=getPlan();card.classList.toggle('wide',mode==='levels');
+ if(mode==='title')card.innerHTML=`<div class="hero"><div class="hero-icon" aria-hidden="true">🏝️</div><div class="eyebrow">The junior field lab</div><h1>Ecosystem Island</h1></div><p class="sub">Grow a living island! Plant a forest, bring in wildlife, and discover what keeps a food web in balance.</p><div class="pillrow"><span>🌱 Build habitats</span><span>🐾 Follow wildlife</span><span>📈 Track populations</span></div><div class="actions"><button class="big" data-start="${unlocked()}">▶ ${unlocked()>1?'Continue':'Play'}</button><button data-menu="levels">☰ Levels</button><button data-start="0">🏝 Sandbox</button></div>`;
+ if(mode==='levels')card.innerHTML=`<div class="eyebrow muted">Field assignments · ${Object.keys(best).filter(k=>best[k]>0).length} / 10 completed</div><h2>Choose a mission</h2><p>Finish each assignment to unlock the next one.</p><div class="levelgrid">${plans.map((p,i)=>`<button class="level" ${i+1>unlocked()?'disabled':''} data-start="${i+1}"><span>${p[0]}</span><strong>${String(i+1).padStart(2,'0')} · ${p[1]}</strong><small>${i+1>unlocked()?'🔒 Locked':trophy(best[i+1]||0)}</small></button>`).join('')}</div><div class="actions"><button class="big" data-start="0">🏝 Open Sandbox</button><button data-menu="back">← Back</button></div>`;
+ if(mode==='won'||mode==='lost'){
+  const won=mode==='won';card.innerHTML=`<div class="hero"><div class="hero-icon">${won?'🎉':'🍃'}</div><div class="eyebrow">${won?'Assignment complete':'Try another approach'}</div><h2>${P[1]}</h2>${won?`<div class="stars" aria-label="${s.stars} out of 3 stars">${trophy(s.stars)}</div>`:''}</div><p>${won?`You met the goal in ${(s.time/DAY).toFixed(1)} island days and spent ${s.spent} nature points.`:s.reason}</p><div class="lesson"><b>💡 Did you know?</b><p>${P[4]}</p></div>${won&&s.stars<3?'<p style="margin-top:8px;font-size:12px">For more stars, finish sooner and use fewer nature points.</p>':''}<div class="actions">${won?`<button class="big" data-start="${s.level===10?0:s.level+1}">${s.level===10?'🏝 Sandbox':'Next mission →'}</button>`:''}<button class="${won?'':'sun'}" data-start="${s.level}">↻ ${won?'Replay':'Try again'}</button><button data-menu="levels">☰ Levels</button></div>`;
+ }
+ card.scrollTop=0;card.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
+}
+let previous='title';
+card.addEventListener('click',e=>{const btn=e.target.closest('button');if(!btn)return;ping('select');if(btn.dataset.start!==undefined)loadLevel(Number(btn.dataset.start));else if(btn.dataset.menu==='levels'){previous=screen;show('levels')}else if(btn.dataset.menu==='back')show(previous)});
+$('#levels').onclick=()=>{previous=screen;show('levels');ping('select')};
+function loadLevel(n){
+ if(!Number.isInteger(n)||n<0||n>plans.length)return false;
+ sim=makeSim(n,isLow());paused=true;speed=1;accumulator=0;notices={};lastInspect='';tool='inspect';tab=kinds[getPlan()[6][0]][3];$('#notice').hidden=true;resetCamera();show('');buildTray();update();world.classList.remove('place');return true;
+}
+function buildTray(){
+ const tools=getPlan()[6];const tabs=Object.keys(icons).filter(c=>tools.some(t=>kinds[t][3]===c));
+ $('#tabs').innerHTML=tabs.map(c=>`<button data-tab="${c}" aria-pressed="${c===tab}">${icons[c]} ${c}</button>`).join('');
+ $('#tiles').innerHTML=`<button class="tile inspect" data-tool="inspect" title="Inspect species" aria-pressed="${tool==='inspect'}"><span>🔎</span>Inspect<small>Field guide</small></button>${tools.filter(t=>kinds[t][3]===tab).map(t=>{const [emoji,name,cost,, ,tip]=kinds[t];return `<button class="tile" title="${tip}" data-tool="${t}" aria-pressed="${t===tool}"><span>${emoji}</span>${name}<small>${cost?'✦ '+cost:'Free'}</small></button>`}).join('')}`;
+}
+$('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;buildTray();$('#tabs').querySelector(`[data-tab="${tab}"]`).focus({preventScroll:true});ping('select')};
+$('#tiles').onclick=e=>{const b=e.target.closest('[data-tool]');if(!b)return;tool=b.dataset.tool;world.classList.toggle('place',tool!=='inspect');for(const tile of $('#tiles').children)tile.setAttribute('aria-pressed',String(tile===b));if(tool!=='inspect')toast(tool==='relocate'?'Tap a goat to relocate it.':`Tap land to place ${kinds[tool][0]} ${kinds[tool][1]}.`);else toast('Tap a plant or animal to learn about it.');ping('select');update()};
+function setSpeed(v){if(![0,1,2,4].includes(v))return false;if(v===0){paused=true}else{speed=v;if(sim.state.status==='running')paused=false}update();return true}
+function toggle(){const s=sim.state;if(s.status==='ready'){s.status='running';paused=false;ping('run')}else if(s.status==='running'){paused=!paused;ping('select')}update()}
+$('#run').onclick=toggle;
+for(const el of document.querySelectorAll('[data-speed]'))el.onclick=()=>{setSpeed(Number(el.dataset.speed));ping('select')};
+$('#reset').onclick=()=>{loadLevel(sim.state.level);toast('Fresh start!');ping('select')};
+$('#graphics').onclick=()=>{gfx=({Auto:'High',High:'Low',Low:'Auto'})[gfx];store.set('graphics',gfx);quality();toast(`Graphics: ${gfx}${gfx==='Auto'?` (${isLow()?'Low':'High'})`:''}`);ping('select')};
+function soundUI(){$('#sound').textContent=mute?'🔇':'🔊';$('#sound').setAttribute('aria-pressed',String(!mute));$('#sound').title=mute?'Sound off':'Sound on'}
+$('#sound').onclick=()=>{mute=!mute;store.set('mute',mute);soundUI();ping('select')};
+$('#zoomIn').onclick=()=>zoomBy(.83);$('#zoomOut').onclick=()=>zoomBy(1.20);$('#homeCam').onclick=resetCamera;
+$('#clearInspect').onclick=()=>{sim.state.selected=null;update()};
+const lists=[['Plants','plants','#3a9157'],['Grazers','grazers','#945cc3'],['Hunters','hunters','#c65b3d'],['Bees','bees','#b48015'],['Recyclers','recyclers','#398da1']];
+$('#keys').innerHTML=lists.map(([label,,color])=>`<span><b style="background:${color}"></b>${label}</span>`).join('');
+function objective(s,c){
+ const sum=a=>a.reduce((v,t)=>v+c[t],0), p=sum(plant), hist=s.streak/DAY, holds=(n,extra='')=>[hist/n,`${hist.toFixed(1)} / ${n} days${extra}`];
+ switch(s.level){case 1:return holds(3,` · 🐇 ${c.rabbit}/2`);case 2:{const saplings=s.entities.filter(e=>e.type==='tree'&&e.natural&&!e.dead).length;return [Math.min(c.tree/20,saplings/3,hist),`${hist.toFixed(1)}/1 day · 🌳 ${c.tree}/20 · 🌱 ${saplings}/3 grown`]}case 3:return [s.pollinated/30,`🌼 ${s.pollinated} / 30 flowers`];case 4:return holds(5,` · 🐇 ${c.rabbit}/3 · 🦊 ${c.fox}/1`);case 5:return [s.recycled/18,`🍂 ${s.recycled} / 18 recycled`];case 6:return [Math.min(s.time/(DAY*4),c.deer/3,p/16),`🦌 ${c.deer}/3 · 🌱 ${p}/16`];case 7:return holds(4,` · 🦌 ${c.deer}/6 · 🐺 ${c.wolf}/1`);case 8:return [s.invaded?((c.goat===0 ? .7 : .3)+.3*Math.min(p/25,c.rabbit/3,1)):s.time/(DAY*3),s.invaded?`🐐 ${c.goat} left · 🌱 ${p}/25 · 🐇 ${c.rabbit}/3`:'Goats arrive on day 2'];case 9:return [Math.min(hist/3,s.pollinated/12),`${hist.toFixed(1)}/3 days · 🌼 ${s.pollinated}/12`];case 10:return holds(3);default:return [0,''];}
+}
+function graph(state){
+ const cv=$('#graph'),w=cv.clientWidth,h=cv.clientHeight;if(w<1||h<1)return;const px=Math.min(devicePixelRatio||1,2);if(cv.width!==Math.round(w*px)||cv.height!==Math.round(h*px)){cv.width=Math.round(w*px);cv.height=Math.round(h*px)}
+ const ctx=cv.getContext('2d');ctx.setTransform(px,0,0,px,0,0);ctx.clearRect(0,0,w,h);
+ const x0=28,x1=w-6,y0=8,y1=h-20, data=state.history, a=data[0].t, b=Math.max(a+DAY,data.at(-1).t), max=Math.max(10,...data.flatMap(d=>lists.map(([,k])=>d[k]))), top=Math.ceil(max/10)*10;
+ ctx.font='10px system-ui';ctx.fillStyle='#4c6e5c';ctx.strokeStyle='#dae7d9';ctx.lineWidth=1;
+ for(let i=0;i<=4;i++){const y=y1-(y1-y0)*i/4;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();if(i%2===0)ctx.fillText(Math.round(top*i/4),1,y+3)}
+ ctx.fillText(`Day ${1+Math.floor(a/DAY)}`,x0,y1+14);ctx.textAlign='right';ctx.fillText(`Day ${1+Math.floor(b/DAY)}`,x1,y1+14);ctx.textAlign='left';
+ for(const [,key,color] of lists){if(!data.some(d=>d[key]))continue;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.beginPath();let x=x0,y=y1;data.forEach((d,i)=>{x=x0+(x1-x0)*(d.t-a)/(b-a);y=y1-(y1-y0)*d[key]/top;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)});ctx.stroke();ctx.beginPath();ctx.arc(x,y,2.5,0,6.283);ctx.fill()}
+}
+const names=list=>list.map(k=>kinds[k][0]+' '+kinds[k][1]).join(' · ');
+function field(s){
+ const e=s.entities.find(e=>e.id===s.selected&&!e.dead);$('#clearInspect').hidden=!e;
+ if(!e){if(lastInspect!=='empty'){$('#species').innerHTML='<p class="muted" style="margin-top:6px">Choose <b>Inspect</b>, then tap a plant or creature to see its role in the food web.</p>';lastInspect='empty'}return}
+ const k=e.type,[emoji,name,,,,desc]=kinds[k];const food=diet[k]||[],eat=Object.keys(diet).filter(t=>diet[t].includes(k)&&t!=='bee');
+ const role=plant.includes(k)?'Producer':hunters.includes(k)?'Carnivore':k==='bee'?'Pollinator':k==='mushroom'?'Decomposer':k==='worm'?'Detritivore':k==='pond'?'Fresh water':'Herbivore';
+ const stat=k==='pond'?'Reservoir · fresh water':plant.includes(k)?`Health ${Math.round(e.vital)}%${e.pollinated?' · Pollinated ✨':''}`:recyclers.includes(k)?e.action:`${e.action} · Food ${Math.round(e.food)}% · Water ${Math.round(e.water)}%`;
+ const key=e.id+stat;if(key===lastInspect)return;lastInspect=key;
+ const from=food.length?names(food):plant.includes(k)?'☀ Sunlight + 💧 water':recyclers.includes(k)?'🍂 Dead material':'Rain';
+ const to=eat.length?names(eat):k==='flower'?'🐝 Bees visit for nectar':recyclers.includes(k)?'🌱 Soil nutrients feed plants':k==='pond'?'🐾 Wildlife drinks here':'None modeled';
+ $('#species').innerHTML=`<h3>${emoji} ${name} <span class="live">${role}</span></h3><p>${desc}</p><p class="speciesStats">${stat}</p><div class="web" aria-label="Food web"><div>${from} <strong>→ ${emoji}</strong></div><div>${emoji} <strong>→</strong> ${to}</div></div>`;
+}
+function update(){
+ const s=sim.state,P=getPlan(),c=sim.counts(), day=Math.floor(s.time/DAY)+1,phase=(s.time%DAY)/DAY;
+ $('#points').innerHTML=`✦ <b>${s.points}</b><small>Nature points</small>`;
+ $('#day').innerHTML=`${s.drought?'☀️':phase>.70?'🌙':'🌤️'} <b>Day ${day}</b><small>${s.drought?'Drought':phase>.70?'Night':phase>.57?'Evening':'Daylight'}${s.level?' · '+P[8]+'-day limit':''}</small>`;
+ $('#maptag').textContent=s.drought?'●  DRY SPELL':'●  ISLAND HABITAT';
+ $('#chapter').textContent=s.level?`Mission ${String(s.level).padStart(2,'0')} / ${plans.length}`:'Free play · Sandbox';$('#mission').textContent=P[0]+' '+P[1];$('#goal').textContent=P[2];$('#tip').textContent='💡 '+P[3];
+ const [fraction,text]=objective(s,c);$('#goalrow').hidden=$('#goalbar').hidden=!s.level;$('#progress').textContent=text;$('#fill').style.width=clamp(fraction*100,0,100)+'%';
+ $('#run').textContent=s.status==='ready'?'▶ Start':s.status==='running'?paused?'▶ Resume':'Ⅱ Pause':s.status==='won'?'✓ Done':'■ Ended';$('#run').disabled=['won','lost'].includes(s.status);
+ $('#live').textContent=({ready:'READY',won:'COMPLETE',lost:'ENDED'})[s.status]||(paused?'PAUSED':'● LIVE');
+ for(const b of document.querySelectorAll('[data-speed]'))b.setAttribute('aria-pressed',String(+b.dataset.speed===speed));
+ for(const b of $('#tiles').children){const t=b.dataset.tool;b.classList.toggle('poor',!!kinds[t]&&s.points<kinds[t][2])}
+ $('#trayhint').textContent=tool==='inspect'?'Tap wildlife to open its field card':tool==='relocate'?'Tap an introduced goat':'Tap an open spot to place '+kinds[tool][1].toLowerCase();
+ $('#stats').innerHTML=`<div><strong>${c.rabbit+c.deer+c.goat+c.bee+c.fox+c.wolf+c.hawk}</strong>Wildlife</div><div><strong>${Math.round(s.nutrients)}%</strong>Soil nutrients</div><div><strong>${s.pollinated}</strong>Pollinated</div>`;
+ graph(s);field(s);
+}
+function checkStatus(){
+ const s=sim.state;
+ if(s.drought&&!notices.drought){notices.drought=true;toast('☀️ Drought! Wildlife drinks more often.');ping('warn')}
+ if(s.invaded&&!notices.goat){notices.goat=true;toast('🐐 Goats have arrived! Find Relocate under Care.');ping('warn')}
+ if(!['won','lost'].includes(s.status)||notices.ended)return;
+ notices.ended=true;paused=true;
+ if(s.status==='won'){best[s.level]=Math.max(best[s.level]||0,s.stars);store.set('stars',best)}
+ update();show(s.status);ping(s.status==='won'?'win':'lose');
+}
+function attempt(t,x,z,interactive=false){const result=sim.place(t,x,z);if(result.ok&&sim.state.time===0){const c=sim.counts(),h=sim.state.history[0];h.plants=plant.reduce((n,k)=>n+c[k],0);h.grazers=grazers.reduce((n,k)=>n+c[k],0);h.hunters=hunters.reduce((n,k)=>n+c[k],0);h.bees=c.bee;h.recyclers=c.worm+c.mushroom}
+ if(interactive){if(result.msg)toast(result.msg);ping(result.ok?'place':'warn')}
+ if(result.ok)update();return result.ok;
+}
+const ray=new THREE.Raycaster(), groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), at=new THREE.Vector3(), pointer=new THREE.Vector2(), projected=new THREE.Vector3();
+function tap(px,py){
+ const b=world.getBoundingClientRect();pointer.set((px-b.left)*2/b.width-1,1-(py-b.top)*2/b.height);ray.setFromCamera(pointer,camera);if(!ray.ray.intersectPlane(groundPlane,at))return;
+ for(let i=0;i<3;i++){groundPlane.constant=-ground(at.x,at.z);ray.ray.intersectPlane(groundPlane,at)}groundPlane.constant=0;
+ if(tool!=='inspect'&&tool!=='relocate'){attempt(tool,at.x,at.z,true);return}
+ let hit=null,closest=tool==='relocate'?34:22;
+ for(const e of sim.state.entities){if(e.dead||tool==='relocate'&&e.type!=='goat')continue;
+  projected.set(e.x,ground(e.x,e.z)+(({tree:1.5,hawk:3,bee:1.42,deer:1.1,goat:.7,fox:.65,wolf:.65,rabbit:.52,bush:.39,flower:.42})[e.type]??0),e.z);
+  projected.project(camera);const d=Math.hypot((projected.x-pointer.x)*b.width/2,(projected.y-pointer.y)*b.height/2)+(plant.includes(e.type)?3:0);if(d<closest){closest=d;hit=e}
+ }
+ if(tool==='relocate'){attempt(tool,hit?.x??at.x,hit?.z??at.z,true);return}
+ sim.state.selected=hit?.id??null;update();if(hit){ping('select');if(matchMedia('(max-width:740px)').matches)$('#field').scrollIntoView({block:'nearest',behavior:'smooth'})}else toast('Tap a plant or animal to inspect it.');
+}
+const fingers=new Map();let dragged=false, dragPan=false;
+world.addEventListener('pointerdown',e=>{if(e.button!==0&&e.button!==2&&e.button!==1)return;e.preventDefault();world.setPointerCapture(e.pointerId);if(!fingers.size){dragged=false;dragPan=e.shiftKey||e.button!==0}fingers.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY});if(fingers.size>1)dragged=true});
+world.addEventListener('pointermove',e=>{const p=fingers.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+ if(fingers.size>1){const other=[...fingers].find(([id])=>id!==e.pointerId)[1],before=Math.hypot(p.x-other.x,p.y-other.y),after=Math.hypot(e.clientX-other.x,e.clientY-other.y);if(before>8&&after>8)zoomBy(before/after);pan(dx*.5,dy*.5)}
+ else{if(Math.hypot(e.clientX-p.startX,e.clientY-p.startY)>5)dragged=true;if(dragged){if(dragPan)pan(dx,dy);else{yaw-=dx*.008;pitch=clamp(pitch+dy*.008,.30,1.44);setCamera()}}}p.x=e.clientX;p.y=e.clientY;
+});
+function pan(dx,dy){const f=.069*zoom;panX=clamp(panX+(-Math.cos(yaw)*dx+Math.sin(yaw)*dy)*f,-13,13);panZ=clamp(panZ+(Math.sin(yaw)*dx+Math.cos(yaw)*dy)*f,-13,13);setCamera()}
+world.addEventListener('pointerup',e=>{if(fingers.has(e.pointerId)&&!dragged&&!dragPan)tap(e.clientX,e.clientY);fingers.delete(e.pointerId)});
+for(const type of ['pointercancel','lostpointercapture'])world.addEventListener(type,e=>fingers.delete(e.pointerId));
+world.addEventListener('contextmenu',e=>e.preventDefault());world.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(clamp(e.deltaY,-95,95)*.0024))},{passive:false});
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){if(screen==='levels')show(previous);else if(!screen){tool='inspect';buildTray();world.classList.remove('place');update()}return}
+ if(screen&&e.key==='Tab'){const btn=[...card.querySelectorAll('button:not(:disabled)')];if(e.shiftKey&&document.activeElement===btn[0]){e.preventDefault();btn.at(-1)?.focus()}else if(!e.shiftKey&&document.activeElement===btn.at(-1)){e.preventDefault();btn[0]?.focus()}return}
+ if(screen||e.target.closest('button'))return;if(e.code==='Space'){e.preventDefault();toggle()}if(e.key==='+'||e.key==='=')zoomBy(.85);if(e.key==='-')zoomBy(1.18);
+});
+window.__game={get state(){return sim.state},get level(){return sim.state.level},get speed(){return paused&&sim.state.status==='running'?0:speed},set speed(v){setSpeed(v)},loadLevel,place:(type,x,z)=>attempt(type,x,z),counts:()=>sim.counts(),setSpeed,pause:()=>setSpeed(0),start:()=>{if(sim.state.status==='ready'||paused)toggle()},
+ fastForward(sec){if(!Number.isFinite(sec)||sec<0)return sim.state.status;const s=sim.state;if(s.status==='ready')s.status='running';for(let i=0,n=Math.min(20000,Math.floor(sec/STEP));i<n&&s.status==='running';i++)sim.tick();accumulator=0;checkStatus();update();return s.status}
+};
+loadLevel(1);soundUI();quality();new ResizeObserver(resize).observe(world);$('#boot').hidden=true;show('title');
+let last=performance.now(),ui=0,draw=0,animalClock=0;
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.1,(now-last)/1000);last=now;clock+=dt;ui+=dt;draw+=dt;
+ if(!paused&&!screen&&sim.state.status==='running'){animalClock+=dt*speed;accumulator+=dt*speed;while(accumulator>=STEP){sim.tick();accumulator-=STEP}checkStatus()}
+ if(ui>.16){ui=0;if(!screen)update()}
+ if(draw>=(isLow()?.031:0)){draw=0;const alpha=!paused&&!screen&&sim.state.status==='running'?accumulator/STEP:1;drawEntities(sim.state,animalClock,alpha);atmosphere(sim.state,clock);renderer.render(scene,camera)}
+}
+requestAnimationFrame(frame);
+</script></body></html>
+
+

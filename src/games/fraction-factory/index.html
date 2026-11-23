@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Fraction Factory</title>
+<script type="importmap">{"imports":{"three":"/games/vendor/three-0.160.0/three.module.js"}}</script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',system-ui,sans-serif;background:#ffd9ec;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#world{position:fixed;inset:0;touch-action:none}#world canvas{display:block}
+button{font:inherit;cursor:pointer;border:0}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1;margin:0 3px;font-weight:900}
+.fr>span:first-child{border-bottom:.12em solid currentColor;padding:0 .15em .08em}.fr>span:last-child{padding-top:.08em}
+.num{font-weight:900;vertical-align:middle}
+#top{position:fixed;left:10px;right:10px;top:8px;display:flex;gap:8px;align-items:center;pointer-events:none;z-index:2}
+#top>*{pointer-events:auto}
+.panel{background:#5b2a86e8;color:#fff;border-radius:16px;padding:7px 13px;box-shadow:0 4px 14px #0003;font-weight:800}
+#title{font-weight:900;font-size:17px;line-height:1.15}#title small{display:block;font-weight:800;font-size:12px;color:#ffd166}
+#coins,#prog{font-size:16px;white-space:nowrap}
+.spacer{flex:1}
+.tbtn{background:#fff;color:#5b2a86;border-radius:14px;padding:9px 12px;font-weight:900;box-shadow:0 3px 0 #cdb6e3;font-size:14px;white-space:nowrap}
+.tbtn:active{transform:translateY(2px);box-shadow:none}
+#ticket{position:fixed;left:10px;top:66px;width:300px;background:#fffdf5;border:4px solid #ffb703;border-radius:18px;padding:8px 12px 10px;z-index:2;box-shadow:0 6px 18px #0003;color:#3d2256;display:none}
+#ticket .who{font-weight:800;font-size:14px;color:#7a5a96}
+#ticket .who b{color:#5b2a86}
+#ask{font-size:26px;font-weight:900;margin:4px 0 6px;line-height:1.25;color:#3d2256}
+#ask .fr{font-size:26px}#ask .num{font-size:30px}
+#ask .want{display:block;font-size:20px;color:#d1495b}
+#pat{height:12px;background:#eee3f6;border-radius:7px;overflow:hidden;position:relative}
+#patFill{height:100%;width:100%;background:linear-gradient(90deg,#06d6a0,#9be564);border-radius:7px;transition:background .3s}
+#pat.low #patFill{background:linear-gradient(90deg,#ef476f,#ff9f1c)}
+#patLbl{font-size:11px;font-weight:800;color:#8a6aa6;margin-top:2px;display:flex;justify-content:space-between}
+#hintBox{display:none;margin-top:6px;background:#eaf4ff;border-radius:10px;padding:6px 8px;font-size:13px;font-weight:700;color:#24476f;line-height:1.35}
+#hintBox .fr{font-size:13px}
+#tools{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);display:none;flex-direction:column;gap:6px;align-items:center;background:#5b2a86e8;padding:8px 10px;border-radius:20px;box-shadow:0 6px 20px #0004;z-index:2;max-width:calc(100vw - 12px)}
+#tools .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+#have{color:#fff;font-weight:900;font-size:16px;min-height:22px;display:flex;align-items:center;gap:4px}
+#have .fr{font-size:15px}
+.lbl{color:#ffd166;font-weight:900;font-size:14px;margin-right:2px}
+.nb{min-width:44px;height:44px;border-radius:12px;background:#fff;color:#5b2a86;font-weight:900;font-size:19px;box-shadow:0 3px 0 #cdb6e3;padding:0 6px}
+.nb.sel{background:#ffd166;color:#5a3b00;box-shadow:0 3px 0 #c98f00}
+.nb:disabled{background:#8f78a6;color:#cbb9dc;box-shadow:none;cursor:not-allowed;position:relative}
+.nb:disabled::after{content:'🔒';position:absolute;font-size:11px;right:1px;top:-2px}
+.act{padding:10px 14px;border-radius:14px;background:#7d4bb0;color:#fff;font-weight:900;font-size:15px;box-shadow:0 3px 0 #3f1d63}
+#deliverBtn{background:linear-gradient(#7ae582,#25a244);color:#063b12;font-size:18px;padding:11px 22px;box-shadow:0 4px 0 #13702a}
+.act:active,.nb:active,#deliverBtn:active{transform:translateY(2px);box-shadow:none}
+.cmpb{min-width:130px;padding:10px 18px;border-radius:16px;background:linear-gradient(#ffe08a,#f4a300);color:#3b2a00;font-weight:900;font-size:22px;box-shadow:0 4px 0 #b57700}
+.cmpb .fr{font-size:20px}
+#msg{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);background:#fffbea;color:#5a3b00;border:3px solid #ffd166;border-radius:16px;padding:10px 18px;font-weight:900;font-size:18px;display:none;z-index:5;box-shadow:0 4px 14px #0003;text-align:center;max-width:90vw;pointer-events:none}
+.pop{position:fixed;z-index:6;font-weight:900;font-size:24px;color:#ffb703;text-shadow:0 2px 0 #7a4a00,0 0 8px #fff;pointer-events:none;animation:up 1.2s ease-out forwards}
+@keyframes up{from{transform:translateY(0);opacity:1}to{transform:translateY(-70px);opacity:0}}
+#overlay{position:fixed;inset:0;background:#2a0d4599;display:flex;align-items:center;justify-content:center;z-index:10;padding:12px}
+#overlay.hide{display:none}
+.card{background:#fff;color:#3d2256;border-radius:24px;padding:22px 26px;max-width:540px;width:100%;text-align:center;box-shadow:0 14px 44px #0007;max-height:94vh;overflow:auto;border:5px solid #ffd166}
+.card.wide{max-width:760px}.card h1{font-size:44px;margin:4px 0;color:#5b2a86;line-height:1.05}.card h2{margin:4px 0 10px;color:#5b2a86;font-size:26px}
+.card .sub{color:#7a5a96;margin:6px 0;font-weight:700}
+.card button{margin:6px 4px;padding:13px 24px;border-radius:16px;font-weight:900;font-size:18px;background:linear-gradient(#ffd166,#f4a300);color:#3b2a00;box-shadow:0 4px 0 #b57700}
+.card button.sec{background:#efe6f7;color:#5b2a86;box-shadow:0 4px 0 #cdb6e3}
+.card button.grn{background:linear-gradient(#7ae582,#25a244);color:#063b12;box-shadow:0 4px 0 #13702a}
+.lesson{background:#f3ecfb;border-radius:14px;padding:12px 14px;color:#3d2256;text-align:left;line-height:1.5;margin:10px 0;font-weight:600}
+.lesson b{color:#d1495b}.lesson .fr{font-size:15px}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 0}.stats div{background:#f6f0fb;border-radius:10px;padding:6px 12px;font-weight:900;font-size:14px;color:#5b2a86}
+.big{font-size:50px;color:#f4a300;letter-spacing:6px;line-height:1.1}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.card .lv{background:#f6f0fb;border-radius:16px;padding:8px 4px!important;color:#5b2a86!important;font-weight:900;box-shadow:0 3px 0 #cdb6e3!important;margin:0!important;font-size:12px!important;line-height:1.2}
+.card .lv:disabled{opacity:.45;cursor:default}.lv .e{font-size:26px}.lv .n{font-size:13px}.lv .s{color:#f4a300;font-size:14px;letter-spacing:1px}.lv:disabled{opacity:.45;cursor:default}
+canvas.teach{width:100%;max-width:560px;background:#fffaf0;border-radius:14px;border:2px solid #f1e4cc}
+.logo{font-size:60px;line-height:1}
+@media(max-width:760px){
+#top{gap:5px;left:6px;right:6px;top:6px;flex-wrap:wrap}#top .spacer{display:none}
+#title{font-size:13px;padding:5px 9px;flex:1 1 auto}#title small{font-size:10px}
+#coins,#prog{font-size:13px;padding:6px 8px}
+.tbtn{padding:6px 8px;font-size:12px}
+#ticket{left:6px;right:6px;width:auto;top:96px;padding:6px 10px 8px}
+#ask{font-size:20px;margin:2px 0 4px}#ask .fr{font-size:19px}#ask .num{font-size:22px}#ask .want{font-size:16px}
+#tools{bottom:6px;padding:6px;gap:5px;width:calc(100vw - 12px)}
+.nb{min-width:36px;height:40px;font-size:16px;padding:0 4px}
+.lbl{display:none}.act{padding:9px 10px;font-size:13px}#deliverBtn{font-size:16px;padding:10px 16px}
+.cmpb{min-width:110px;font-size:18px}
+.card{padding:16px 14px}.card h1{font-size:34px}.levels{grid-template-columns:repeat(3,1fr);gap:7px}
+.card button{padding:11px 16px;font-size:16px}
+}
+</style></head>
+<body>
+<div id="world"></div>
+<div id="top"><div class="panel" id="title">🏭 Fraction Factory<small id="lvlName"></small></div><div class="panel" id="coins">🪙 0</div><div class="panel" id="prog">📦 0/0</div><div class="spacer"></div><button class="tbtn" id="hintBtn">💡 Hint</button><button class="tbtn" id="sndBtn">🔊</button><button class="tbtn" id="gfxBtn">⚙️ Auto</button><button class="tbtn" id="lvlBtn">🗺️ Levels</button></div>
+<div id="ticket"><div class="who"><span id="rbIcon">🤖</span> <b id="rbName">Bolt</b> wants:</div><div id="ask"></div><div id="pat"><div id="patFill"></div></div><div id="patLbl"><span>⏳ patience</span><span id="patSec"></span></div><div id="hintBox"></div></div>
+<div id="tools">
+<div id="have"></div>
+<div class="row" id="sliceRow"><span class="lbl" id="sliceLbl">🔪 Cut into</span><span id="nBtns" class="row"></span></div>
+<div class="row" id="actRow"><button class="act" id="wholeBtn">➕ Whole</button><button class="act" id="clearSel">↺ Clear</button><button class="act" id="deliverBtn">📦 Deliver!</button></div>
+<div class="row" id="cmpRow"><button class="cmpb" id="pickA"></button><button class="cmpb" id="pickB"></button></div>
+</div>
+<div id="msg"></div>
+<div id="overlay"><div class="card" id="card"></div></div>
+<script type="module">
+
+import * as THREE from 'three';
+const $=id=>document.getElementById(id);
+// ================= exact fractions =================
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){const t=a%b;a=b;b=t}return a||1};
+const lcm=(a,b)=>a/gcd(a,b)*b;
+function F(n,d=1){if(d<0){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}}
+const fadd=(a,b)=>F(a.n*b.d+b.n*a.d,a.d*b.d);
+const fsub=(a,b)=>F(a.n*b.d-b.n*a.d,a.d*b.d);
+const fcmp=(a,b)=>a.n*b.d-b.n*a.d;
+const feq=(a,b)=>fcmp(a,b)===0;
+const fval=a=>a.n/a.d;
+const fh=(n,d)=>`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const mixH=(n,d)=>{if(d===1)return `<b class="num">${n}</b>`;if(n<d)return fh(n,d);const w=Math.floor(n/d),r=n-w*d;return r?`<b class="num">${w}</b>${fh(r,d)}`:`<b class="num">${w}</b>`};
+const fH=f=>f.d===1?`<b class="num">${f.n}</b>`:fh(f.n,f.d);
+const fT=f=>f.d===1?''+f.n:f.n+'/'+f.d;
+const mixT=f=>{if(f.d===1||f.n<f.d)return fT(f);const w=Math.floor(f.n/f.d),r=f.n-w*f.d;return r?w+' '+r+'/'+f.d:''+w};
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const ALLN=[2,3,4,5,6,8,10,12];
+// ================= audio =================
+let AC=null,muted=localStorage.getItem('fractionFactoryMute')==='1';
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function tone(f,dur,type='sine',vol=.2,when=0,slide=0){const a=ac();if(!a||muted)return;const t=a.currentTime+when;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.05)}
+let nbuf=null;
+function noise(dur,vol=.2,when=0,freq=3000,q=1){const a=ac();if(!a||muted)return;if(!nbuf){nbuf=a.createBuffer(1,a.sampleRate,a.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}const t=a.currentTime+when;const s=a.createBufferSource();s.buffer=nbuf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;const g=a.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(a.destination);s.start(t);s.stop(t+dur+.02)}
+const SFX={
+ chop(){noise(.07,.3,0,2800,2);tone(1400,.05,'square',.04,0,-600)},
+ pop(){tone(520,.09,'triangle',.18,0,320)},unpop(){tone(640,.09,'triangle',.14,0,-280)},
+ click(){tone(760,.05,'triangle',.1)},
+ coin(){tone(988,.08,'square',.08);tone(1319,.25,'square',.08,.08)},
+ good(){[523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.18,i*.09))},
+ bad(){tone(260,.25,'sawtooth',.1,0,-90);tone(180,.4,'sawtooth',.09,.18,-70)},
+ whoosh(){noise(.35,.15,0,700,.7)},
+ tick(){tone(1250,.03,'square',.05)},
+ beep(){tone(880,.07,'sine',.12);tone(1320,.09,'sine',.1,.08)},
+ win(){[523,659,784,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.18,i*.12));tone(1568,.5,'sine',.1,.75)},
+ fail(){[392,349,311,262].forEach((f,i)=>tone(f,.3,'triangle',.15,i*.18))},
+ boop(){tone(300,.12,'sine',.15,0,200)}
+};
+// ================= renderer & graphics =================
+const GKEY='fractionFactoryGfx';
+let gfxMode=localStorage.getItem(GKEY)||'auto';
+const weakHw=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
+const gfxLow=gfxMode==='low'||(gfxMode==='auto'&&weakHw);
+const renderer=new THREE.WebGLRenderer({antialias:!gfxLow,powerPreference:'high-performance'});
+renderer.setPixelRatio(gfxLow?1:Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=!gfxLow;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;
+$('world').appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#ffd9ec');
+scene.fog=new THREE.Fog('#ffd9ec',30,60);
+const camera=new THREE.PerspectiveCamera(42,1,.1,120);
+scene.add(new THREE.HemisphereLight(0xfff4fb,0x9a7ab0,1.15));
+const sun=new THREE.DirectionalLight(0xffffff,1.7);sun.position.set(4,13,8);
+if(!gfxLow){sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);const c=sun.shadow.camera;c.left=-11;c.right=11;c.top=9;c.bottom=-9;c.near=1;c.far=40;sun.shadow.bias=-.0006;sun.shadow.normalBias=.02}
+scene.add(sun);
+const fill=new THREE.PointLight(0xffc8e8,gfxLow?0:12,30);fill.position.set(-6,5,4);scene.add(fill);
+function shadow(o,cast=true,recv=true){if(gfxLow)return o;o.traverse(m=>{if(m.isMesh){m.castShadow=cast;m.receiveShadow=recv}});return o}
+// ================= canvas textures =================
+function ctex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');draw(x,w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=gfxLow?1:4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
+const floorTex=ctex(256,256,(x,w,h)=>{const s=64;for(let i=0;i<4;i++)for(let j=0;j<4;j++){x.fillStyle=(i+j)%2?'#c9b8e8':'#e9ddfa';x.fillRect(i*s,j*s,s,s)}x.strokeStyle='#ffffff60';x.lineWidth=3;for(let i=0;i<=4;i++){x.beginPath();x.moveTo(i*s,0);x.lineTo(i*s,h);x.stroke();x.beginPath();x.moveTo(0,i*s);x.lineTo(w,i*s);x.stroke()}},[10,8]);
+const wallTex=ctex(256,256,(x,w,h)=>{x.fillStyle='#ffc6df';x.fillRect(0,0,w,h);for(let i=0;i<8;i++){x.fillStyle=i%2?'#ffb3d4':'#ffc6df';x.fillRect(i*32,0,32,h)}x.fillStyle='#ffffff55';for(let i=0;i<8;i++){x.beginPath();x.arc(i*32+16,10,3,0,7);x.fill();x.beginPath();x.arc(i*32+16,h-10,3,0,7);x.fill()}},[6,1]);
+const beltTex=ctex(256,64,(x,w,h)=>{x.fillStyle='#3a3346';x.fillRect(0,0,w,h);x.strokeStyle='#5a5070';x.lineWidth=8;for(let i=-1;i<9;i++){x.beginPath();x.moveTo(i*32,4);x.lineTo(i*32+16,h/2);x.lineTo(i*32,h-4);x.stroke()}},[6,1]);
+const steelTex=ctex(256,256,(x,w,h)=>{x.fillStyle='#cfd6e0';x.fillRect(0,0,w,h);for(let i=0;i<500;i++){x.fillStyle=Math.random()<.5?'#ffffff22':'#8a94a522';x.fillRect(0,Math.random()*h,w,1)}x.strokeStyle='#9aa4b588';x.lineWidth=2;x.strokeRect(3,3,w-6,h-6)},[3,1]);
+const woodTex=ctex(256,256,(x,w,h)=>{x.fillStyle='#d9a066';x.fillRect(0,0,w,h);for(let i=0;i<40;i++){x.strokeStyle=`rgba(${120+Math.random()*40|0},70,30,${.15+Math.random()*.2})`;x.lineWidth=1+Math.random()*3;x.beginPath();const y=Math.random()*h;x.moveTo(0,y);x.bezierCurveTo(w*.3,y+Math.random()*16-8,w*.6,y+Math.random()*16-8,w,y);x.stroke()}},[2,1]);
+const cheeseTex=ctex(256,256,(x,w,h)=>{x.fillStyle='#ffd34e';x.fillRect(0,0,w,h);for(let i=0;i<70;i++){x.fillStyle=Math.random()<.5?'#ffbf2e88':'#fff0a088';x.beginPath();x.ellipse(Math.random()*w,Math.random()*h,4+Math.random()*12,3+Math.random()*8,Math.random()*3,0,7);x.fill()}for(let i=0;i<40;i++){x.fillStyle='#e0782a55';x.beginPath();x.arc(Math.random()*w,Math.random()*h,2+Math.random()*4,0,7);x.fill()}},[.8,.8]);
+const chocTex=ctex(128,128,(x,w,h)=>{x.fillStyle='#5a2e1a';x.fillRect(0,0,w,h);const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,'#8a4b2c');g.addColorStop(1,'#6b3820');x.fillStyle=g;x.fillRect(10,10,w-20,h-20);x.fillStyle='#ffffff18';x.fillRect(14,14,w-28,10)});
+const cardTex=ctex(128,128,(x,w,h)=>{x.fillStyle='#d8a86a';x.fillRect(0,0,w,h);for(let i=0;i<300;i++){x.fillStyle=Math.random()<.5?'#c4925522':'#f0c58a22';x.fillRect(Math.random()*w,Math.random()*h,2,2)}x.fillStyle='#c9b48a';x.fillRect(w/2-10,0,20,h)});
+const M={
+ floor:new THREE.MeshStandardMaterial({map:floorTex,roughness:.75}),
+ wall:new THREE.MeshStandardMaterial({map:wallTex,roughness:.9}),
+ belt:new THREE.MeshStandardMaterial({map:beltTex,roughness:.8}),
+ steel:new THREE.MeshStandardMaterial({map:steelTex,metalness:.55,roughness:.35}),
+ metal:new THREE.MeshStandardMaterial({color:0x9aa3b5,metalness:.7,roughness:.3}),
+ dark:new THREE.MeshStandardMaterial({color:0x3a3346,metalness:.4,roughness:.5}),
+ yellow:new THREE.MeshStandardMaterial({color:0xffc233,roughness:.5}),
+ wood:new THREE.MeshStandardMaterial({map:woodTex,roughness:.7}),
+ dough:new THREE.MeshStandardMaterial({color:0xe6a85c,roughness:.8}),
+ cheese:new THREE.MeshStandardMaterial({map:cheeseTex,roughness:.6}),
+ pepperoni:new THREE.MeshStandardMaterial({color:0xb8322a,roughness:.55}),
+ basil:new THREE.MeshStandardMaterial({color:0x3f9b3a,roughness:.6}),
+ sponge:new THREE.MeshStandardMaterial({color:0xf5d29a,roughness:.85}),
+ cream:new THREE.MeshStandardMaterial({color:0xfff6ea,roughness:.6}),
+ frost:new THREE.MeshStandardMaterial({color:0xff8fc0,roughness:.45}),
+ cherry:new THREE.MeshStandardMaterial({color:0xe0102f,roughness:.2,metalness:.1}),
+ choc:new THREE.MeshStandardMaterial({map:chocTex,roughness:.45}),
+ card:new THREE.MeshStandardMaterial({map:cardTex,roughness:.85}),
+ glass:new THREE.MeshStandardMaterial({color:0xbfe9ff,roughness:.1,metalness:.1,transparent:true,opacity:.5}),
+ sky:new THREE.MeshBasicMaterial({map:ctex(64,128,(x,w,h)=>{const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'#6fc3ff');g.addColorStop(1,'#d8f1ff');x.fillStyle=g;x.fillRect(0,0,w,h);x.fillStyle='#ffffffcc';x.beginPath();x.ellipse(20,40,16,7,0,0,7);x.ellipse(44,80,14,6,0,0,7);x.fill()})}),
+ blade:new THREE.MeshStandardMaterial({color:0xe8eef6,metalness:.9,roughness:.15}),
+ plate:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.35}),
+};
+const selCache=new Map();
+function selMat(m){let s=selCache.get(m);if(!s){s=m.clone();s.emissive=new THREE.Color(0xffb000);s.emissiveIntensity=.45;selCache.set(m,s)}return s}
+// ================= environment =================
+const FLOOR_Y=0,BENCH_Y=1.08,ITEM_Z=.5,BELT_Z=-2.55,BELT_Y=1.18,ROBOT_X=4.7,ROBOT_Z=-4.3,BOX_X0=-3.2;
+function box(w,h,d,m,x=0,y=0,z=0,p=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);p.add(o);return o}
+function cyl(rt,rb,h,m,x=0,y=0,z=0,p=scene,seg=20){const o=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),m);o.position.set(x,y,z);p.add(o);return o}
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(60,40),M.floor);floor.rotation.x=-Math.PI/2;floor.receiveShadow=!gfxLow;scene.add(floor);
+const wall=new THREE.Mesh(new THREE.PlaneGeometry(60,16),M.wall);wall.position.set(0,8,-8.5);wall.receiveShadow=!gfxLow;scene.add(wall);
+// windows
+for(const wx of [-9,-3,9]){const fr=box(3.4,2.6,.2,M.dark,wx,6.4,-8.4);box(3,2.2,.05,M.sky,wx,6.4,-8.28);box(.12,2.2,.06,M.dark,wx,6.4,-8.25);box(3,.12,.06,M.dark,wx,6.4,-8.25)}
+// sign
+{const t=ctex(512,128,(x,w,h)=>{x.fillStyle='#5b2a86';x.beginPath();x.roundRect(4,4,w-8,h-8,30);x.fill();x.strokeStyle='#ffd166';x.lineWidth=8;x.stroke();x.font='900 64px Nunito,Segoe UI,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#ffd166';x.fillText('FRACTION FACTORY',w/2,h/2+4)});
+ const s=new THREE.Mesh(new THREE.PlaneGeometry(6.4,1.6),new THREE.MeshBasicMaterial({map:t,transparent:true}));s.position.set(3.2,6.6,-8.3);scene.add(s)}
+// gears
+function gearGeo(r,teeth,th){const s=new THREE.Shape();const n=teeth*2;for(let i=0;i<=n;i++){const a0=i/n*Math.PI*2,a1=(i+1)/n*Math.PI*2,rr=i%2?r:r*1.18;if(i===0)s.moveTo(Math.cos(a0)*rr,Math.sin(a0)*rr);s.lineTo(Math.cos(a0)*rr,Math.sin(a0)*rr);s.lineTo(Math.cos(a1)*rr,Math.sin(a1)*rr)}const h=new THREE.Path();h.absarc(0,0,r*.35,0,Math.PI*2,true);s.holes.push(h);return new THREE.ExtrudeGeometry(s,{depth:th,bevelEnabled:false})}
+const gears=[];
+[[-6.2,3.6,1.1,12,0xffc233],[-4.6,4.9,.7,9,0x4cc9f0],[-7.6,5.4,.8,10,0xff70a6],[8.6,3.4,.9,11,0x7ae582],[7.4,2.4,.55,8,0xffc233]].forEach(([x,y,r,t,c])=>{const g=new THREE.Mesh(gearGeo(r,t,.25),new THREE.MeshStandardMaterial({color:c,metalness:.4,roughness:.4}));g.position.set(x,y,-8.35);scene.add(g);gears.push({g,s:(gears.length%2?-1:1)*.6/r})});
+// pipes
+{const pm=new THREE.MeshStandardMaterial({color:0x4cc9f0,metalness:.5,roughness:.35});const p=cyl(.22,.22,30,pm,0,9.6,-8.1);p.rotation.z=Math.PI/2;const p2=cyl(.15,.15,9,pm,-11.5,5,-8.1)}
+// upper decorative conveyor with candies
+const upper={g:new THREE.Group(),items:[]};scene.add(upper.g);
+{box(30,.25,1,M.dark,0,4.05,-7.6);const bt=beltTex.clone();bt.needsUpdate=true;bt.repeat.set(12,1);upper.mat=new THREE.MeshStandardMaterial({map:bt,roughness:.8});box(30,.05,.9,upper.mat,0,4.2,-7.6);
+ const cols=[0xff70a6,0xffc233,0x4cc9f0,0x7ae582,0xb388eb];const n=gfxLow?6:14;
+ for(let i=0;i<n;i++){const kind=i%3;let m;const mat=new THREE.MeshStandardMaterial({color:cols[i%5],roughness:.35});
+  if(kind===0)m=new THREE.Mesh(new THREE.SphereGeometry(.28,14,10),mat);else if(kind===1){m=new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.2,16),mat)}else m=new THREE.Mesh(new THREE.BoxGeometry(.6,.3,.4),mat);
+  m.position.set(-15+i*30/n,4.5,-7.6);upper.g.add(m);upper.items.push(m)}}
+// main conveyor
+const belt=new THREE.Group();scene.add(belt);
+{box(22,.3,1.9,M.dark,0,BELT_Y-.2,BELT_Z,belt);const top=box(22,.04,1.7,M.belt,0,BELT_Y-.03,BELT_Z,belt);M.belt.map.repeat.set(10,1);
+ box(22,.18,.12,M.yellow,0,BELT_Y+.05,BELT_Z+.95,belt);box(22,.18,.12,M.yellow,0,BELT_Y+.05,BELT_Z-.95,belt);
+ for(let x=-10;x<=10;x+=2.5){box(.2,BELT_Y-.3,.2,M.metal,x,(BELT_Y-.3)/2,BELT_Z+.7,belt);box(.2,BELT_Y-.3,.2,M.metal,x,(BELT_Y-.3)/2,BELT_Z-.7,belt)}
+ shadow(belt,true,true)}
+// bench
+const benchG=new THREE.Group();scene.add(benchG);
+{box(10,.16,3.4,M.steel,0,BENCH_Y-.08,ITEM_Z+.35,benchG);box(9.4,.05,2.9,M.wood,0,BENCH_Y+.01,ITEM_Z+.35,benchG);
+ for(const x of [-4.7,4.7])for(const z of [ITEM_Z-1.15,ITEM_Z+1.85])box(.22,BENCH_Y-.16,.22,M.metal,x,(BENCH_Y-.16)/2,z,benchG);
+ box(9.6,.08,.1,M.yellow,0,.3,ITEM_Z+1.85,benchG);
+ // slicer machine on the left
+ const sm=new THREE.Group();sm.position.set(-6.2,0,ITEM_Z-.3);benchG.add(sm);
+ box(1.6,2.6,1.6,new THREE.MeshStandardMaterial({color:0xff70a6,roughness:.4,metalness:.2}),0,1.3,0,sm);box(1.7,.3,1.7,M.yellow,0,2.75,0,sm);
+ const lamp=new THREE.Mesh(new THREE.SphereGeometry(.22,14,10),new THREE.MeshStandardMaterial({color:0xff3b3b,emissive:0xff2020,emissiveIntensity:.3}));lamp.position.set(0,3.05,0);sm.add(lamp);benchG.userData.lamp=lamp;
+ const st=ctex(128,128,(x,w,h)=>{x.fillStyle='#fff';x.beginPath();x.roundRect(4,4,w-8,h-8,18);x.fill();x.font='72px serif';x.textAlign='center';x.textBaseline='middle';x.fillText('🔪',w/2,h/2+4)});
+ const sp=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:st,transparent:true}));sp.position.set(0,1.6,.81);sm.add(sp);
+ shadow(benchG,true,true)}
+// ================= confetti =================
+const CONF_N=gfxLow?60:180;
+const confMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(.14,.08),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}),CONF_N);
+confMesh.frustumCulled=false;scene.add(confMesh);
+const conf=[];const _m4=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler(),_v=new THREE.Vector3(),_s=new THREE.Vector3();
+{const cols=[0xff70a6,0xffc233,0x4cc9f0,0x7ae582,0xb388eb,0xff9f1c];const c=new THREE.Color();for(let i=0;i<CONF_N;i++){conf.push({p:new THREE.Vector3(),v:new THREE.Vector3(),r:new THREE.Vector3(),w:new THREE.Vector3(),life:0});confMesh.setColorAt(i,c.set(cols[i%cols.length]));_m4.makeScale(0,0,0);confMesh.setMatrixAt(i,_m4)}confMesh.instanceColor.needsUpdate=true}
+let confI=0;
+function confetti(x,y,z,n=gfxLow?40:110){for(let k=0;k<n;k++){const c=conf[confI];confI=(confI+1)%CONF_N;c.p.set(x,y,z);c.v.set((Math.random()-.5)*7,4+Math.random()*6,(Math.random()-.5)*5);c.r.set(Math.random()*6,Math.random()*6,Math.random()*6);c.w.set(Math.random()*10,Math.random()*10,Math.random()*10);c.life=2+Math.random()}}
+function updConfetti(dt){for(let i=0;i<CONF_N;i++){const c=conf[i];if(c.life<=0)continue;c.life-=dt;c.v.y-=9*dt;c.v.multiplyScalar(1-1.5*dt);c.p.addScaledVector(c.v,dt);c.r.addScaledVector(c.w,dt);if(c.p.y<.05){c.p.y=.05;c.v.set(0,0,0);c.w.set(0,0,0)}_q.setFromEuler(_e.set(c.r.x,c.r.y,c.r.z));const s=c.life>0?Math.min(1,c.life*2):0;_m4.compose(c.p,_q,_s.set(s,s,s));confMesh.setMatrixAt(i,_m4)}confMesh.instanceMatrix.needsUpdate=true}
+// ================= tweens =================
+let tweens=[];
+function tween(dur,fn,done,delay=0){const w={t:-delay,dur,fn,done};tweens.push(w);return w}
+const after=(s,fn)=>tween(s,null,fn);
+function updTweens(dt){const list=tweens.slice();for(const w of list){if(w.dead)continue;w.t+=dt;if(w.t<0)continue;const k=Math.min(1,w.t/w.dur);if(w.fn)w.fn(k);if(k>=1){w.dead=true;if(w.done)w.done()}}tweens=tweens.filter(w=>!w.dead)}
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+
+// ================= food items & pieces =================
+const itemRoot=new THREE.Group();scene.add(itemRoot);
+const geoCache=new Map();
+function sectorGeo(r,h,N,key){const k=key+'|'+r+'|'+h+'|'+N;let g=geoCache.get(k);if(g)return g;const s=new THREE.Shape();const al=Math.PI*2/N;
+ if(N===1){s.absarc(0,0,r,0,Math.PI*2,false)}else{s.moveTo(0,0);s.lineTo(r,0);s.absarc(0,0,r,0,al,false);s.lineTo(0,0)}
+ const bev=Math.min(.03,h*.25);g=new THREE.ExtrudeGeometry(s,{depth:h,bevelEnabled:true,bevelThickness:bev,bevelSize:bev,bevelSegments:gfxLow?1:2,curveSegments:Math.max(3,Math.round((gfxLow?32:56)/N))});g.rotateX(-Math.PI/2);geoCache.set(k,g);return g}
+function boxGeo(w,h,d){const k='b|'+w.toFixed(4)+'|'+h+'|'+d;let g=geoCache.get(k);if(!g){g=new THREE.BoxGeometry(w,h,d);geoCache.set(k,g)}return g}
+const pepGeo=new THREE.CylinderGeometry(.13,.13,.03,14),cherGeo=new THREE.SphereGeometry(.1,12,8),basilGeo=new THREE.SphereGeometry(.06,6,4),dolGeo=new THREE.SphereGeometry(.09,8,6);
+const chocMats=new Map();
+function chocMat(N){let m=chocMats.get(N);if(!m){const t=chocTex.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(Math.max(1,Math.round(8/N)),3);t.needsUpdate=true;m=new THREE.MeshStandardMaterial({map:t,roughness:.45});chocMats.set(N,m)}return m}
+const SIZE={pizza:{r:1.12},cake:{r:1.02},choc:{w:2.5,d:1.25,h:.22}};
+const bench={items:[],balls:[],plates:[],N:1,sortN:1,shape:null,mode:null,slicing:false};
+function addMesh(geo,mat,parent,y=0){const m=new THREE.Mesh(geo,mat);m.position.y=y;m.userData.m0=mat;if(!gfxLow){m.castShadow=true;m.receiveShadow=true}parent.add(m);return m}
+function clearBench(){itemRoot.clear();bench.items=[];bench.balls=[];bench.plates=[];bench.N=1;bench.sortN=1}
+function makeToppings(shape){const t=[];if(shape==='pizza'){const n=gfxLow?7:10;let tries=0;while(t.length<n&&tries++<400){const r=.28+Math.random()*.55,a=Math.random()*Math.PI*2;const x=Math.cos(a)*r,z=Math.sin(a)*r;if(t.every(o=>Math.hypot(o.x-x,o.z-z)>.33))t.push({r,a,x,z,k:'pep'})}if(!gfxLow)for(let i=0;i<12;i++){const r=.2+Math.random()*.7,a=Math.random()*Math.PI*2;t.push({r,a,k:'basil'})}}
+ else if(shape==='cake'){for(let i=0;i<8;i++)t.push({r:.74,a:(i+.5)/8*Math.PI*2,k:'cherry'});if(!gfxLow)for(let i=0;i<16;i++)t.push({r:.93,a:i/16*Math.PI*2+.1,k:'dollop'})}
+ return t}
+const ROT0=Math.PI/2;
+function buildPieces(item,N){for(const p of item.pieces)item.group.remove(p);item.pieces=[];item.N=N;const shape=bench.shape;
+ if(shape==='choc'){const S=SIZE.choc,w=S.w/N;for(let i=0;i<N;i++){const p=new THREE.Group();const m=addMesh(boxGeo(w-.012,S.h,S.d),chocMat(N),p,S.h/2+.02);const off=i-(N-1)/2;p.userData={piece:true,item,i,sel:false,base:new THREE.Vector3(-S.w/2+w*(i+.5),0,0),dir:new THREE.Vector3(off,0,0),lift:0};p.position.copy(p.userData.base);item.group.add(p);item.pieces.push(p)}return}
+ const al=Math.PI*2/N;
+ for(let i=0;i<N;i++){const p=new THREE.Group();const a0=ROT0+i*al;p.rotation.y=a0;
+  if(shape==='pizza'){const r=SIZE.pizza.r;addMesh(sectorGeo(r,.14,N,'dough'),M.dough,p,.02);addMesh(sectorGeo(r-.13,.04,N,'cheese'),M.cheese,p,.17)}
+  else{const r=SIZE.cake.r;addMesh(sectorGeo(r,.2,N,'sp1'),M.sponge,p,.02);addMesh(sectorGeo(r+.005,.06,N,'crm'),M.cream,p,.25);addMesh(sectorGeo(r,.18,N,'sp2'),M.sponge,p,.34);addMesh(sectorGeo(r+.02,.07,N,'frost'),M.frost,p,.55)}
+  for(const t of item.topp){let rel=((t.a-a0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);if(N>1&&rel>=al)continue;if(N>1){const pad=.13/t.r;if(rel<pad||rel>al-pad){if(t.k==='basil')continue;rel=Math.min(Math.max(rel,pad),al-pad);if(al<2*pad)rel=al/2}}
+   const x=Math.cos(rel)*t.r,z=-Math.sin(rel)*t.r;let m;
+   if(t.k==='pep'){m=addMesh(pepGeo,M.pepperoni,p,.235)}else if(t.k==='basil'){m=addMesh(basilGeo,M.basil,p,.22);m.scale.set(1,.3,1.6)}else if(t.k==='cherry'){m=addMesh(cherGeo,M.cherry,p,.72)}else{m=addMesh(dolGeo,M.cream,p,.66)}
+   m.position.x=x;m.position.z=z}
+  const mid=a0+al/2;p.userData={piece:true,item,i,sel:false,base:new THREE.Vector3(0,0,0),dir:new THREE.Vector3(Math.cos(mid),0,-Math.sin(mid)),lift:0};item.group.add(p);item.pieces.push(p)}}
+function setupAmount(order){clearBench();bench.mode='amount';bench.shape=order.shape;const K=order.items;const sp=order.shape==='choc'?2.85:2.7;const sc=K===3?(order.shape==='choc'?.98:.95):1;
+ for(let k=0;k<K;k++){const g=new THREE.Group();g.position.set((k-(K-1)/2)*sp,BENCH_Y+.04,ITEM_Z+(order.shape==='choc'?.1:0));g.scale.setScalar(sc);itemRoot.add(g);
+  if(order.shape!=='choc'){const b=new THREE.Mesh(new THREE.CylinderGeometry(SIZE[order.shape].r+.18,SIZE[order.shape].r+.22,.05,40),order.shape==='pizza'?M.wood:M.plate);b.position.y=0;if(!gfxLow)b.receiveShadow=true;g.add(b)}
+  else{const b=new THREE.Mesh(new THREE.BoxGeometry(2.9,.04,1.6),M.plate);g.add(b)}
+  const item={k,group:g,pieces:[],N:1,topp:makeToppings(order.shape)};bench.items.push(item);buildPieces(item,1)}
+ bench.N=1}
+// ---------- blades / slicing animation ----------
+const blades=[];
+function getBlade(i){if(!blades[i]){const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(.04,.7,2.6),M.blade);b.position.y=.35;g.add(b);const h=new THREE.Mesh(new THREE.BoxGeometry(.16,.22,2.8),M.yellow);h.position.y=.8;g.add(h);g.visible=false;scene.add(g);blades[i]=g}return blades[i]}
+function sliceTo(N,instant){if(bench.mode!=='amount'||bench.slicing)return;bench.N=N;for(const it of bench.items){buildPieces(it,N);for(const p of it.pieces)p.userData.gap=0}
+ if(instant){for(const it of bench.items)for(const p of it.pieces)p.userData.gap=1;return}
+ bench.slicing=true;const shape=bench.shape;const cuts=[];
+ if(shape==='choc'){for(let i=1;i<N;i++)cuts.push({x:-SIZE.choc.w/2+SIZE.choc.w*i/N,rot:0,len:1.6})}
+ else{const al=Math.PI*2/N;if(N%2===0){for(let i=0;i<N/2;i++)cuts.push({a:ROT0+i*al,full:true})}else for(let i=0;i<N;i++)cuts.push({a:ROT0+i*al,full:false})}
+ const per=Math.min(.16,.9/Math.max(1,cuts.length));const lamp=benchG.userData.lamp;lamp.material.emissiveIntensity=2;
+ cuts.forEach((c,ci)=>{tween(per,k=>{bench.items.forEach((it,ii)=>{const b=getBlade(ii);b.visible=true;const gp=it.group.position,sc=it.group.scale.x;
+   if(shape==='choc'){b.position.set(gp.x+c.x*sc,0,gp.z);b.rotation.set(0,0,0);b.scale.set(1,1,.62*sc)}
+   else{const r=SIZE[shape].r*sc;if(c.full){b.position.set(gp.x,0,gp.z);b.scale.set(1,1,r*2/2.6)}else{b.position.set(gp.x+Math.cos(c.a)*r/2,0,gp.z-Math.sin(c.a)*r/2);b.scale.set(1,1,r/2.6)}b.rotation.set(0,c.a+Math.PI/2,0)}
+   const y=k<.5?1-k*2:(k-.5)*2;b.position.y=gp.y+.05+y*1.6})},ci===0?null:null,ci*per);
+  after(ci*per+per*.5,()=>SFX.chop())});
+ after(cuts.length*per+.02,()=>{for(const b of blades)if(b)b.visible=false;lamp.material.emissiveIntensity=.3;bench.slicing=false;tween(.25,k=>{for(const it of bench.items)for(const p of it.pieces)p.userData.gap=ease(k)})})}
+function gapAmt(){return bench.shape==='choc'?.07:.1}
+function updPieces(dt){const g=gapAmt();const kk=1-Math.pow(.0005,dt);for(const it of bench.items)for(const p of it.pieces){const u=p.userData;if(u.flying)continue;const gap=(u.gap===undefined?1:u.gap)*(it.N>1?g:0);u.lift+=((u.sel?.32:0)-u.lift)*kk;p.position.set(u.base.x+u.dir.x*gap,u.base.y+u.lift,u.base.z+u.dir.z*gap)}
+ for(const b of bench.balls){const u=b.userData;if(u.flying)continue;u.lift+=((u.sel?.28:0)-u.lift)*kk;if(u.hop<1){u.hop=Math.min(1,u.hop+dt*2.2);const k=ease(u.hop);b.position.lerpVectors(u.from,u.to,k);b.position.y+=Math.sin(Math.PI*k)*.8+u.lift}else{b.position.copy(u.to);b.position.y+=u.lift}}}
+function setSel(p,on){p.userData.sel=on;p.traverse(m=>{if(m.isMesh&&m.userData.m0)m.material=on?selMat(m.userData.m0):m.userData.m0})}
+// ---------- gumballs ----------
+const ballGeo=new THREE.SphereGeometry(.19,gfxLow?12:20,gfxLow?8:14);
+const BALL_COLS=[0xff4d6d,0xffc233,0x4cc9f0,0x7ae582,0xb388eb,0xff9f1c,0xff70a6];
+const ballMats=BALL_COLS.map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.22,metalness:.05}));
+function setupSet(order){clearBench();bench.mode='set';bench.shape='gum';const T=order.total;for(let j=0;j<T;j++){const m=new THREE.Mesh(ballGeo,ballMats[j%ballMats.length]);m.userData={ball:true,j,sel:false,m0:ballMats[j%ballMats.length],lift:0,hop:1,from:new THREE.Vector3(),to:new THREE.Vector3()};if(!gfxLow)m.castShadow=true;itemRoot.add(m);bench.balls.push(m)}
+ layoutBalls(1,true)}
+function groupOf(j){return Math.floor(j/(bench.balls.length/bench.sortN))}
+function layoutBalls(N,instant){bench.sortN=N;for(const p of bench.plates)itemRoot.remove(p);bench.plates=[];const T=bench.balls.length,m=T/N;const cols=N<=6?N:Math.ceil(N/2),rows=N<=6?1:2;
+ const gcols=Math.ceil(Math.sqrt(m)),grows=Math.ceil(m/gcols),sp=.43;const cell=Math.max(gcols*sp+.35,1.0);const dx=Math.min(cell+.2,9/cols);
+ for(let g=0;g<N;g++){const c=g%cols,r=Math.floor(g/cols);const cx=(c-(cols-1)/2)*dx,cz=ITEM_Z+(rows===2?(r-.5)*1.35:0);
+  const rad=N===1?Math.max(gcols,grows)*sp*.75+.3:Math.min(dx*.46,Math.max(gcols,grows)*sp*.5+.28);
+  const pl=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad*.9,.08,32),new THREE.MeshStandardMaterial({color:N===1?0xbfe9ff:0xffffff,roughness:.3}));pl.position.set(cx,BENCH_Y+.06,cz);if(!gfxLow)pl.receiveShadow=true;pl.userData={plate:true,g};itemRoot.add(pl);bench.plates.push(pl);
+  for(let q=0;q<m;q++){const j=g*m+q;const b=bench.balls[j];const qc=q%gcols,qr=Math.floor(q/gcols);const to=new THREE.Vector3(cx+(qc-(gcols-1)/2)*sp,BENCH_Y+.29,cz+(qr-(grows-1)/2)*sp);const u=b.userData;u.from.copy(b.position);u.to.copy(to);
+   if(instant){b.position.copy(to);u.hop=1}else{u.hop=-Math.random()*.25-j*.012}}}
+ for(const b of bench.balls)setSel(b,false);updPlates()}
+function updPlates(){for(const pl of bench.plates){const g=pl.userData.g;const on=bench.sortN>1&&bench.balls.some(b=>b.userData.sel&&groupOf(b.userData.j)===g);pl.material.color.set(on?0xffe08a:(bench.sortN===1?0xbfe9ff:0xffffff))}}
+// ================= order box & crates =================
+function makeCrate(label){const g=new THREE.Group();const w=1.5,h=.8,d=1.1,t=.07;
+ box(w,t,d,M.card,0,t/2,0,g);box(w,h,t,M.card,0,h/2,d/2-t/2,g);box(w,h,t,M.card,0,h/2,-d/2+t/2,g);box(t,h,d,M.card,w/2-t/2,h/2,0,g);box(t,h,d,M.card,-w/2+t/2,h/2,0,g);
+ const lid=box(w+.06,.07,d+.06,M.card,0,h+.04,0,g);lid.visible=false;g.userData.lid=lid;
+ if(label){const lt=ctex(256,200,(x,W,H)=>{x.fillStyle='#fffdf5';x.beginPath();x.roundRect(6,6,W-12,H-12,22);x.fill();x.lineWidth=8;x.strokeStyle=label.col;x.stroke();x.fillStyle=label.col;x.font='900 54px Nunito,Segoe UI,sans-serif';x.textAlign='left';x.textBaseline='middle';x.fillText(label.tag,22,52);drawValueLabel(x,label,W/2+26,H/2+8)});
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.35,1.05),new THREE.MeshBasicMaterial({map:lt,transparent:true}));pl.position.set(0,h+.55,d/2-.05);pl.rotation.x=-.35;g.add(pl);
+  const post=box(.06,.5,.06,M.metal,0,h+.05,d/2-.15,g)}
+ shadow(g,true,true);return g}
+function drawValueLabel(x,label,cx,cy){x.fillStyle='#3d2256';x.textAlign='center';x.textBaseline='middle';
+ if(label.f&&label.style==='frac'){const n=label.n,d=label.d;x.font='900 62px Nunito,Segoe UI,sans-serif';x.fillText(n,cx,cy-36);x.fillText(d,cx,cy+40);x.fillRect(cx-44,cy-4,88,9)}
+ else{x.font='900 72px Nunito,Segoe UI,sans-serif';x.fillText(label.text,cx,cy+4)}}
+const crates=[];let orderBox=null;
+function clearCrates(){for(const c of crates)scene.remove(c);crates.length=0;if(orderBox){scene.remove(orderBox);orderBox=null}}
+function spawnOrderBox(){if(orderBox)scene.remove(orderBox);orderBox=makeCrate(null);orderBox.position.set(-12,BELT_Y,BELT_Z);scene.add(orderBox);const ob=orderBox;tween(.9,k=>{ob.position.x=-12+(BOX_X0+12)*ease(k)})}
+// ================= robots =================
+const ROBOT_COLS=[0x4cc9f0,0xff70a6,0x7ae582,0xffc233,0xb388eb,0xff9f1c,0x48cae4,0xf15bb5];
+const ROBOT_NAMES=['Bolt','Sprocket','Widget','Gizmo','Nova','Pixel','Cog','Zippy','Beep','Rivet','Tinker','Dot','Sparky','Nibbles','Chip','Lulu'];
+function drawFace(r,emo){const x=r.fctx,W=256,H=160;x.fillStyle='#16324f';x.fillRect(0,0,W,H);x.fillStyle='#1f4a70';x.fillRect(6,6,W-12,H-12);const c=emo==='sad'?'#7cc6ff':emo==='angry'?'#ff6b6b':'#7dffb0';x.strokeStyle=c;x.fillStyle=c;x.lineWidth=12;x.lineCap='round';
+ const eye=(ex)=>{if(emo==='happy'){x.beginPath();x.arc(ex,72,22,Math.PI*1.1,Math.PI*1.9);x.stroke()}else if(emo==='sad'){x.beginPath();x.arc(ex,62,18,Math.PI*.15,Math.PI*.85);x.stroke()}else if(emo==='wow'){x.beginPath();x.arc(ex,64,20,0,7);x.stroke()}else{x.beginPath();x.ellipse(ex,64,13,emo==='worried'?20:18,0,0,7);x.fill()}};
+ eye(84);eye(172);
+ if(emo==='worried'||emo==='angry'){x.beginPath();x.moveTo(62,emo==='angry'?30:40);x.lineTo(104,emo==='angry'?42:30);x.moveTo(194,emo==='angry'?30:40);x.lineTo(152,emo==='angry'?42:30);x.stroke()}
+ x.beginPath();if(emo==='happy'||emo==='neutral'){x.arc(128,emo==='happy'?100:108,emo==='happy'?28:18,Math.PI*.15,Math.PI*.85);x.stroke()}else if(emo==='wow'){x.arc(128,118,14,0,7);x.stroke()}else{x.arc(128,135,24,Math.PI*1.2,Math.PI*1.8);x.stroke()}
+ if(emo==='sad'){x.fillStyle='#7cc6ff';x.beginPath();x.ellipse(172,100,7,11,0,0,7);x.fill()}
+ if(emo==='happy'){x.fillStyle='#ff70a655';x.beginPath();x.ellipse(52,104,18,10,0,0,7);x.ellipse(204,104,18,10,0,0,7);x.fill()}
+ r.ftex.needsUpdate=true;r.emo=emo}
+function makeRobot(idx){const g=new THREE.Group();const col=ROBOT_COLS[idx%ROBOT_COLS.length];const mat=new THREE.MeshStandardMaterial({color:col,metalness:.35,roughness:.4});const white=new THREE.MeshStandardMaterial({color:0xf4f1fa,metalness:.2,roughness:.35});
+ const base=cyl(.6,.7,.3,M.dark,0,.15,0,g,24);const neck=cyl(.5,.62,.25,white,0,.42,0,g,24);
+ const body=new THREE.Mesh(new THREE.SphereGeometry(.78,gfxLow?14:24,gfxLow?10:18),mat);body.scale.set(1,1.05,.85);body.position.y=1.25;g.add(body);
+ const belly=new THREE.Mesh(new THREE.CircleGeometry(.36,24),white);belly.position.set(0,1.25,.67);g.add(belly);
+ for(let i=0;i<3;i++){const l=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),new THREE.MeshStandardMaterial({color:[0xff4d6d,0xffc233,0x7ae582][i],emissive:[0xff4d6d,0xffc233,0x7ae582][i],emissiveIntensity:.6}));l.position.set(-.14+i*.14,1.3,.7);g.add(l)}
+ const head=new THREE.Group();head.position.y=2.45;g.add(head);
+ const hb=new THREE.Mesh(new THREE.BoxGeometry(1.55,1.1,1.05),white);head.add(hb);
+ const cv=document.createElement('canvas');cv.width=256;cv.height=160;const ftex=new THREE.CanvasTexture(cv);ftex.colorSpace=THREE.SRGBColorSpace;
+ const face=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.82),new THREE.MeshBasicMaterial({map:ftex}));face.position.z=.53;head.add(face);
+ for(const s of [-1,1]){const e=cyl(.18,.18,.15,mat,s*.84,0,0,head,16);e.rotation.z=Math.PI/2}
+ const ant=cyl(.03,.03,.45,M.metal,0,.75,0,head,8);const tip=new THREE.Mesh(new THREE.SphereGeometry(.11,12,8),new THREE.MeshStandardMaterial({color:0xffd166,emissive:0xffb000,emissiveIntensity:.8}));tip.position.y=1;head.add(tip);
+ const arms=[];for(const s of [-1,1]){const piv=new THREE.Group();piv.position.set(s*.78,1.55,0);g.add(piv);const a=cyl(.09,.09,.75,white,0,-.35,0,piv,10);const h=new THREE.Mesh(new THREE.SphereGeometry(.16,12,8),mat);h.position.y=-.78;piv.add(h);piv.rotation.z=s*.35;arms.push(piv)}
+ shadow(g,true,false);
+ const r={g,head,arms,tip,fctx:cv.getContext('2d'),ftex,emo:'',state:'idle',t:Math.random()*5,x:-13,tx:ROBOT_X,jump:0,shake:0,name:ROBOT_NAMES[idx%ROBOT_NAMES.length]};drawFace(r,'neutral');g.position.set(-13,0,ROBOT_Z);g.rotation.y=-.25;scene.add(g);return r}
+let robot=null,leaving=[];
+function updRobots(dt){const all=robot?[robot,...leaving]:leaving;for(const r of all){r.t+=dt;r.x+=(r.tx-r.x)*(1-Math.pow(.02,dt));let y=Math.sin(r.t*3)*.05;let rz=0;
+  if(r.jump>0){r.jump-=dt;y+=Math.abs(Math.sin(r.jump*9))*.6;r.arms[0].rotation.z=-2.4;r.arms[1].rotation.z=2.4}else{r.arms[0].rotation.z=-.35+Math.sin(r.t*2)*.08;r.arms[1].rotation.z=.35-Math.sin(r.t*2)*.08}
+  if(r.shake>0){r.shake-=dt;r.head.rotation.y=Math.sin(r.shake*25)*.35}else r.head.rotation.y*=.9;
+  if(r.emo==='worried')rz=Math.sin(r.t*14)*.04;if(r.emo==='sad')r.head.rotation.x=.25;else r.head.rotation.x*=.9;
+  r.g.position.set(r.x,y,ROBOT_Z);r.g.rotation.z=rz;r.tip.scale.setScalar(1+Math.sin(r.t*6)*.2)}
+ leaving=leaving.filter(r=>{if(Math.abs(r.x-r.tx)<.2){scene.remove(r.g);r.ftex.dispose();return false}return true})}
+let robotCount=0;
+function newRobot(){if(robot){robot.tx=16;leaving.push(robot)}robot=makeRobot(robotCount++);return robot}
+
+// ================= orders & levels =================
+const SHN={pizza:['🍕','pizza','pizzas'],cake:['🎂','cake','cakes'],choc:['🍫','chocolate bar','chocolate bars']};
+const W1=s=>`of a ${SHN[s][0]} ${SHN[s][1]}`;
+const WN=(s,v)=>v>1?`${SHN[s][0]} ${SHN[s][2]}`:`${SHN[s][0]} ${SHN[s][1]}`;
+const coprimeA=b=>{let a;do{a=R(1,b-1)}while(gcd(a,b)!==1);return a};
+function oAmount(target,shape,ask,o={}){return Object.assign({type:'amount',target,shape,ask,items:Math.max(1,Math.min(3,Math.ceil(fval(target)-1e-9))),allowed:ALLN.slice(),hint:'',kind:'basic'},o)}
+function cutHint(t){const w=Math.floor(t.n/t.d),r=t.n-w*t.d;if(t.d===1)return `Tap ${t.n} whole one${t.n>1?'s':''} (no cutting needed!).`;if(!w)return `Cut into <b>${t.d}</b>, then tap <b>${t.n}</b> slice${t.n>1?'s':''}.`;return `Cut into <b>${t.d}</b>. Press ➕ Whole ${w} time${w>1?'s':''}, then tap <b>${r}</b> more slice${r>1?'s':''}.`}
+function genBasic(i){const b=i===0?2:i===1?4:pick([2,3,4,3,4]);const a=i===0?1:i===1?pick([1,3]):coprimeA(b);
+ return oAmount(F(a,b),'pizza',`${fh(a,b)} ${W1('pizza')}`,{hint:`The bottom number ${b} means <b>${b} equal slices</b>. The top number ${a} means take <b>${a}</b>. `+cutHint(F(a,b))})}
+function genBars(i){const b=pick(i<3?[5,6,8,3]:[5,6,8,10,4]);const a=coprimeA(b);const s=i%3===2?'pizza':'choc';
+ return oAmount(F(a,b),s,`${fh(a,b)} ${W1(s)}`,{hint:`${b} equal pieces, take ${a}. `+cutHint(F(a,b))})}
+function genEquiv(i){const q=pick([2,3,4]),p=coprimeA(q);const s=pick(['pizza','choc','cake']);
+ if(i%2===0){const m=pick([2,3,4].filter(m=>q*m<=12));const D=q*m;
+  return oAmount(F(p,q),s,`${fh(p*m,D)} ${W1(s)}`,{kind:'equiv',allowed:ALLN.filter(N=>N%D!==0),jam:`The ${D}-slicer is jammed!`,
+   hint:`The ${D}-slicer is jammed! But ${fh(p*m,D)} is the same amount as <b>${fh(p,q)}</b> (divide top and bottom by ${m}). Cut into ${q} and take ${p}.`})}
+ const m=pick([2,3].filter(m=>q*m<=12));
+ return oAmount(F(p,q),s,`${fh(p,q)} ${W1(s)}`,{kind:'equiv',allowed:ALLN.filter(N=>N!==q),jam:`The ${q}-slicer is jammed!`,
+  hint:`The ${q}-slicer is jammed! Multiply top and bottom by ${m}: ${fh(p,q)} = <b>${fh(p*m,q*m)}</b>. Cut into ${q*m} and take ${p*m}.`})}
+function lbl(n,d,tag,col){return{style:'frac',n,d,f:F(n,d),tag,col,html:fh(n,d)}}
+function lblT(text,f,tag,col){return{style:'text',text,f,tag,col,html:`<b class="num">${text}</b>`}}
+function cmpHint(A,B){const a=A.f,b=B.f;if(A.style==='frac'&&B.style==='frac'){if(A.d===B.d)return `Same bottom number = same size slices. The one with <b>more slices</b> (bigger top) is bigger.`;
+  if(A.n===B.n)return `Same number of slices. A <b>bigger bottom number</b> means the whole was cut into more pieces, so each slice is <b>smaller</b>!`;
+  const L=lcm(A.d,B.d);return `Make the bottoms match: ${fh(A.n,A.d)} = ${fh(A.n*L/A.d,L)} and ${fh(B.n,B.d)} = ${fh(B.n*L/B.d,L)}. Now compare the tops!`}
+ const L=lcm(a.d,b.d);return `Turn both into fractions: ${A.html} = ${fh(a.n*L/a.d,L)} and ${B.html} = ${fh(b.n*L/b.d,L)}. Now compare the tops!`}
+function oCmp(A,B,want){return{type:'cmp',A,B,want,ask:`<span class="want">I want the ${want==='bigger'?'BIGGER ⬆️':'SMALLER ⬇️'} box!</span>`,hint:cmpHint(A,B)}}
+function genCompare(i){let A,B;do{if(i<2){const d=pick([3,4,5,6,8]);const x=R(1,d-1),y=R(1,d-1);A=lbl(x,d);B=lbl(y,d)}
+  else if(i<4){const n=pick([1,1,2,3]);const d1=R(n+1,10),d2=R(n+1,10);A=lbl(n,d1);B=lbl(n,d2)}
+  else{const d1=R(2,12),d2=R(2,12);A=lbl(R(1,d1-1),d1);B=lbl(R(1,d2-1),d2)}}while(feq(A.f,B.f)||(A.d===B.d&&A.n===B.n));
+ A.tag='A';A.col='#ef476f';B.tag='B';B.col='#118ab2';return oCmp(A,B,i%2?'smaller':'bigger')}
+function genAddLike(i){const b=pick([3,4,5,6,8,10]);let a,c;do{a=R(1,b-1);c=R(1,b-1)}while(a+c>b||(a+c===b&&Math.random()<.75));const s=pick(['cake','cake','pizza']);
+ return oAmount(F(a+c,b),s,`${fh(a,b)} + ${fh(c,b)} ${W1(s)}`,{kind:'add',hint:`Same bottom number! Keep the bottom and add the tops: ${a} + ${c} = <b>${a+c}</b>. So it's ${fh(a+c,b)}: cut into ${b}, take ${a+c}.`})}
+const PAIRS=[[2,4],[2,8],[4,8],[3,6],[2,6],[2,3],[3,4],[2,5],[4,6],[3,12],[4,12],[2,10],[5,10],[6,12]];
+function unlikeHint(a,b,c,d){const L=lcm(b,d);const x=a*L/b,y=c*L/d;return `Different bottoms! Change both to <b>${L}ths</b>: ${fh(a,b)} = ${fh(x,L)} and ${fh(c,d)} = ${fh(y,L)}. Total = ${fh(x+y,L)}. Cut into ${L} and take ${x+y}${x+y>L?' (use ➕ Whole)':''}.`}
+function genAddUnlike(i){const pool=i<3?PAIRS.slice(0,6):PAIRS;let a,b,c,d;do{[b,d]=pick(pool);if(Math.random()<.5)[b,d]=[d,b];a=R(1,b-1);c=R(1,d-1)}while(fcmp(fadd(F(a,b),F(c,d)),F(1))>0);const s=pick(['cake','pizza','choc']);
+ return oAmount(fadd(F(a,b),F(c,d)),s,`${fh(a,b)} + ${fh(c,d)} ${W1(s)}`,{kind:'add',hint:unlikeHint(a,b,c,d)})}
+function genMixed(i){const d=pick([2,3,4]);let n;do{n=R(d+1,Math.floor(d*2.75))}while(n%d===0&&Math.random()<.8);const t=F(n,d);const s=pick(['pizza','cake','choc']);const w=Math.floor(n/d),r=n%d;
+ const showMixed=i%2===0;const ask=(showMixed?mixH(n,d):fh(n,d))+' '+WN(s,2);
+ const hint=showMixed?(r?`${mixH(n,d)} means ${w} whole${w>1?'s':''} and ${fh(r,d)} more. Cut into ${d}, press ➕ Whole ${w} time${w>1?'s':''}, then tap ${r} slice${r>1?'s':''}.`:`That's ${w} whole ones!`)
+  :`${fh(n,d)} is <b>improper</b> — more than one whole! ${d} slices make 1 whole, so ${n} slices = ${mixH(n,d)}. Cut into ${d} and take ${n} slices.`;
+ return oAmount(t,s,ask,{kind:'mixed',hint})}
+function genSet(i){const opts=[];for(const T of [6,8,10,12])for(const d of [2,3,4,5,6])if(T%d===0&&T!==d)opts.push([T,d]);const [T,d]=pick(opts);const a=R(1,d-1);
+ return oSet(T,F(a,d),`${fh(a,d)} of ${T} 🍬 gumballs`,`Sort the ${T} gumballs into <b>${d} equal groups</b> (${T/d} in each). Then take ${a} group${a>1?'s':''} = <b>${a*T/d}</b> gumballs.`)}
+function oSet(T,frac,ask,hint){return{type:'set',total:T,frac,count:frac.n*T/frac.d,ask,hint,allowed:ALLN.filter(N=>T%N===0&&N<T||N===T&&T<=12)}}
+function genMixAdd(i){const f=i%3;let a,b,c,d,w=0,ask,hint,t;
+ if(f===0){b=pick([2,3,4,5,6,8]);do{a=R(1,b-1);c=R(1,b-1)}while(a+c<=b);t=F(a+c,b);ask=`${fh(a,b)} + ${fh(c,b)}`;hint=`Same bottoms: add the tops, ${a} + ${c} = ${a+c}, so ${fh(a+c,b)} = <b>${mixH(a+c,b)}</b>. Cut into ${b}, take ${a+c} slices (➕ Whole helps!).`}
+ else if(f===1){b=pick([2,3,4,5,6]);a=R(1,b-1);c=R(1,b-1);w=1;t=fadd(F(w*b+a,b),F(c,b));ask=`${mixH(b+a,b)} + ${fh(c,b)}`;hint=`${mixH(b+a,b)} = ${fh(b+a,b)}. Add ${fh(c,b)}: ${b+a} + ${c} = ${b+a+c}, so ${fh(b+a+c,b)} = <b>${mixH(b+a+c,b)}</b>. Cut into ${b}.`}
+ else{do{[b,d]=pick(PAIRS.slice(0,8));if(Math.random()<.5)[b,d]=[d,b];a=R(1,b-1);c=R(1,d-1);t=fadd(F(a,b),F(c,d))}while(fcmp(t,F(1))<=0);ask=`${fh(a,b)} + ${fh(c,d)}`;hint=unlikeHint(a,b,c,d)}
+ const s=pick(['pizza','cake','choc']);return oAmount(t,s,ask+' '+WN(s,2),{kind:'mixed',hint})}
+const DECS=[['0.5',1,2],['0.25',1,4],['0.75',3,4],['0.1',1,10],['0.3',3,10],['0.7',7,10],['0.9',9,10],['0.2',1,5],['0.4',2,5],['0.6',3,5],['0.8',4,5],['1.5',3,2],['1.25',5,4]];
+function decHint(t,n,d){const raw=t.includes('.')?t.split('.')[1].length:0;const den=10**raw;const num=Math.round(parseFloat(t)*den);const fr=F(num,den);return `${t} = ${fh(num,den)}${fr.d!==den?` = <b>${mixH(fr.n,fr.d)}</b>`:''}. `+cutHint(fr)}
+function genDec(i){if(i%3===2){let A,B;do{const [t,n,d]=pick(DECS.slice(0,11));A=lblT(t,F(n,d),'A','#ef476f');const [p,q]=pick([[1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[5,6],[1,6]]);B=lbl(p,q,'B','#118ab2')}while(feq(A.f,B.f));if(Math.random()<.5){[A,B]=[B,A];A.tag='A';A.col='#ef476f';B.tag='B';B.col='#118ab2'}return oCmp(A,B,i%2?'smaller':'bigger')}
+ const [t,n,d]=pick(i<4?DECS.slice(0,11):DECS);const s=pick(['pizza','choc','cake']);return oAmount(F(n,d),s,`<b class="num">${t}</b> ${n>d?WN(s,2):W1(s)}`,{kind:'dec',hint:decHint(t,n,d)})}
+const PCTS=[50,25,75,10,20,30,40,60,70,80,90,150,125];
+const PSETS=[[8,25],[12,25],[12,50],[10,20],[10,30],[10,50],[4,75],[8,75],[12,75],[10,40],[6,50],[10,70]];
+function pctHint(p){const f=F(p,100);return `Percent means "out of 100": ${p}% = ${fh(p,100)} = <b>${mixH(f.n,f.d)}</b>. `}
+function genPct(i){if(i%3===2){const [T,p]=pick(PSETS);const f=F(p,100);return oSet(T,f,`<b class="num">${p}%</b> of ${T} 🍬 gumballs`,pctHint(p)+`Sort into ${f.d} groups, take ${f.n} → <b>${f.n*T/f.d}</b> gumballs.`)}
+ const p=pick(i<4?PCTS.slice(0,11):PCTS);const s=pick(['pizza','choc','cake']);const f=F(p,100);return oAmount(f,s,`<b class="num">${p}%</b> ${p>100?WN(s,2):W1(s)}`,{kind:'pct',hint:pctHint(p)+cutHint(f)})}
+const GENS=[genBasic,genBars,genEquiv,genCompare,genAddLike,genAddUnlike,genMixed,genSet,genMixAdd,genDec,genPct];
+function genGrand(i){const g=pick(GENS.slice(1));return g(R(2,7))}
+const LEVELS=[
+ {name:'Pizza Basics',icon:'🍕',n:6,pat:80,belt:1,gen:genBasic,intro:'Robots want <b>parts</b> of a pizza! The <b>bottom number</b> tells you how many equal slices to cut. The <b>top number</b> tells you how many slices to put in the box.',lesson:'A fraction like <b>3/4</b> means: cut the whole into <b>4 equal parts</b> and take <b>3</b> of them.'},
+ {name:'Chocolate Bars',icon:'🍫',n:6,pat:75,belt:1.1,gen:genBars,intro:'Chocolate bars cut into equal strips. Fifths, sixths and eighths — the more pieces, the smaller each piece!',lesson:'The bigger the bottom number, the <b>smaller</b> each piece is. 1/8 is smaller than 1/5!'},
+ {name:'Same Amount, New Name',icon:'🔁',n:7,pat:75,belt:1.2,gen:genEquiv,intro:'Some slicers are <b>jammed</b> 🔒! But 2/4 of a pizza is the SAME as 1/2. Find a slicer that makes the same amount.',lesson:'<b>Equivalent fractions</b> are the same amount with different names: 1/2 = 2/4 = 3/6. Multiply or divide top AND bottom by the same number.'},
+ {name:'Bigger or Smaller?',icon:'⚖️',n:7,pat:45,belt:1.3,gen:genCompare,intro:'Two boxes roll in. The robot wants the <b>bigger</b> (or <b>smaller</b>) one. Tap the right box!',lesson:'Same bottom? Bigger top wins. Same top? <b>Smaller</b> bottom wins (bigger pieces). Different? Make the bottoms match first!'},
+ {name:'Adding Same Slices',icon:'➕',n:7,pat:70,belt:1.4,gen:genAddLike,intro:'Now robots order two parts together! When the bottom numbers match, just <b>add the tops</b>.',lesson:'1/5 + 2/5 = <b>3/5</b>. Keep the bottom number, add the top numbers.'},
+ {name:'Adding Different Slices',icon:'🧩',n:7,pat:80,belt:1.5,gen:genAddUnlike,intro:'1/2 + 1/4? The slices are different sizes! Cut into a size that works for both — a <b>common denominator</b>.',lesson:'To add 1/2 + 1/4, change 1/2 into <b>2/4</b>. Then 2/4 + 1/4 = <b>3/4</b>.'},
+ {name:'More Than One Whole',icon:'🍕🍕',n:7,pat:75,belt:1.6,gen:genMixed,intro:'Hungry robots want more than one whole! <b>1 3/4</b> (mixed number) is the same as <b>7/4</b> (improper fraction). Use ➕ Whole to fill a whole one fast.',lesson:'<b>7/4 = 1 3/4</b>: 4 quarters make 1 whole, and 3 quarters are left over.'},
+ {name:'Gumball Groups',icon:'🍬',n:7,pat:65,belt:1.7,gen:genSet,intro:'Fractions of a <b>set</b>! To find 1/3 of 12 gumballs, sort them into <b>3 equal groups</b> and take 1 group.',lesson:'1/3 of 12 = 12 ÷ 3 = <b>4</b>. Divide by the bottom, multiply by the top.'},
+ {name:'Mixed Number Mix-up',icon:'🎂',n:7,pat:85,belt:1.8,gen:genMixAdd,intro:'Adding that goes past one whole! 3/4 + 3/4 = 6/4 = <b>1 2/4</b> = 1 1/2.',lesson:'When the top gets bigger than the bottom, you have more than 1 whole. 6/4 = <b>1 2/4</b>.'},
+ {name:'Decimal Diner',icon:'🔟',n:8,pat:65,belt:1.9,gen:genDec,intro:'Decimals are fractions too! <b>0.5 = 5/10 = 1/2</b>, and <b>0.3 = 3/10</b>. Use the 10-slicer for tenths.',lesson:'Decimals are tenths and hundredths: 0.7 = <b>7/10</b>, 0.25 = 25/100 = <b>1/4</b>.'},
+ {name:'Percent Party',icon:'💯',n:8,pat:65,belt:2,gen:genPct,intro:'Percent means "out of 100". <b>50% = 1/2</b>, <b>25% = 1/4</b>, <b>10% = 1/10</b>.',lesson:'<b>%</b> means out of 100: 75% = 75/100 = <b>3/4</b>. 20% = 20/100 = <b>1/5</b>.'},
+ {name:'Grand Factory',icon:'🏆',n:8,pat:55,belt:2.3,gen:genGrand,intro:'Everything you learned, all at once — and the belt is fast! Show the robots you are a Fraction Master!',lesson:'You can <b>cut, compare, add, convert</b> fractions. You are a Fraction Master! 🏆'},
+];
+function genRush(k){const lv=Math.min(GENS.length-1,Math.floor(k/2.5));const gi=R(Math.max(0,lv-3),lv);return GENS[gi](R(2,7))}
+function patFor(o,base){let p=base;if(o.type==='amount'&&(o.kind==='add'||o.kind==='mixed'))p+=8;if(o.type==='cmp')p=Math.min(p,base*.8);return p}
+
+// ================= game state =================
+const SAVE='fractionFactorySave';
+let save;try{save=JSON.parse(localStorage.getItem(SAVE))}catch(e){}
+if(!save||!Array.isArray(save.stars))save={stars:[],coins:0,rushBest:0};
+while(save.stars.length<LEVELS.length)save.stars.push(0);
+const persist=()=>{try{localStorage.setItem(SAVE,JSON.stringify(save))}catch(e){}};
+const G={state:'title',li:0,rush:false,orderIdx:0,total:0,correct:0,wrong:0,earned:0,lives:3,served:0,order:null,pat:1,patMax:1,hintUsed:false,token:0,paused:null,lastTick:0};
+const unlocked=i=>i===0||save.stars[i-1]>0||save.all;
+const beltSpeed=()=>G.rush?Math.min(2.6,1+G.served*.07):LEVELS[G.li].belt;
+// ================= UI helpers =================
+let msgT=null;
+function toast(h,ms=1700){const m=$('msg');m.innerHTML=h;m.style.display='block';clearTimeout(msgT);msgT=setTimeout(()=>m.style.display='none',ms)}
+function popCoins(n){const r=$('coins').getBoundingClientRect();const d=document.createElement('div');d.className='pop';d.textContent='+'+n+' 🪙';d.style.left=(r.left)+'px';d.style.top=(r.bottom+4)+'px';document.body.appendChild(d);setTimeout(()=>d.remove(),1300)}
+function showCard(html,wide){$('card').className='card'+(wide?' wide':'');$('card').innerHTML=html;$('overlay').classList.remove('hide')}
+function hideCard(){$('overlay').classList.add('hide')}
+function setGameUI(on){$('ticket').style.display=on?'block':'none';$('tools').style.display=on?'flex':'none'}
+function renderTop(){$('coins').textContent='🪙 '+save.coins;
+ if(G.rush){$('lvlName').textContent='⚡ Rush Mode';$('prog').textContent='❤️'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.max(0,3-G.lives))+' ✅'+G.served}
+ else{$('lvlName').textContent='Level '+(G.li+1)+': '+LEVELS[G.li].name;$('prog').textContent=`📦 ${Math.min(G.orderIdx+1,G.total)}/${G.total}  ✅${G.correct}`}}
+function countSel(){let s=0;for(const it of bench.items)for(const p of it.pieces)if(p.userData.sel)s++;return s}
+function renderHave(){const o=G.order;if(!o)return;const h=$('have');
+ if(o.type==='amount'){const S=countSel(),N=bench.N;if(!S){h.innerHTML=N===1?'👆 Pick a slicer size, then tap slices':'📦 Box is empty — tap slices!';return}
+  const f=F(S,N);let s='📦 In box: '+(N===1?`<b class="num">${S}</b> whole`:fh(S,N));if(N>1&&(f.d!==N||f.n>=f.d))s+=' = '+mixH(f.n,f.d);h.innerHTML=s}
+ else if(o.type==='set'){const S=bench.balls.filter(b=>b.userData.sel).length;h.innerHTML=S?`📦 In box: <b class="num">${S}</b> gumball${S>1?'s':''}`:(bench.sortN===1?'👆 Sort into groups, or tap gumballs':'📦 Box is empty — tap a group!')}
+ else h.innerHTML='👆 Tap a box (or a button below)'}
+function renderTools(){const o=G.order;const nb=$('nBtns');nb.innerHTML='';
+ $('sliceRow').style.display=o.type==='cmp'?'none':'flex';$('actRow').style.display=o.type==='cmp'?'none':'flex';$('cmpRow').style.display=o.type==='cmp'?'flex':'none';
+ $('wholeBtn').style.display=o.type==='amount'&&o.items>1?'':'none';
+ if(o.type==='cmp'){$('pickA').innerHTML='📦 A: '+o.A.html;$('pickB').innerHTML='📦 B: '+o.B.html;$('pickA').style.color='#9b1238';$('pickB').style.color='#0b4f6c';renderHave();return}
+ $('sliceLbl').textContent=o.type==='set'?'🍬 Sort into':'🔪 Cut into';
+ const list=o.type==='set'?o.allowed:ALLN;
+ for(const N of list){const b=document.createElement('button');b.className='nb'+(N===(o.type==='set'?bench.sortN:bench.N)?' sel':'');b.textContent=N;b.disabled=o.type==='amount'&&!o.allowed.includes(N);b.title=o.type==='set'?`Sort into ${N} groups`:`Cut into ${N} equal pieces`;
+  b.onclick=()=>{if(G.state!=='playing'||bench.slicing)return;ac();if(o.type==='set'){layoutBalls(N);SFX.whoosh()}else sliceTo(N);renderTools();renderHave()};nb.appendChild(b)}
+ renderHave()}
+function renderTicket(){const o=G.order;$('rbName').textContent=robot?robot.name:'Robot';$('ask').innerHTML=o.ask+(o.jam?`<div style="font-size:13px;color:#d1495b">🔒 ${o.jam}</div>`:'');$('hintBox').style.display='none';$('hintBox').innerHTML='💡 '+o.hint}
+function renderPat(){const k=Math.max(0,G.pat/G.patMax);$('patFill').style.width=(k*100)+'%';$('pat').classList.toggle('low',k<.3);$('patSec').textContent=Math.ceil(Math.max(0,G.pat))+'s'}
+// ================= flow =================
+function startLevel(li,skipIntro){G.rush=false;G.li=li;G.orderIdx=0;G.total=LEVELS[li].n;G.correct=0;G.wrong=0;G.earned=0;G.order=null;resetWorld();renderTop();
+ if(skipIntro){hideCard();nextOrder(true);return}
+ const L=LEVELS[li];G.state='intro';setGameUI(false);
+ showCard(`<div class="logo">${L.icon}</div><h2>Level ${li+1}: ${L.name}</h2><div class="lesson">${L.intro}</div><div class="stats"><div>📦 ${L.n} orders</div><div>✅ Need ${Math.ceil(L.n*.6)} right</div><div>⏳ ${L.pat}s patience</div></div><button class="grn" id="goBtn">Start ▶</button> <button class="sec" id="backBtn">🗺️ Levels</button>`);
+ $('goBtn').onclick=()=>{ac();SFX.click();hideCard();nextOrder(true)};$('backBtn').onclick=showLevels}
+function startRush(){G.rush=true;G.li=0;G.lives=3;G.served=0;G.correct=0;G.wrong=0;G.earned=0;G.orderIdx=0;G.order=null;resetWorld();renderTop();hideCard();nextOrder(true)}
+function resetWorld(){G.token++;tweens=[];clearBench();clearCrates();if(robot){scene.remove(robot.g);robot=null}for(const r of leaving)scene.remove(r.g);leaving=[];for(const b of blades)if(b)b.visible=false;bench.slicing=false;benchG.userData.lamp.material.emissiveIntensity=.3}
+function nextOrder(first){G.token++;hideCard();
+ if(!G.rush&&G.orderIdx>=G.total)return finishLevel();
+ if(G.rush&&G.lives<=0)return rushOver();
+ const o=G.rush?genRush(G.served):LEVELS[G.li].gen(G.orderIdx);G.order=o;G.hintUsed=false;
+ G.patMax=Math.round(patFor(o,G.rush?Math.max(24,55-G.served*1.3):LEVELS[G.li].pat));G.pat=G.patMax;
+ clearCrates();bench.slicing=false;for(const b of blades)if(b)b.visible=false;
+ if(o.type==='amount')setupAmount(o);else if(o.type==='set')setupSet(o);else{clearBench();bench.mode='cmp';spawnCrates(o)}
+ if(o.type!=='cmp')spawnOrderBox();
+ newRobot();SFX.beep();G.state='playing';setGameUI(true);renderTop();renderTicket();renderTools();renderPat()}
+function spawnCrates(o){[o.A,o.B].forEach((L,i)=>{const c=makeCrate(L);c.userData.crate=true;c.userData.idx=i;const x0=-12-i*2.2,tx=i?1.1:-2.3;c.position.set(x0,BELT_Y,BELT_Z);scene.add(c);crates.push(c);tween(1,k=>{c.position.x=x0+(tx-x0)*ease(k)})})}
+function handleTap(o){if(G.state!=='playing')return;const u=o.userData;
+ if(u.crate){chooseCrate(u.idx);return}
+ if(u.piece){if(bench.slicing)return;setSel(o,!u.sel);u.sel?SFX.pop():SFX.unpop();renderHave();return}
+ if(u.ball||u.plate){if(bench.sortN>1){const g=u.ball?groupOf(u.j):u.g;const grp=bench.balls.filter(b=>groupOf(b.userData.j)===g);const on=!grp.every(b=>b.userData.sel);for(const b of grp)setSel(b,on);on?SFX.pop():SFX.unpop()}else if(u.ball){setSel(o,!u.sel);u.sel?SFX.pop():SFX.unpop()}updPlates();renderHave()}}
+function selectWhole(){if(G.state!=='playing'||bench.mode!=='amount'||bench.slicing)return;const it=bench.items.find(it=>it.pieces.some(p=>!p.userData.sel));if(!it){SFX.boop();toast('Everything is already in the box!');return}for(const p of it.pieces)setSel(p,true);SFX.pop();renderHave()}
+function clearSel(){if(G.state!=='playing')return;for(const it of bench.items)for(const p of it.pieces)setSel(p,false);for(const b of bench.balls)setSel(b,false);updPlates();SFX.unpop();renderHave()}
+function deliver(){if(G.state!=='playing')return false;const o=G.order;
+ if(o.type==='cmp'){toast('Tap the box you want to send! 📦');return false}
+ if(bench.slicing)return false;
+ let ok,gave,sel;
+ if(o.type==='amount'){const S=countSel();if(!S){toast('The box is empty! Tap some slices first 👆');SFX.boop();return false}gave=F(S,bench.N);gave.raw={n:S,d:bench.N};ok=feq(gave,o.target);sel=[];for(const it of bench.items)for(const p of it.pieces)if(p.userData.sel)sel.push(p)}
+ else{sel=bench.balls.filter(b=>b.userData.sel);if(!sel.length){toast('The box is empty! Tap some gumballs first 👆');SFX.boop();return false}gave=sel.length;ok=gave===o.count}
+ G.state='delivering';const tok=G.token;SFX.whoosh();const ob=orderBox;const n=sel.length;const stag=Math.min(.05,.5/n);
+ sel.forEach((p,i)=>{p.userData.flying=true;ob.attach(p);const from=p.position.clone(),s0=p.scale.x;const to=new THREE.Vector3((Math.random()-.5)*.6,.25+Math.min(.4,i*.015),(Math.random()-.5)*.4);const ts=bench.mode==='set'?1:.42;
+  tween(.55,k=>{const e=ease(k);p.position.lerpVectors(from,to,e);p.position.y+=Math.sin(Math.PI*k)*1.6;p.scale.setScalar(s0+(ts-s0)*e)},null,i*stag)});
+ const tFly=.55+n*stag;
+ after(tFly+.05,()=>{if(tok!==G.token)return;const lid=ob.userData.lid;lid.visible=true;lid.position.y=2;tween(.25,k=>{lid.position.y=2-(2-.84)*k},()=>{SFX.click();
+  const bs=beltSpeed(),dur=1.5/bs;tween(dur,k=>{ob.position.x=BOX_X0+(ROBOT_X-.2-BOX_X0)*ease(k);M.belt.map.offset.x-=.012*bs},()=>{if(tok===G.token)resolve(ok,gave,ob)})})});
+ return true}
+function chooseCrate(i){if(G.state!=='playing')return;const o=G.order;const ch=i?o.B:o.A,ot=i?o.A:o.B;const c=fcmp(ch.f,ot.f);const ok=o.want==='bigger'?c>0:c<0;G.state='delivering';const tok=G.token;SFX.whoosh();
+ const cr=crates[i],oc=crates[1-i];const x0=cr.position.x;tween(.4,k=>{oc.scale.setScalar(1-k*.999);oc.position.y=BELT_Y-k*.5});
+ const bs=beltSpeed();tween(1.3/bs,k=>{cr.position.x=x0+(ROBOT_X-.2-x0)*ease(k);M.belt.map.offset.x-=.012*bs},()=>{if(tok===G.token)resolve(ok,ch,cr)},.25)}
+function resolve(ok,gave,boxObj){const tok=G.token;const o=G.order;const r=robot;
+ tween(.5,k=>{boxObj.position.y=BELT_Y+k*1.2;boxObj.scale.setScalar(Math.max(.001,1-k))});
+ if(G.rush)G.served++;else G.orderIdx++;
+ if(ok){G.correct++;let reward=10+Math.round(10*G.pat/G.patMax);if(G.hintUsed)reward=Math.ceil(reward/2);let extra='';
+  if(o.type==='amount'&&o.kind==='equiv'&&gave.raw.d===o.target.d){reward+=5;extra=' ⭐ Simplest form +5!'}
+  save.coins+=reward;G.earned+=reward;persist();
+  drawFace(r,'happy');r.jump=1.3;confetti(ROBOT_X,3.2,ROBOT_Z+.6);SFX.good();setTimeout(()=>SFX.coin(),350);popCoins(reward);
+  let txt='✅ Perfect!';if(o.type==='amount'&&gave.raw&&(gave.raw.d!==o.target.d||gave.raw.n!==o.target.n)&&gave.raw.d>1)txt+=` ${fh(gave.raw.n,gave.raw.d)} = ${mixH(o.target.n,o.target.d)}`;
+  toast(txt+extra,1500);renderTop();
+  after(1.7,()=>{if(tok!==G.token)return;nextOrder()})}
+ else{G.wrong++;if(G.rush)G.lives--;drawFace(r,'sad');r.shake=1;SFX.bad();renderTop();after(1.1,()=>{if(tok!==G.token)return;showTeach(gave,false)})}}
+function timeout(){G.state='timeout';const tok=G.token;G.wrong++;if(G.rush){G.lives--;G.served++}else G.orderIdx++;drawFace(robot,'angry');robot.shake=1;SFX.bad();renderTop();toast('⏰ Out of patience!');after(1.2,()=>{if(tok!==G.token)return;showTeach(null,true)})}
+// ================= teaching card =================
+const COLW='#06d6a0',COLG='#ff9f1c';
+function drawShape(x,shape,cx,cy,s,d,filled,col){x.lineWidth=2.5;x.strokeStyle='#5b2a86';
+ if(shape==='choc'){const w=s*2.2,h=s*1.2;for(let k=0;k<d;k++){x.fillStyle=k<filled?col:'#f1e9f7';x.fillRect(cx-w/2+k*w/d,cy-h/2,w/d,h);x.strokeRect(cx-w/2+k*w/d,cy-h/2,w/d,h)}return}
+ if(d===1){x.fillStyle=filled?col:'#f1e9f7';x.beginPath();x.arc(cx,cy,s,0,7);x.fill();x.stroke();return}
+ for(let k=0;k<d;k++){const a0=-Math.PI/2+k*Math.PI*2/d,a1=a0+Math.PI*2/d;x.fillStyle=k<filled?col:'#f1e9f7';x.beginPath();x.moveTo(cx,cy);x.arc(cx,cy,s,a0,a1);x.closePath();x.fill();x.stroke()}}
+function numberLine(x,x0,y,len,Wh,d,marks){x.strokeStyle='#5b2a86';x.lineWidth=3;x.beginPath();x.moveTo(x0,y);x.lineTo(x0+len,y);x.stroke();x.fillStyle='#5b2a86';x.font='800 15px Nunito,Segoe UI,sans-serif';x.textAlign='center';
+ if(Wh*d<=60)for(let k=0;k<=Wh*d;k++){const px=x0+len*k/(Wh*d);x.lineWidth=k%d?1.5:3;x.beginPath();x.moveTo(px,y-(k%d?6:11));x.lineTo(px,y+(k%d?6:11));x.stroke()}
+ for(let w=0;w<=Wh;w++){x.fillStyle='#5b2a86';x.fillText(w,x0+len*w/Wh-(marks.some(m=>m&&!m.up&&Math.abs(m.v-w)<.08*Wh)?18:0),y+26)}
+ for(const m of marks){if(!m)continue;const px=x0+len*Math.min(m.v,Wh)/Wh;x.fillStyle=m.col;x.beginPath();if(m.up){x.moveTo(px,y-4);x.lineTo(px-9,y-20);x.lineTo(px+9,y-20)}else{x.moveTo(px,y+4);x.lineTo(px-9,y+20);x.lineTo(px+9,y+20)}x.fill();x.font='900 16px Nunito,Segoe UI,sans-serif';x.fillText(m.lab,px,m.up?y-30:y+44)}}
+function drawTeach(cv,o,gave){const x=cv.getContext('2d'),W=cv.width,H=cv.height;x.clearRect(0,0,W,H);x.textBaseline='middle';
+ const rowLab=(t,cy,col)=>{x.fillStyle=col;x.font='900 19px Nunito,Segoe UI,sans-serif';x.textAlign='left';x.fillText(t,12,cy)};
+ if(o.type==='amount'){const t=o.target,vT=fval(t),vG=gave?fval(gave):0;const Wh=Math.max(1,Math.ceil(Math.max(vT,vG)-1e-9));
+  const rows=[{lab:'Wanted',n:t.n,d:t.d,col:COLW}];if(gave)rows.push({lab:'You gave',n:gave.raw.n,d:gave.raw.d,col:COLG});
+  const s=Math.min(40,(W-170)/(Wh*2.5));
+  rows.forEach((r,ri)=>{const cy=gave?55+ri*98:90;rowLab(r.lab,cy,r.col==COLW?'#079e77':'#c56a00');for(let w=0;w<Wh;w++)drawShape(x,o.shape,145+s+w*s*2.6,cy,s,r.d,Math.max(0,Math.min(r.d,r.n-w*r.d)),r.col);x.fillStyle='#3d2256';x.font='900 24px Nunito,Segoe UI,sans-serif';x.textAlign='right';x.fillText(r.d===1?''+r.n:r.n+'/'+r.d,W-12,cy)});
+  numberLine(x,30,H-72,W-60,Wh,t.d,[{v:vT,col:'#079e77',lab:mixT(t),up:true},gave&&{v:vG,col:'#c56a00',lab:mixT(gave),up:false}])}
+ else if(o.type==='set'){const T=o.total,gsz=T/o.frac.d;const rows=[{lab:'Wanted',n:o.count,col:COLW}];if(gave!==null)rows.push({lab:'You gave',n:gave,col:COLG});
+  const r0=Math.min(13,(W-170)/(T*2.3+o.frac.d*1.5));rows.forEach((r,ri)=>{const cy=50+ri*85;rowLab(r.lab+' '+r.n,cy,r.col==COLW?'#079e77':'#c56a00');let px=160;for(let j=0;j<T;j++){if(j&&j%gsz===0)px+=r0*1.6;x.fillStyle=j<r.n?r.col:'#eee3f6';x.strokeStyle='#5b2a86';x.lineWidth=2;x.beginPath();x.arc(px,cy,r0,0,7);x.fill();x.stroke();px+=r0*2.3}});
+  x.fillStyle='#3d2256';x.font='800 17px Nunito,Segoe UI,sans-serif';x.textAlign='center';x.fillText(`${T} gumballs in ${o.frac.d} equal groups of ${gsz}.  ${o.frac.n} group${o.frac.n>1?'s':''} = ${o.count}`,W/2,H-40)}
+ else{const rows=[o.A,o.B];const s=36;rows.forEach((L,ri)=>{const cy=55+ri*95;rowLab(L.tag,cy,L.col);drawShape(x,'pizza',120,cy,s,L.f.d,L.f.n,L.col);x.fillStyle='#3d2256';x.font='900 24px Nunito,Segoe UI,sans-serif';x.textAlign='left';x.fillText((L.style==='frac'?L.n+'/'+L.d:L.text)+(L.style!=='frac'?'  =  '+fT(L.f):''),180,cy)});
+  const d=lcm(o.A.f.d,o.B.f.d);numberLine(x,30,H-72,W-60,1,d<=24?d:1,[{v:fval(o.A.f),col:o.A.col,lab:'A',up:true},{v:fval(o.B.f),col:o.B.col,lab:'B',up:false}])}}
+function showTeach(gave,isTimeout){G.state='teach';const o=G.order,nm=robot?robot.name:'The robot';let title,text;
+ if(o.type==='amount'){const want=mixH(o.target.n,o.target.d);
+  if(isTimeout){title='⏰ Too slow!';text=`${nm} wanted <b>${want}</b>.`}
+  else{title='Oops! Not quite 🤖';const d=fsub(o.target,gave);text=`You gave ${fh(gave.raw.n,gave.raw.d)}${gave.raw.d===1?'':''} but ${nm} wanted <b>${want}</b>. `+(d.n>0?`You needed <b>${mixH(d.n,d.d)}</b> more.`:`That's <b>${mixH(-d.n,d.d)}</b> too much.`)}}
+ else if(o.type==='set'){const want=o.count;title=isTimeout?'⏰ Too slow!':'Oops! Not quite 🤖';text=isTimeout?`${nm} wanted <b>${want}</b> gumballs.`:`You gave <b>${gave}</b> gumball${gave>1?'s':''} but ${nm} wanted <b>${want}</b>.`}
+ else{const big=fcmp(o.A.f,o.B.f)>0?o.A:o.B,sm=big===o.A?o.B:o.A;title=isTimeout?'⏰ Too slow!':'Oops! Wrong box 🤖';text=`Box ${big.tag} (${big.html}) is bigger than box ${sm.tag} (${sm.html}). ${nm} wanted the <b>${o.want}</b> one: box <b>${(o.want==='bigger'?big:sm).tag}</b>.`}
+ text+=`<br>💡 ${o.hint}`;
+ const last=G.rush?G.lives<=0:G.orderIdx>=G.total;
+ showCard(`<h2>${title}</h2><canvas class="teach" id="teachCv" width="560" height="${o.type==='set'?250:300}"></canvas><div class="lesson">${text}</div>${G.rush?`<div class="stats"><div>${'❤️'.repeat(Math.max(0,G.lives))||'💔'} lives left</div></div>`:''}<button class="grn" id="nextBtn">${last?'Finish 🏁':'Next order ▶'}</button>`);
+ drawTeach($('teachCv'),o,isTimeout?null:gave);$('nextBtn').onclick=()=>{SFX.click();nextOrder()}}
+// ================= end cards =================
+function starsFor(c,t){const pass=Math.ceil(t*.6);return c===t?3:(c>=t-2&&c>=pass)?2:c>=pass?1:0}
+function finishLevel(){G.state='done';setGameUI(false);const L=LEVELS[G.li];const st=starsFor(G.correct,G.total);
+ if(st>0){save.stars[G.li]=Math.max(save.stars[G.li],st);persist();SFX.win();confetti(0,4,0,gfxLow?60:180);if(robot){drawFace(robot,'happy');robot.jump=2}
+  const nxt=G.li+1<LEVELS.length;
+  showCard(`<h2>🎉 Level ${G.li+1} complete!</h2><div class="big">${'★'.repeat(st)}<span style="color:#e2d6ee">${'★'.repeat(3-st)}</span></div><div class="stats"><div>✅ ${G.correct}/${G.total} orders</div><div>🪙 +${G.earned} coins</div></div><div class="lesson">📘 ${L.lesson}</div>${nxt?'<button class="grn" id="nextLv">Next level ▶</button>':'<button class="grn" id="rushBtn">⚡ Try Rush Mode</button>'}<button class="sec" id="replay">↻ Replay</button><button class="sec" id="lvls">🗺️ Levels</button>`);
+  if(nxt)$('nextLv').onclick=()=>startLevel(G.li+1);else $('rushBtn').onclick=startRush}
+ else{SFX.fail();showCard(`<h2>🔧 Keep practising!</h2><div class="sub">You served ${G.correct} of ${G.total} orders right. You need ${Math.ceil(G.total*.6)} to pass.</div><div class="lesson">📘 ${L.lesson}</div><button class="grn" id="replay">↻ Try again</button><button class="sec" id="lvls">🗺️ Levels</button>`)}
+ $('replay').onclick=()=>startLevel(G.li,true);$('lvls').onclick=showLevels}
+function rushOver(){G.state='done';setGameUI(false);const best=G.served>(save.rushBest||0);if(G.correct>(save.rushBest||0)){save.rushBest=G.correct;persist()}SFX.win();
+ showCard(`<h2>⚡ Rush over!</h2><div class="logo">🏭</div><div class="stats"><div>✅ ${G.correct} correct</div><div>📦 ${G.served} orders</div><div>🪙 +${G.earned}</div><div>🏆 Best: ${save.rushBest}</div></div><div class="lesson">The belt got faster and faster! Practise the levels to grow your fraction super-powers. 💪</div><button class="grn" id="again">↻ Play again</button><button class="sec" id="lvls">🗺️ Levels</button>`);
+ $('again').onclick=startRush;$('lvls').onclick=showLevels}
+function showLevels(){if(G.state==='playing'){G.paused='playing';G.state='paused'}else if(G.state!=='paused')G.paused=null;setGameUI(G.state==='paused');
+ let h=`<h2>🗺️ Choose a level</h2><div class="levels">`;LEVELS.forEach((L,i)=>{const s=save.stars[i];h+=`<button class="lv" data-i="${i}" ${unlocked(i)?'':'disabled'}><div class="e">${unlocked(i)?L.icon:'🔒'}</div><div class="n">${i+1}. ${L.name}</div><div class="s">${'★'.repeat(s)}<span style="color:#cbb9dc">${'★'.repeat(3-s)}</span></div></button>`});
+ h+=`</div><button id="rushBtn">⚡ Rush Mode <small>(best ${save.rushBest||0})</small></button>${G.paused?'<button class="grn" id="resume">▶ Resume</button>':'<button class="sec" id="home">🏠 Title</button>'}`;showCard(h,true);
+ document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{ac();SFX.click();G.paused=null;startLevel(+b.dataset.i)});
+ $('rushBtn').onclick=()=>{ac();G.paused=null;startRush()};if($('resume'))$('resume').onclick=resume;if($('home'))$('home').onclick=showTitle}
+function resume(){if(G.paused){G.state=G.paused;G.paused=null}hideCard();setGameUI(true)}
+function showTitle(){G.state='title';G.paused=null;setGameUI(false);const cont=Math.max(0,LEVELS.findIndex((L,i)=>unlocked(i)&&save.stars[i]===0));const nextLv=cont<0?0:cont;const total=save.stars.reduce((a,b)=>a+b,0);
+ showCard(`<div class="logo">🍕🏭🍫</div><h1>Fraction Factory</h1><div class="sub">Slice, scoop and pack fractions for hungry robots! 🤖</div><div class="stats"><div>⭐ ${total}/${LEVELS.length*3}</div><div>🪙 ${save.coins}</div><div>⚡ Rush best ${save.rushBest||0}</div></div><div class="lesson">1️⃣ Read the robot's order.<br>2️⃣ Pick a slicer size to cut the food into equal pieces.<br>3️⃣ Tap pieces to put them in the box, then press <b>📦 Deliver!</b></div><button class="grn" id="playBtn">▶ Play</button><button id="lvBtn2">🗺️ Levels</button><button class="sec" id="rushBtn">⚡ Rush</button>`);
+ $('playBtn').onclick=()=>{ac();SFX.click();startLevel(nextLv)};$('lvBtn2').onclick=()=>{ac();showLevels()};$('rushBtn').onclick=()=>{ac();startRush()}}
+// ================= buttons & input =================
+$('wholeBtn').onclick=selectWhole;$('clearSel').onclick=clearSel;$('deliverBtn').onclick=()=>{ac();deliver()};
+$('pickA').onclick=()=>{ac();chooseCrate(0)};$('pickB').onclick=()=>{ac();chooseCrate(1)};
+$('hintBtn').onclick=()=>{if(G.state!=='playing'||!G.order)return;const hb=$('hintBox');const show=hb.style.display!=='block';hb.style.display=show?'block':'none';if(show&&!G.hintUsed){G.hintUsed=true;toast('💡 Hint on — coins for this order are halved',1300)}SFX.click()};
+$('lvlBtn').onclick=()=>{ac();if(G.state==='delivering'||G.state==='timeout')return;showLevels()};
+const gfxLabel=()=>'⚙️ '+gfxMode[0].toUpperCase()+gfxMode.slice(1);$('gfxBtn').textContent=gfxLabel();
+$('gfxBtn').onclick=()=>{gfxMode=gfxMode==='auto'?'high':gfxMode==='high'?'low':'auto';localStorage.setItem(GKEY,gfxMode);$('gfxBtn').textContent=gfxLabel();toast('Graphics: '+gfxMode+' — reloading…');setTimeout(()=>location.reload(),600)};
+$('sndBtn').textContent=muted?'🔇':'🔊';$('sndBtn').onclick=()=>{muted=!muted;localStorage.setItem('fractionFactoryMute',muted?'1':'0');$('sndBtn').textContent=muted?'🔇':'🔊';if(!muted)SFX.click()};
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+function pickAt(cx,cy){ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const hits=ray.intersectObjects(bench.mode==='cmp'?crates:itemRoot.children,true);
+ for(const h of hits){let o=h.object;while(o&&!(o.userData.piece||o.userData.ball||o.userData.crate||o.userData.plate))o=o.parent;if(o)return o}return null}
+renderer.domElement.addEventListener('pointerdown',e=>{ac();if(G.state!=='playing')return;const o=pickAt(e.clientX,e.clientY);if(o)handleTap(o)});
+renderer.domElement.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;renderer.domElement.style.cursor=G.state==='playing'&&pickAt(e.clientX,e.clientY)?'pointer':'default'});
+addEventListener('keydown',e=>{if(G.state!=='playing')return;if(e.key==='Enter')deliver();else if(e.key==='Escape')clearSel();else if(e.key==='w'||e.key==='W')selectWhole()});
+// ================= camera / loop =================
+const camTarget=new THREE.Vector3();
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;const portrait=w/h<.85;camera.fov=portrait?52:40;
+ const t=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)); const halfW=portrait?4.9:6.8,halfH=5.1;const D=Math.max(halfH/t,halfW/(t*camera.aspect));
+  camTarget.set(portrait?.4:.6,portrait?1.1:1.7,portrait?-1.9:-1.7);const dir=new THREE.Vector3(0,portrait?2.1:.85,1).normalize();camera.position.copy(camTarget).addScaledVector(dir,D);camera.lookAt(camTarget);
+ camera.updateProjectionMatrix()}
+addEventListener('resize',resize);
+let time=0,lastSec=-1;
+function update(dt){time+=dt;const bs=beltSpeed();
+ for(const g of gears)g.g.rotation.z+=g.s*dt*bs;
+ for(const m of upper.items){m.position.x+=dt*1.2*bs;if(m.position.x>15)m.position.x-=30;m.rotation.y+=dt}upper.mat.map.offset.x-=dt*.04*bs;M.belt.map.offset.x-=dt*.05*bs;
+ if(G.state==='playing'){G.pat-=dt;renderPat();const k=G.pat/G.patMax;if(robot){const want=k<.3?'worried':'neutral';if(robot.emo!==want&&(robot.emo==='neutral'||robot.emo==='worried'))drawFace(robot,want)}
+  const sec=Math.ceil(G.pat);if(sec<=5&&sec!==lastSec&&sec>0){lastSec=sec;SFX.tick()}if(G.pat<=0)timeout()}
+ updTweens(dt);updPieces(dt);updRobots(dt);updConfetti(dt)}
+let last=performance.now();
+function frame(){requestAnimationFrame(frame);const now=performance.now();const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}
+// ================= test API =================
+function solveNow(wrong){const o=G.order;if(G.state!=='playing'||!o)return false;
+ if(o.type==='cmp'){const c=fcmp(o.A.f,o.B.f);let idx=(o.want==='bigger')===(c>0)?0:1;if(wrong)idx=1-idx;chooseCrate(idx);return true}
+ if(o.type==='set'){const d=o.frac.d;layoutBalls(d,true);let need=o.count;if(wrong)need=need+1<=o.total?need+1:need-1;bench.balls.forEach((b,j)=>setSel(b,j<need));updPlates();renderTools();return true}
+ const t=o.target;let N=t.d===1?1:o.allowed.find(N=>N%t.d===0);if(wrong&&t.d===1){N=o.allowed[0]}
+ sliceTo(N,true);let need=t.n*N/t.d;if(wrong){const max=o.items*N;need=need+1<=max?need+1:need-1}
+ let c=0;for(const it of bench.items)for(const p of it.pieces)setSel(p,c++<need);renderTools();return true}
+window.__game={
+ get state(){return G.state},get level(){return G.rush?'rush':G.li+1},get G(){return G},get bench(){return bench},
+ get order(){const o=G.order;if(!o)return null;return{type:o.type,kind:o.kind,shape:o.shape,target:o.target?fT(o.target):undefined,count:o.count,total:o.total,frac:o.frac?fT(o.frac):undefined,A:o.A&&fT(o.A.f),B:o.B&&fT(o.B.f),want:o.want,items:o.items,allowed:o.allowed,ask:$('ask').textContent}},
+ get camera(){return camera},get stars(){return save.stars.slice()},get coins(){return save.coins},get levels(){return LEVELS.length},
+ loadLevel(n){startLevel(n-1,true)},startRush,showTitle,showLevels,
+ solve(){return solveNow(false)},solveWrong(){return solveNow(true)},deliver,slice(N){sliceTo(N,true);renderTools()},sort(N){layoutBalls(N,true);renderTools()},
+ tapPiece(k,i){const p=bench.items[k]&&bench.items[k].pieces[i];if(p)handleTap(p)},pickBox:chooseCrate,selectWhole,clearSel,
+ next(){if(G.state==='teach')nextOrder()},
+ fastForward(sec){const n=Math.ceil(sec*30);for(let i=0;i<n;i++)update(1/30);renderer.render(scene,camera)},
+ unlockAll(){save.all=true;persist()},resetSave(){save={stars:LEVELS.map(()=>0),coins:0,rushBest:0};persist()},
+ F,fadd,fsub,fcmp,gcd,gens:GENS,LEVELS
+};
+resize();showTitle();frame();
+</script></body></html>
+

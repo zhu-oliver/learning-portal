@@ -33,6 +33,8 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
       <h2>English games</h2>
       <p>Spelling Snake: listen to a word, then steer your snake to collect its letters in order. Seven levels cover short words, sight words, sound teams, magic E, and trickier spellings.</p>
       <Link className="button primary" href="/learn/reading/spelling-snake">Play Spelling Snake <ArrowRight size={18} /></Link>
+      <p>Typing Ninja: slice flying targets by typing their letters. Practise keyboard rows, capitals, words, and sentences across 12 levels.</p>
+      <Link className="button primary" href="/learn/reading/typing-ninja">Play Typing Ninja <ArrowRight size={18} /></Link>
     </section>}
     {subject.slug === "math" && <section className="lesson-final-quiz">
       <h2>Mental Mathematics</h2>
@@ -47,6 +49,19 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
       <Link className="button primary" href="/learn/math/math-kart">Play Math Kart <ArrowRight size={18} /></Link>
       <p>Code Commander: build a program to guide your tank to the flag. Practise sequences, loops, nested loops, and conditions across 25 coding missions.</p>
       <Link className="button primary" href="/learn/math/code-commander">Play Code Commander <ArrowRight size={18} /></Link>
+      <p>Fraction Factory: slice and pack food for hungry robots. Explore equivalent fractions, comparisons, addition, mixed numbers, decimals, and percentages across 12 levels.</p>
+      <Link className="button primary" href="/learn/math/fraction-factory">Play Fraction Factory <ArrowRight size={18} /></Link>
+    </section>}
+    {subject.slug === "science" && <section className="lesson-final-quiz">
+      <h2>Science games</h2>
+      <p>Ecosystem Island: build habitats and watch a living food web. Explore plants, pollination, predators, decomposers, and biodiversity across ten missions and an open sandbox.</p>
+      <Link className="button primary" href="/learn/science/ecosystem-island">Play Ecosystem Island <ArrowRight size={18} /></Link>
+      <p>Time Traveler: repair your time machine across 12 eras, from dinosaurs to the Moon landing. Find parts, answer questions, meet characters, and put events in chronological order.</p>
+      <Link className="button primary" href="/learn/science/time-traveler">Play Time Traveler <ArrowRight size={18} /></Link>
+      <p>Map Quest: explore an interactive globe with countries, landmarks, nature, world regions, and coordinates. Choose a discovery quiz, read about each destination, and collect passport stamps.</p>
+      <Link className="button primary" href="/learn/science/map-quest">Play Map Quest <ArrowRight size={18} /></Link>
+      <p>Planet Hopper: fly a rocket through the solar system, visit planets and moons, and discover facts about each destination.</p>
+      <Link className="button primary" href="/learn/science/planet-hopper">Play Planet Hopper <ArrowRight size={18} /></Link>
     </section>}
     <h2 className="lessons-title">Choose your grade</h2>
     <p className="history-intro">Ontario curriculum learning for Grades 1–8. Choose a grade to explore its topic lessons, guided activities, practice and separate mixed-format quizzes.</p>

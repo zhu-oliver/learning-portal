@@ -11,6 +11,7 @@ vi.mock("next/navigation", () => ({ notFound: mocks.notFound, redirect: mocks.re
 vi.mock("@/components/result-save", () => ({ ResultSave: () => <p>Result saving enabled</p> }));
 
 import DashboardPage from "./page";
+import GamesPage from "./games/page";
 import SubjectPage from "./[subject]/page";
 import LessonPage from "./[subject]/[lesson]/page";
 import CoursePage from "./[subject]/[lesson]/[course]/page";
@@ -116,6 +117,28 @@ describe("learning pages", () => {
       expect(screen.getByRole("link", { name: new RegExp(slug, "i") })).toHaveAttribute("href", `/learn/${slug}`);
     }
     expect(screen.queryByRole("heading", { name: "Spelling Bee" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Explore all games" })).toHaveAttribute("href", "/learn/games");
+  });
+
+  it("lists every game with its subject play link in the separate Games directory", async () => {
+    render(await GamesPage());
+    expect(screen.getByRole("heading", { level: 1, name: "Games" })).toBeInTheDocument();
+    const expected = [
+      ["Math Army", "math", "math-army"], ["Math Kart", "math", "math-kart"],
+      ["Code Commander", "math", "code-commander"], ["Fraction Factory", "math", "fraction-factory"],
+      ["Spelling Snake", "reading", "spelling-snake"], ["Typing Ninja", "reading", "typing-ninja"],
+      ["Ecosystem Island", "science", "ecosystem-island"], ["Time Traveler", "science", "time-traveler"],
+      ["Map Quest", "science", "map-quest"], ["Planet Hopper", "science", "planet-hopper"],
+    ];
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(expected.length);
+    for (const [name, subject, slug] of expected) {
+      expect(screen.getByRole("heading", { name }).closest("a")).toHaveAttribute("href", `/learn/${subject}/${slug}`);
+    }
+  });
+
+  it("requires sign-in before showing the Games directory", async () => {
+    mocks.requireUser.mockRejectedValueOnce(new Error("login-required"));
+    await expect(GamesPage()).rejects.toThrow("login-required");
   });
 
   it("links all French lessons and renders exactly ten study images", async () => {

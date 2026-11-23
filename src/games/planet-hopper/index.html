@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080d20">
+  <title>Planet Hopper — Solar System Explorer</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/games/planet-hopper/explorer.css">
+  <script type="importmap">{"imports":{"three":"/games/vendor/three-0.160.0/three.module.js"}}</script>
+</head>
+<body>
+  <main id="world" tabindex="-1" aria-label="Interactive 3D solar system"></main>
+  <div id="labels" aria-hidden="true"></div>
+  <header class="topbar">
+    <div><span class="eyebrow">A LITTLE ROCKET'S BIG ADVENTURE</span><h1>Planet Hopper <span>Explorer</span></h1></div>
+    <button id="helpBtn" class="icon-button" aria-label="Show flight instructions">?</button>
+  </header>
+  <nav class="destinations collapsed" aria-label="Choose a destination">
+    <button id="destinationsToggle" aria-expanded="false" aria-controls="destinationList">🪐 Destinations ▾</button>
+    <div class="section-title">SOLAR SYSTEM <span>DESTINATIONS</span></div>
+    <div id="destinationList"></div>
+    <p class="scale-note">Planets, dwarf planets and moons share correct diameter proportions, enlarged about 92× relative to heliocentric distances; the Sun remains enlarged about 31×. Moon distances use the same 92× enlargement. Orbits use reference ellipses and tilts, not live positions. Asteroid/comet sizes and the ship are illustrative. 1 AU = Earth’s average distance from the Sun.</p>
+  </nav>
+  <aside class="info" aria-live="polite">
+    <span class="eyebrow" id="bodyType"></span>
+    <h2 id="bodyName"></h2>
+    <figure id="bodyImageContainer"></figure>
+    <p id="bodyDescription"></p>
+    <p id="textureStatus" class="texture-status" role="status" hidden></p>
+    <dl class="composition"><div><dt>Composition</dt><dd id="bodyComposition"></dd></div></dl>
+    <dl id="bodyFacts"></dl>
+    <div id="distance"></div>
+    <button id="autopilotBtn" class="primary">Fly to destination →</button>
+    <div class="object-more">
+      <a id="bodyWikipedia" target="_blank" rel="noopener">Read more on Wikipedia</a>
+    </div>
+    <p class="hint">Only planet orbits appear by default; selecting another object shows its orbit. After autopilot arrives, drag to look around while staying near the destination. Press a flight key to resume manual flight.</p>
+  </aside>
+  <div class="flight-status"><span class="status-dot"></span><span id="flightStatus">FREE FLIGHT</span><span id="speedStatus"></span></div>
+  <div class="controls-hint">W / S <b>forward / back</b> &nbsp; A / D <b>turn</b> &nbsp; Drag <b>look</b> &nbsp; Q / E <b>up / down</b></div>
+  <div class="touch-controls">
+    <div class="touch-group">
+      <button data-control="left" aria-label="Turn left">◀</button>
+      <button data-control="forward" aria-label="Fly forward">▲</button>
+      <button data-control="right" aria-label="Turn right">▶</button>
+      <button data-control="back" aria-label="Fly backward">▼</button>
+    </div>
+    <div class="touch-group vertical">
+      <button data-control="up" aria-label="Fly up">↑</button>
+      <button data-control="down" aria-label="Fly down">↓</button>
+    </div>
+  </div>
+  <div id="help" class="overlay">
+    <div class="help-card">
+      <span class="eyebrow">WELCOME ABOARD</span>
+      <h2>Explore the solar system</h2>
+      <p>Fly around the Sun, planets, moons, dwarf planets, asteroids and comets. Click an object in space to learn about it, or expand the destination headings to find more.</p>
+      <div class="instructions">
+        <div><strong>W / S</strong><span>Fly forward / backward</span></div>
+        <div><strong>A / D</strong><span>Turn left / right</span></div>
+        <div><strong>Drag</strong><span>Look up, down and around</span></div>
+        <div><strong>Q / E</strong><span>Fly up / down</span></div>
+      </div>
+      <p class="help-note">Planets and comets use reference elliptical orbits, including orbital inclinations and retrograde motion. Planets, dwarf planets and moons are enlarged about 92× relative to heliocentric distances; the Sun remains enlarged about 31×. Moon distances are also enlarged 92×, preserving each system’s size/distance proportions. Moon planes use ecliptic, equatorial or local Laplace references; their fixed orientations are approximate. Planetary and moon animation clocks are accelerated separately, and starting phases are illustrative, not live positions. Asteroid-belt rocks, asteroid/comet sizes and the ship remain illustrative. Flight and the camera adapt for close-up visits.</p>
+      <p class="help-note">Orbit references: <a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html" target="_blank" rel="noopener">JPL planetary elements</a>, <a href="https://ssd.jpl.nasa.gov/sats/elem/" target="_blank" rel="noopener">satellite mean elements</a>, <a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html" target="_blank" rel="noopener">Small-Body Database</a> and <a href="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc" target="_blank" rel="noopener">IAU pole orientations</a>. Elements are fixed snapshots at mixed reference epochs, not an ephemeris.</p>
+      <p class="help-note">The right-side information panel includes additional facts, Wikipedia articles and credited Wikimedia Commons reference images. Scroll the panel to see all details. Some images are illustrations or low-resolution spacecraft views. Choose Load reference image to connect to Wikimedia Commons; this shares connection information such as your IP address. Descriptions and surface textures are included locally in the game.</p>
+      <p class="help-note">Earth, Mercury, Mars, Jupiter and the Moon use locally stored surface maps. Earth: NASA Blue Marble, Reto Stöckli, Robert Simmon and MODIS teams (<a href="https://commons.wikimedia.org/wiki/File:Land_shallow_topo_2048.jpg" target="_blank" rel="noopener">source</a>). Mercury: MESSENGER, Johns Hopkins APL and USGS (<a href="https://commons.wikimedia.org/wiki/File:Mercury_MESSENGER_MDIS_Basemap_MD3Color_Mosaic_Global_32ppd.jpg" target="_blank" rel="noopener">source</a>; grayscale). Mars: NASA/JPL/USGS Viking mosaic (<a href="https://commons.wikimedia.org/wiki/File:Mars_Viking_MDIM21_ClrMosaic_1km.jpg" target="_blank" rel="noopener">source</a>; colorized). Jupiter: NASA/JPL/Space Science Institute Cassini (<a href="https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/" target="_blank" rel="noopener">source</a>). Moon: NASA Scientific Visualization Studio, Ernie Wright, LRO/LROC (<a href="https://svs.gsfc.nasa.gov/4720/" target="_blank" rel="noopener">source</a>). Some maps are resized for the game; other surfaces remain illustrative.</p>
+      <p class="help-note">After autopilot arrives, dragging changes the view while the spacecraft follows its destination. Flight keys or touch controls release it. Dragging during an autopilot journey cancels the journey.</p>
+      <button id="startBtn" class="primary">Start exploring →</button>
+    </div>
+  </div>
+  <div id="error" class="error hide" role="alert"></div>
+  <script type="module" src="/games/planet-hopper/explorer.js"></script>
+</body>
+</html>

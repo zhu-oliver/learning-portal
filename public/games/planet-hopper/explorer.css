@@ -1,0 +1,103 @@
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:#080d20;color:#f5f7ff;font-family:Nunito,"Segoe UI",system-ui,sans-serif}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #ffd47c;outline-offset:3px}
+#world,#labels{position:fixed;inset:0}
+#world{touch-action:none}
+#world canvas{display:block}
+#labels{pointer-events:none;overflow:hidden}
+.world-label{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:.08em;text-shadow:0 2px 6px #000;background:#071022a8;border:1px solid #a9c5e33b;border-radius:20px;padding:4px 8px}
+.topbar{position:fixed;top:24px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.topbar button{pointer-events:auto}
+.eyebrow,.section-title{font-size:10px;font-weight:800;letter-spacing:.19em;color:#9eb8de}
+h1{font-size:22px;letter-spacing:-.03em;margin:4px 0;color:#fff}
+h1 span{font-weight:400;color:#9db1d5}
+.icon-button{width:38px;height:38px;border:1px solid #aec5ec55;border-radius:50%;background:#101a35d9;color:white;font-weight:800;font-size:18px}
+.destinations,.info{position:fixed;top:105px;background:linear-gradient(145deg,#172644ed,#0b142be8);border:1px solid #95b6e53b;box-shadow:0 16px 48px #0005;border-radius:18px;backdrop-filter:blur(12px)}
+.destinations{left:28px;width:200px;padding:16px 12px;max-height:calc(100vh - 190px);overflow:auto}
+.section-title{padding:0 8px 10px;color:#d9e7ff}
+.section-title span{display:block;margin-top:3px;color:#7794bb;font-size:9px}
+#destinationsToggle{display:none}
+#destinationList{display:grid;gap:3px}
+.destination{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;color:#bbcae0;border:1px solid transparent;border-radius:10px;padding:7px 8px;font-size:13px;font-weight:700}
+.destination:hover,.destination.active{background:#527eb43d;border-color:#95b9ea43;color:#fff}
+.destination-icon{font-size:19px;width:25px;text-align:center}
+.category{margin-top:5px;border-top:1px solid #7894b638;padding-top:5px}
+.category>summary{cursor:pointer;list-style:none;padding:8px;color:#d9e7ff;font-size:12px;font-weight:800}
+.category>summary::-webkit-details-marker{display:none}
+.category>summary::before{content:'▸';display:inline-block;margin-right:8px;color:#9eb8de}
+.category[open]>summary::before{transform:rotate(90deg)}
+.category>summary:focus-visible{outline:2px solid #ffd47c;outline-offset:-2px;border-radius:8px}
+.category-list{border-left:1px solid #7894b65c;margin-left:10px;padding-left:5px}
+.system{position:relative}
+.system>details>summary{position:absolute;right:0;top:1px;width:36px;height:34px;display:grid;place-items:center;list-style:none;border-radius:9px;color:#b5cbe6;cursor:pointer;font-size:16px}
+.system>details>summary::-webkit-details-marker{display:none}
+.system>details>summary:hover,.system>details>summary:focus-visible{background:#527eb43d;outline:2px solid #ffd47c;outline-offset:-2px}
+.system>details[open]>summary span{transform:rotate(90deg)}
+.system>.destination{padding-right:36px}
+.moon-list{border-left:1px solid #7894b65c;margin:2px 0 5px 20px;padding-left:6px}
+.moon-list .destination{font-size:12px;padding:5px 7px}
+.moon-list .destination-icon{font-size:14px;width:20px}
+.scale-note,.hint{color:#8ea3c2;font-size:11px;line-height:1.45;margin:12px 8px 0}
+.info{right:28px;width:276px;padding:21px;max-height:calc(100vh - 175px);overflow:auto}
+.info h2{font-size:30px;letter-spacing:-.04em;margin:5px 0 8px}
+.info p{font-size:13px;line-height:1.55;color:#c0cfe5;margin:0}
+.info .texture-status:not([hidden]){margin-top:8px;color:#ffd47c;font-size:11px}
+.info dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:17px 0}
+.info dl.composition{grid-template-columns:1fr;margin-bottom:0}
+.info dl div{padding:9px;background:#ffffff0b;border-radius:9px;min-width:0}
+dt{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#91a9c9}
+dd{margin:5px 0 0;font-size:12px;font-weight:750;color:#f4f8ff}
+#distance{font-size:12px;color:#a8c2e8;margin:0 0 12px}
+.primary{width:100%;border:0;border-radius:11px;background:linear-gradient(110deg,#8fe1e6,#9bb4ff);color:#11223f;padding:12px 14px;font-weight:850}
+.primary:hover{filter:brightness(1.1)}
+.info .hint{font-size:11px;color:#91a9c9;margin:10px 0 0}
+.object-more{margin-top:12px;border-top:1px solid #95b6e53b;padding-top:10px}
+.object-more a{color:#a9d8ff;font-size:11px;overflow-wrap:anywhere}
+#bodyImageContainer{margin:12px 0}
+#bodyImageContainer img{display:block;width:100%;max-height:220px;object-fit:contain;background:#060c1b;border-radius:9px}
+#bodyImageContainer img[hidden]{display:none}
+#bodyImageContainer figcaption,#bodyImageContainer figcaption a{font-size:10px;line-height:1.5;color:#9eb8de;overflow-wrap:anywhere}
+#bodyImageContainer figcaption{margin-top:6px}
+#bodyImageContainer .image-status{font-size:11px;color:#9eb8de;margin:5px 0}
+.flight-status{position:fixed;bottom:25px;left:28px;display:flex;align-items:center;gap:8px;color:#c7d9f3;font-size:10px;font-weight:800;letter-spacing:.12em}
+.status-dot{width:7px;height:7px;background:#7ae5d2;border-radius:50%;box-shadow:0 0 10px #7ae5d2}
+#speedStatus{color:#8da2c0;letter-spacing:0;font-weight:500}
+.controls-hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);border:1px solid #a9c5e333;background:#0b152cdd;border-radius:12px;padding:10px 14px;color:#d9e5fa;font-size:11px;white-space:nowrap}
+.controls-hint b{font-weight:500;color:#93a9c8}
+.touch-controls{display:none;position:fixed;bottom:16px;left:16px;right:16px;justify-content:space-between;pointer-events:none}
+.touch-group{display:grid;grid-template-columns:repeat(3,46px);gap:5px;pointer-events:auto}
+.touch-group button{height:42px;border:1px solid #b6d7f77a;border-radius:12px;background:#162c50cf;color:#fff;touch-action:none;font-size:18px}
+.touch-group button.active{background:#538dc7}
+.touch-group button:nth-child(4){grid-column:2}
+.touch-group.vertical{grid-template-columns:46px;align-content:end}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:#050a1acb;backdrop-filter:blur(8px)}
+.overlay.hide,.error.hide{display:none}
+.help-card{width:min(520px,100%);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#1d3153,#101a35);border:1px solid #a5c4ed66;border-radius:22px;padding:28px;box-shadow:0 20px 70px #0009}
+.help-card h2{font-size:30px;margin:8px 0}
+.help-card p{color:#c0cfe5;line-height:1.55;font-size:14px}
+.instructions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:20px 0}
+.instructions div{display:flex;align-items:center;gap:10px;background:#ffffff0c;padding:11px;border-radius:9px;font-size:12px;color:#bdcce1}
+.instructions strong{color:#fff;min-width:48px}
+.help-card .help-note{font-size:12px;color:#91a9c9}
+.error{position:fixed;inset:0;background:#101a35;color:white;display:grid;place-items:center;padding:30px;text-align:center;z-index:10}
+@media(max-width:700px){
+  .topbar{top:12px;left:14px;right:14px}
+  h1{font-size:17px}.topbar .eyebrow{font-size:8px}
+  .destinations{top:63px;left:10px;right:auto;width:150px;padding:6px;max-height:calc(100vh - 190px);overflow:auto;border-radius:13px}
+  #destinationsToggle{display:block;width:100%;padding:7px 4px;color:#e3efff;background:#527eb43d;border:1px solid #95b9ea43;border-radius:8px;font-size:11px;font-weight:800;text-align:left}
+  .destinations.collapsed #destinationList{display:none}
+  .section-title,.scale-note{display:none}
+  #destinationList{display:grid;gap:2px}
+  .destination{width:100%;padding:6px;font-size:11px}
+  .destination-icon{font-size:16px;width:20px}
+  .moon-list{margin-left:10px;padding-left:4px}
+  .moon-list .destination{font-size:11px;padding:5px 3px}
+  .info{top:63px;bottom:auto;right:10px;width:min(225px,calc(100vw - 180px));padding:10px;border-radius:14px;max-height:calc(100vh - 190px);overflow:auto}
+  .info h2{font-size:21px;margin:3px 0}.info p{font-size:11px;line-height:1.35}
+  .info dl{gap:4px;margin:7px 0}.info dl div{padding:5px}dt{font-size:8px}dd{font-size:10px;margin-top:2px}
+  #distance{font-size:10px;margin-bottom:6px}.info .primary{padding:8px;font-size:12px}.info .hint{display:none}
+  .flight-status{bottom:104px;left:16px;font-size:9px}.controls-hint{display:none}.touch-controls{display:flex}
+  .help-card{padding:22px}.help-card h2{font-size:25px}
+}
+@media(pointer:coarse) and (min-width:701px){.touch-controls{display:flex}.controls-hint{display:none}.flight-status{bottom:115px}}

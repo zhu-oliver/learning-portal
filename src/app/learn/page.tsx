@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock, Compass, History, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Compass, Gamepad2, History, Sparkles } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { subjects } from "@/modules";
 import { SubjectIcon } from "@/components/subject-icon";
@@ -16,6 +16,7 @@ export default async function DashboardPage() {
       <span className="welcome-art" aria-hidden="true"><Compass size={84} strokeWidth={1} /></span>
     </section>
     <section className="discovery-banner"><div><h2>Create your own learning</h2><p>Ask your local AI for a lesson and multiple-choice quiz. Reopen your private saved lessons whenever you sign in.</p><Link className="button secondary" href="/learn/studio"><Sparkles size={17} /> Open AI Learning Studio</Link></div></section>
+    <section className="discovery-banner"><span className="discovery-icon"><Gamepad2 size={26} /></span><div><h2>Games</h2><p>Find every learning game in one place, from maths and spelling adventures to world and solar-system exploration.</p><Link className="button secondary" href="/learn/games">Explore all games <ArrowRight size={17} /></Link></div></section>
     <div className="section-intro"><h2>Your subjects</h2><Link href="/learn/history" className="history-link"><History size={17} /> My result history</Link></div>
     <div className="subject-cards dashboard-cards">{subjects.map((subject) =>
       <Link href={`/learn/${subject.slug}`} className={`subject-card theme-${subject.theme}`} key={subject.slug}>

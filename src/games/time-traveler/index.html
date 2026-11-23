@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Time Traveler</title>
+<script type="importmap">{"imports":{"three":"/games/vendor/three-0.160.0/three.module.js"}}</script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:'Nunito','Segoe UI',system-ui,sans-serif;background:#1b1440;user-select:none;-webkit-user-select:none}
+#world{position:fixed;inset:0;touch-action:none}#world canvas{display:block;cursor:grab}#world canvas:active{cursor:grabbing}
+button{font:inherit;cursor:pointer;border:0}
+#top{position:fixed;left:10px;right:10px;top:10px;display:flex;gap:8px;align-items:flex-start;pointer-events:none;z-index:2}
+#top>*{pointer-events:auto}
+.panel{background:#2b2350e8;color:#fff;border-radius:14px;padding:7px 13px;box-shadow:0 4px 14px #0004}
+#eraBox{font-weight:900;font-size:17px;line-height:1.15;max-width:330px}#eraBox small{display:block;font-weight:700;font-size:12px;color:#ffd166}
+#goals{display:flex;gap:10px;font-weight:900;font-size:15px;align-items:center;min-height:42px}#goals span{white-space:nowrap;opacity:.55}#goals span.on{opacity:1}#goals span.done{color:#7dffc4;opacity:1}
+.spacer{flex:1}
+.tbtn{background:#fff;color:#2b2350;border-radius:12px;padding:9px 12px;font-weight:900;box-shadow:0 3px 0 #b9b2d6;font-size:14px}
+.tbtn:active{transform:translateY(2px);box-shadow:none}
+#task{position:fixed;left:50%;top:66px;transform:translateX(-50%);background:#fffbea;color:#5a3b00;border:2px solid #ffd166;border-radius:12px;padding:6px 14px;font-weight:800;font-size:14px;z-index:2;box-shadow:0 4px 14px #0002;text-align:center;max-width:92vw;pointer-events:none}
+#act{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:3;display:none;background:linear-gradient(#7dffc4,#06d6a0);color:#063b2c;font-weight:900;font-size:19px;padding:14px 24px;border-radius:18px;box-shadow:0 5px 0 #04906b,0 8px 20px #0005;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.06)}}
+#msg{position:fixed;left:50%;top:112px;transform:translateX(-50%);background:#2b2350f0;color:#fff;border:2px solid #b388ff;border-radius:14px;padding:9px 16px;font-weight:800;display:none;z-index:4;box-shadow:0 4px 14px #0004;text-align:center;max-width:90vw;font-size:15px}
+#msg.bad{border-color:#ff6b6b;background:#5a1f2ef0}#msg.good{border-color:#7dffc4;background:#11493af0}
+#help{position:fixed;left:10px;bottom:10px;background:#ffffffd8;color:#2b2350;border-radius:12px;padding:7px 11px;font-size:12px;font-weight:700;z-index:2;max-width:250px;line-height:1.4;transition:opacity .8s;pointer-events:none}
+#dlg{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(680px,calc(100vw - 20px));background:#fff;border-radius:20px;box-shadow:0 10px 30px #0006;display:none;gap:12px;align-items:center;padding:12px 14px;z-index:5;border:4px solid #b388ff}
+#dlgFace{font-size:46px;width:66px;height:66px;flex:0 0 66px;display:flex;align-items:center;justify-content:center;background:#efe9ff;border-radius:50%}
+#dlg .body{flex:1;color:#2b2350}#dlgName{color:#7b3fe4;font-size:15px}#dlgText{margin:3px 0 0;font-size:16px;line-height:1.4;font-weight:600}
+#dlgNext{background:linear-gradient(#ffd166,#f4a300);color:#3b2a00;font-weight:900;padding:12px 16px;border-radius:14px;box-shadow:0 4px 0 #b57700;font-size:16px;white-space:nowrap}
+#warpTxt{position:fixed;left:0;right:0;top:40%;text-align:center;color:#e3eaed;font-weight:900;font-size:34px;text-shadow:0 2px 6px #0008;z-index:6;display:none;pointer-events:none}
+#warpTxt small{display:block;font-size:20px;color:#c1d0d5}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7;transition:opacity .35s}
+#overlay{position:fixed;inset:0;background:#120c2ecc;display:flex;align-items:center;justify-content:center;z-index:10;padding:12px}
+#overlay.hide{display:none}#overlay.light{background:#120c2e66}
+.card{background:#fff;color:#241d45;border-radius:22px;padding:22px 26px;max-width:540px;width:100%;text-align:center;box-shadow:0 14px 44px #0008;max-height:94vh;overflow:auto;position:relative}
+.card.wide{max-width:900px}.card h1{font-size:44px;margin:4px 0;color:#2b2350;line-height:1.05}.card h2{margin:4px 0 8px;color:#2b2350;font-size:24px}
+.card .sub{color:#5e587a;margin:6px 0;font-weight:600;line-height:1.4}
+.card button{margin:6px 4px;padding:12px 22px;border-radius:14px;font-weight:900;font-size:17px;background:linear-gradient(#ffd166,#f4a300);color:#3b2a00;box-shadow:0 4px 0 #b57700}
+.card button:active{transform:translateY(2px);box-shadow:none}
+.card button.sec{background:#ece8f8;color:#2b2350;box-shadow:0 4px 0 #bdb5da}
+.card button.x{position:absolute;right:8px;top:6px;padding:4px 10px;font-size:18px;background:#ece8f8;box-shadow:none;color:#2b2350;margin:0}
+.lesson{background:#f0ebff;border-radius:14px;padding:11px 14px;color:#3a2c6b;text-align:left;line-height:1.45;margin:10px 0;font-weight:600}
+.lesson b{color:#d1495b}
+.big{font-size:46px;color:#f4a300;letter-spacing:6px}
+.emo{font-size:64px;line-height:1}
+.stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:8px 0}.stats div{background:#f3f0fb;border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px;color:#3b3360}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.card .lv{background:#ece8f8;border-radius:16px;padding:10px 4px;color:#2b2350;font-weight:900;box-shadow:0 3px 0 #bdb5da;margin:0;font-size:13px;line-height:1.2}
+.lv .n{font-size:30px}.lv .s{color:#f4a300;font-size:15px;letter-spacing:1px}.lv small{display:block;color:#7a7396;font-weight:700;font-size:11px}.card .lv:disabled{opacity:.45;cursor:default}
+.choices{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.card .ch{margin:0;background:#f3f0fb;color:#241d45;box-shadow:0 4px 0 #cfc7ea;text-align:left;font-size:17px;padding:13px 16px;border:3px solid transparent}
+.card .ch.right{background:#c9f7e4;border-color:#06d6a0;box-shadow:0 4px 0 #04906b}
+.card .ch.wrong{background:#ffd9de;border-color:#ef476f;box-shadow:none;opacity:.7}
+.fb{min-height:24px;font-weight:800;margin:6px 0}.fb.bad{color:#d62839}.fb.good{color:#04906b}
+.shake{animation:shake .35s}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.match>div{display:flex;flex-direction:column;gap:8px}
+.card .mi{margin:0;font-size:15px;padding:11px 10px;background:#f3f0fb;color:#241d45;box-shadow:0 4px 0 #cfc7ea;border:3px solid transparent;line-height:1.25}
+.card .mi.sel{border-color:#7b3fe4;background:#e6dcff}.card .mi.done{background:#c9f7e4;border-color:#06d6a0;box-shadow:none;opacity:.85}.card .mi.wrong{background:#ffd9de;border-color:#ef476f}
+.pick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.card .pk{margin:0;background:#f3f0fb;color:#241d45;box-shadow:0 4px 0 #cfc7ea;padding:8px 4px;font-size:13px;border:3px solid transparent}.pk .e{font-size:38px;display:block}
+.card .pk.right{background:#c9f7e4;border-color:#06d6a0}.card .pk.wrong{background:#ffd9de;border-color:#ef476f;opacity:.6}
+.key{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;background:#fbf3dc;border-radius:12px;padding:8px;margin:8px 0;font-weight:800;color:#6b4b10}
+.key div{display:flex;flex-direction:column;align-items:center;font-size:14px}.key img{height:44px}
+.glyphs{display:flex;justify-content:center;align-items:flex-end;flex-wrap:wrap;gap:4px;background:#f6e7c1;border:4px solid #d9b870;border-radius:14px;padding:12px;margin:10px auto;min-height:90px;max-width:380px}
+.glyphs img{height:62px}.glyphs .rn{font-family:Georgia,'Times New Roman',serif;font-size:58px;font-weight:700;color:#5b3a12;letter-spacing:6px}
+.tl{display:flex;flex-direction:column;gap:7px;margin:8px 0;position:relative;touch-action:none}
+.tlh{font-weight:900;color:#7b3fe4;font-size:13px;text-align:left}
+.tc{display:flex;align-items:center;gap:8px;background:#f3f0fb;border-radius:14px;padding:8px 8px 8px 6px;border:3px solid #ddd5f5;text-align:left;font-weight:800;color:#241d45;font-size:15px;cursor:grab;touch-action:none;transition:transform .12s,background .2s}
+.tc .grip{font-size:18px;color:#a79bd0;padding:0 4px}.tc .e{font-size:28px}.tc .t{flex:1;line-height:1.2}.tc .d{display:block;font-size:12px;color:#7b3fe4;font-weight:900}
+.tc.drag{background:#fff;box-shadow:0 8px 20px #0003;z-index:3;position:relative;cursor:grabbing;transition:none;border-color:#7b3fe4}
+.tc.ok{background:#c9f7e4;border-color:#06d6a0}.tc.no{background:#ffd9de;border-color:#ef476f}
+.card .tc button{margin:0 1px;padding:6px 9px;font-size:13px;box-shadow:0 2px 0 #bdb5da;background:#fff;color:#2b2350}
+.tfq{font-size:20px;font-weight:800;margin:14px 0;color:#241d45;min-height:56px}
+.mt{display:flex;flex-wrap:wrap;justify-content:center;row-gap:14px;gap:14px 0;padding:22px 6px 8px;margin:8px 0;align-items:flex-start;position:relative}
+.mt .node{flex:0 0 96px;text-align:center;position:relative;padding-top:14px}
+.mt .node:before{content:'';position:absolute;left:0;right:0;top:20px;height:6px;background:#d6ccf5}
+.mt .dot{width:44px;height:44px;margin:0 auto;border-radius:50%;background:#fff;border:4px solid #b388ff;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative}
+.mt .node.done .dot{background:#ffe9a8;border-color:#f4a300}.mt .node.lock .dot{background:#eee;border-color:#ccc;filter:grayscale(1)}
+.mt .lbl{font-size:12px;font-weight:900;color:#2b2350;margin-top:4px;line-height:1.15}.mt .yr{font-size:11px;font-weight:900;color:#7b3fe4}.mt .st{color:#f4a300;font-size:12px}
+.mt .gap{flex:0 0 70px;text-align:center;font-size:11px;font-weight:900;color:#a79bd0;padding-top:12px;line-height:1.1}
+.mt .ce{flex:0 0 62px;text-align:center;font-size:11px;font-weight:900;color:#d1495b;padding-top:0;position:relative;white-space:nowrap}.mt .ce:after{content:'';position:absolute;left:50%;top:18px;height:46px;border-left:3px dashed #d1495b}
+.flex{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+@media(max-width:760px){#top{flex-wrap:wrap;gap:6px;left:6px;right:6px;top:6px}#top .spacer{display:none}#eraBox{flex:1 1 55%;font-size:14px;padding:6px 10px}#eraBox small{font-size:11px}#goals{flex:1 1 35%;font-size:13px;gap:6px;min-height:36px;padding:6px 8px;justify-content:center}
+.tbtn{flex:1;padding:7px 4px;font-size:12px;white-space:nowrap}#help{display:none}#task{top:112px;font-size:12px}#msg{top:150px;font-size:13px}
+.card{padding:16px 14px}.card h1{font-size:32px}.card h2{font-size:20px}.levels{grid-template-columns:repeat(3,1fr);gap:7px}.pick{grid-template-columns:repeat(4,1fr);gap:5px}.pk .e{font-size:28px}.card .pk{font-size:11px}
+#dlgFace{font-size:32px;width:46px;height:46px;flex:0 0 46px}#dlgText{font-size:14px}#dlg{gap:8px;padding:9px;flex-wrap:wrap}#dlgNext{margin-left:auto;padding:9px 14px}.card .mi{font-size:13px;padding:9px 6px}.tc{font-size:13px}.tc .e{font-size:22px}#warpTxt{font-size:24px}}
+</style></head>
+<body>
+<div id="world"></div>
+<div id="top"><div class="panel" id="eraBox"><span id="eraName">Time Traveler</span><small id="eraDate"></small></div><div class="panel" id="goals"><span id="gParts">⚙️ 0/3</span><span id="gNpc">💬</span><span id="gMach">⚡</span></div><div class="spacer"></div><button class="tbtn" id="hintBtn">💡 Hint</button><button class="tbtn" id="tlBtn">🕰️ Timeline</button><button class="tbtn" id="sndBtn">🔊</button><button class="tbtn" id="gfxBtn">⚙️ Auto</button><button class="tbtn" id="lvlBtn">🗺️ Eras</button></div>
+<div id="task"></div>
+<button id="act"></button>
+<div id="dlg"><div id="dlgFace"></div><div class="body"><b id="dlgName"></b><p id="dlgText"></p></div><button id="dlgNext">Next ▶</button></div>
+<div id="help"><b>Walk:</b> WASD / arrow keys, or tap the ground.<br><b>Look around:</b> drag the world; R resets the view.<br><b>Talk / use:</b> E or Space, or tap people & things.</div>
+<div id="msg"></div><div id="warpTxt"></div><div id="flash"></div>
+<div id="overlay"><div class="card" id="card"></div></div>
+<script type="module">
+import * as THREE from 'three';
+
+
+// ===== ERA DATA (answer index a is always the correct one; choices are shuffled at display) =====
+const ERAS=[
+{id:'dino',name:'Age of Dinosaurs',emoji:'🦖',when:'Late Cretaceous · about 68 million years ago',short:'68 million years ago',year:-68e6,
+ sky:['#5fb4ea','#f7e2a8'],ground:'grass',gcol:'#6fae4a',R:23,
+ npc:{name:'Trixie the Triceratops',face:'🦕',model:'dino',x:-4,z:4,
+  lines:['Hi there, time traveler! I\'m Trixie, a baby Triceratops. Yes — a talking one! 🦕',
+   'Right now it\'s the Late Cretaceous, about 68 million years ago. My big neighbor T. rex lives here too!',
+   'Dinosaurs ruled Earth for over 160 million years. The very first ones appeared about 230 million years ago.',
+   'Uh-oh… your time machine left some weird things lying around. They do NOT belong in my time!']},
+ parts:[
+  {x:-9,z:-4,where:'in a nest of dinosaur eggs',q:'Which dinosaur had three horns and a big bony frill?',c:['Triceratops','Stegosaurus','Velociraptor'],f:'Triceratops means "three-horned face". It lived at the same time as T. rex!'},
+  {x:12,z:-9,where:'behind the swamp ferns',q:'What most likely wiped out the giant dinosaurs 66 million years ago?',c:['A huge asteroid hitting Earth','Too much rain','Hungry humans'],f:'An asteroid about 10 km wide crashed near today\'s Mexico. Humans didn\'t show up until more than 60 million years later!'},
+  {x:-15,z:6,where:'under a giant fern',q:'Which animals alive today are related to dinosaurs?',c:['Birds','Cats','Frogs'],f:'Birds are living dinosaurs! A chicken is a distant cousin of T. rex.'}],
+ ch:{type:'odd',title:'Spot the Time Mistakes!',intro:'Three things in my valley don\'t belong in the age of dinosaurs. Tap them to zap them back to their own time! Careful — some things really did live here.',
+  items:[{e:'👦',x:5,z:-3,bad:1,why:'A person! Humans appeared more than 60 million years AFTER the giant dinosaurs.'},
+   {e:'🚗',x:-7,z:-8,bad:1,why:'A car! The first cars were built in the 1880s CE.'},
+   {e:'🍕',x:15,z:4,bad:1,why:'Pizza! It comes from Italy and is only a few hundred years old.'},
+   {e:'🌸',x:-8,z:9,bad:0,why:'Flowers belong! The first flowering plants bloomed while dinosaurs were alive.'},
+   {e:'🐢',x:7,z:-7,bad:0,why:'Turtles belong! They lived alongside the dinosaurs — and they are still here today.'}]},
+ tl:[{t:'The first dinosaurs appear',e:'🦎',d:'about 230 million years ago',y:-230e6},
+  {t:'Stegosaurus munches plants',e:'🦕',d:'about 150 million years ago',y:-150e6},
+  {t:'T. rex stomps around',e:'🦖',d:'about 68 million years ago',y:-68e6},
+  {t:'An asteroid hits — giant dinosaurs die out',e:'☄️',d:'66 million years ago',y:-66e6},
+  {t:'The first modern humans appear',e:'🧑',d:'about 300,000 years ago',y:-3e5}],
+ facts:['T. rex had teeth about as long as bananas — and the biggest ones were even longer!','Stegosaurus lived so long before T. rex that T. rex actually lived closer in time to YOU than to Stegosaurus!']},
+
+{id:'egypt',name:'Ancient Egypt',emoji:'🐫',when:'Old Kingdom · about 2560 BCE',short:'2560 BCE',year:-2560,
+ sky:['#5aa9e6','#fbe3b4'],ground:'sand',gcol:'#e2c27d',R:23,
+ npc:{name:'Nefer the Scribe',face:'📜',model:'person',hat:'nemes',skin:'#b07a4a',shirt:'#f4ecd8',pants:'#f4ecd8',dress:1,x:-4,z:4,
+  lines:['Greetings, traveler! I am Nefer, a scribe. I write with reed pens on papyrus. 📜',
+   'Our king, Pharaoh Khufu, is building the Great Pyramid. It takes thousands of skilled workers about 20 years!',
+   'Egypt became one kingdom around 3100 BCE, when Upper and Lower Egypt were joined together.',
+   'Scribes like me also write numbers in hieroglyphs. Can you read them? Let\'s test you!']},
+ parts:[
+  {x:-11,z:-10,where:'tucked in the paws of the Sphinx',q:'Which pharaoh was the Great Pyramid of Giza built for?',c:['Pharaoh Khufu','Cleopatra','Julius Caesar'],f:'The Great Pyramid was built for Khufu. It was the tallest human-made building in the world for about 3,800 years!'},
+  {x:13,z:-6,where:'inside a clay pot',q:'Which river gave Egypt water and rich farmland?',c:['The Nile','The Amazon','The Thames'],f:'Each year the Nile flooded and left behind rich black mud — perfect for growing wheat.'},
+  {x:-10,z:9,where:'among the papyrus reeds',q:'Egyptians wrote on sheets made from a river plant. What was it called?',c:['Papyrus','Plastic','Glass'],f:'Our word "paper" comes from "papyrus"!'}],
+ ch:{type:'decode',kind:'egypt',title:'Read the Hieroglyph Numbers!',intro:'Egyptians wrote numbers with picture symbols. Use the key to work out each number.',
+  rounds:[{n:32,o:[32,23,302]},{n:214,o:[214,241,124]},{n:1103,o:[1103,1013,113]}]},
+ tl:[{t:'Upper and Lower Egypt join into one kingdom',e:'👑',d:'about 3100 BCE',y:-3100},
+  {t:'The Great Pyramid of Giza is built',e:'🔺',d:'about 2560 BCE',y:-2560},
+  {t:'Tutankhamun becomes pharaoh as a boy',e:'🧒',d:'about 1332 BCE',y:-1332},
+  {t:'Cleopatra VII rules Egypt',e:'👸',d:'51 BCE',y:-51},
+  {t:'The Rosetta Stone is found',e:'🔎',d:'1799 CE',y:1799}],
+ facts:['Hieroglyphs were a mystery for centuries until the Rosetta Stone helped Jean-François Champollion crack the code in 1822.','Egyptians made mummies to keep bodies safe for the afterlife — they even mummified cats!']},
+
+{id:'greece',name:'Ancient Greece',emoji:'🏛️',when:'Classical Athens · about 432 BCE',short:'432 BCE',year:-432,
+ sky:['#4aa3f0','#e9f4ff'],ground:'dry',gcol:'#b7b46a',R:23,
+ npc:{name:'Nikos the Runner',face:'🏃',model:'person',hat:'wreath',skin:'#d9a273',shirt:'#ffffff',pants:'#ffffff',dress:1,x:-4,z:4,
+  lines:['Yassou! I\'m Nikos. I\'m training for the Olympic Games! 🏃',
+   'The first recorded Olympics were in 776 BCE at Olympia, held to honor Zeus. Winners got an olive wreath, not a gold medal!',
+   'Up on the Acropolis is the brand-new Parthenon, a temple for the goddess Athena. It was finished in 432 BCE.',
+   'Greece had amazing thinkers too. Can you match each one to the big idea they\'re famous for?']},
+ parts:[
+  {x:-14,z:-8,where:'in the olive grove',q:'The ancient Olympic Games honored which god?',c:['Zeus','Thor','Ra'],f:'Every 4 years, athletes gathered at Olympia to compete in honor of Zeus, king of the Greek gods.'},
+  {x:15,z:-10,where:'beside a fallen column',q:'The Parthenon is a temple for which goddess?',c:['Athena','Aphrodite','Isis'],f:'Athena was the goddess of wisdom — and the city of Athens is named after her.'},
+  {x:-6,z:13,where:'inside an amphora (a tall jar)',q:'Athens invented "demokratia" (democracy). What does it mean?',c:['Rule by the people','Rule by one king','Rule by robots'],f:'"Demos" means people and "kratos" means power. Citizens voted on laws themselves!'}],
+ ch:{type:'match',title:'Match the Greek Thinkers!',intro:'Tap a thinker, then tap what they are famous for.',
+  pairs:[['🛁 Archimedes','Shouted "Eureka!" and studied levers & floating'],['⚕️ Hippocrates','Called the "father of medicine"'],['📐 Pythagoras','A famous rule about triangles'],['📖 Homer','Epic poems: the Iliad and the Odyssey']]},
+ tl:[{t:'The first recorded Olympic Games',e:'🏅',d:'776 BCE',y:-776},
+  {t:'Democracy begins in Athens',e:'🗳️',d:'about 508 BCE',y:-508},
+  {t:'The Parthenon is finished',e:'🏛️',d:'432 BCE',y:-432},
+  {t:'Alexander the Great becomes king',e:'🐎',d:'336 BCE',y:-336},
+  {t:'Rome takes control of Greece',e:'🦅',d:'146 BCE',y:-146}],
+ facts:['With BCE dates, bigger numbers are LONGER ago: 776 BCE came before 432 BCE!','Lots of English words come from Greek — "telephone" means "far voice".']},
+
+{id:'china',name:'Ancient China',emoji:'🏯',when:'Qin Dynasty · about 210 BCE',short:'210 BCE',year:-210,
+ sky:['#6db3e8','#f3ecd6'],ground:'grass',gcol:'#7fae5a',R:23,
+ npc:{name:'Lan the Inventor',face:'🏮',model:'person',hat:'conical',skin:'#e8c095',shirt:'#c0392b',pants:'#2c3e50',x:-4,z:4,
+  lines:['Ni hao! I\'m Lan. I love inventing things! 🏮',
+   'In 221 BCE, Qin Shi Huang united China and became the First Emperor. He joined old walls together to guard the north.',
+   'Later, the Silk Road carried our silk all the way to Europe. And about 105 CE, Cai Lun improved how paper was made!',
+   'China gave the world many great inventions. Can you pick them out?']},
+ parts:[
+  {x:-18,z:-3,where:'at the foot of a watchtower',q:'Why was the Great Wall built?',c:['To protect against invaders from the north','To keep pandas inside','To hold back the ocean'],f:'Walls were built and rebuilt for about 2,000 years. The brick wall most people visit today was built by the Ming dynasty.'},
+  {x:15,z:-5.6,where:'next to a clay soldier',q:'What did the First Emperor have buried near his tomb?',c:['An army of clay soldiers','Real dragons','A giant robot'],f:'The Terracotta Army has thousands of life-size clay soldiers — and their faces are all different!'},
+  {x:-7,z:14,where:'in the bamboo grove',q:'Which soft cloth did ancient China make from caterpillar cocoons?',c:['Silk','Denim','Polyester'],f:'Silkworms spin cocoons of silk thread. China kept how to make silk a secret for a very long time!'}],
+ ch:{type:'pick',title:'Inventions from Ancient China',intro:'Tap the 4 inventions that came from ancient China.',
+  items:[{e:'📜',t:'Paper',ok:1,why:'Paper was invented in China about 2,000 years ago.'},{e:'🧭',t:'Compass',ok:1,why:'Chinese inventors used magnets to point south and north.'},{e:'🎆',t:'Fireworks',ok:1,why:'Gunpowder fireworks were invented in China.'},{e:'🧵',t:'Silk',ok:1,why:'Silk-making began in China thousands of years ago.'},
+   {e:'💡',t:'Light bulb',ok:0,why:'Light bulbs came in the 1800s CE.'},{e:'📱',t:'Smartphone',ok:0,why:'Smartphones are from the 2000s!'},{e:'🚂',t:'Steam train',ok:0,why:'Steam trains came from Britain in the 1800s.'},{e:'✈️',t:'Airplane',ok:0,why:'The first airplane flew in 1903.'}]},
+ tl:[{t:'Qin Shi Huang unites China as First Emperor',e:'👑',d:'221 BCE',y:-221},
+  {t:'The Terracotta Army is buried with the emperor',e:'🗿',d:'about 210 BCE',y:-210},
+  {t:'Silk Road trade begins',e:'🐫',d:'about 130 BCE',y:-130},
+  {t:'Cai Lun improves papermaking',e:'📜',d:'about 105 CE',y:105},
+  {t:'The Ming dynasty builds the brick Great Wall',e:'🧱',d:'1500s CE',y:1550}],
+ facts:['All the Great Wall\'s sections together are over 20,000 km long!','Myth buster: you can\'t really see the Great Wall from space with just your eyes — it\'s long but very narrow.']},
+
+
+{id:'rome',name:'Roman Empire',emoji:'🏟️',when:'Rome · 80 CE',short:'80 CE',year:80,
+ sky:['#5ba8e8','#f8ead0'],ground:'stone',gcol:'#c9b48e',R:23,
+ npc:{name:'Livia the Engineer',face:'📏',model:'person',hat:'bun',skin:'#dcae82',shirt:'#8e44ad',pants:'#8e44ad',dress:1,x:-4,z:4,
+  lines:['Salve! I\'m Livia, a Roman engineer. I help build roads and aqueducts! 📏',
+   'Legend says Rome was founded in 753 BCE. This year, 80 CE, our Emperor Titus is opening the giant Colosseum!',
+   'Just last year, in 79 CE, Mount Vesuvius erupted and buried the town of Pompeii in ash.',
+   'We Romans write numbers with letters. I = 1, V = 5, X = 10, L = 50, C = 100. Can you read them?']},
+ parts:[
+  {x:-18,z:2,where:'under an arch of the aqueduct',q:'What did Romans build to carry fresh water into their cities?',c:['Aqueducts','Plastic pipelines','Rainbows'],f:'Aqueducts used a gentle downhill slope so gravity pulled the water along — sometimes for many kilometers!'},
+  {x:13,z:-6,where:'behind a market stall',q:'What was the Colosseum mainly used for?',c:['Big public shows, like gladiator contests','Swimming lessons','Car races'],f:'The Colosseum could hold about 50,000 people. It still stands in Rome today!'},
+  {x:10,z:14.4,where:'beside the fountain',q:'Which language did the ancient Romans speak?',c:['Latin','English','Japanese'],f:'Spanish, French, Italian, Portuguese and Romanian all grew out of Latin!'}],
+ ch:{type:'decode',kind:'roman',title:'Crack the Roman Numerals!',intro:'Put a smaller numeral BEFORE a bigger one to subtract: IV = 4, XL = 40.',
+  rounds:[{n:'XIV',a:14,o:[14,16,9]},{n:'XLII',a:42,o:[42,62,38]},{n:'LXXX',a:80,o:[80,30,70]}]},
+ tl:[{t:'Rome is founded (says the legend)',e:'🐺',d:'753 BCE',y:-753},
+  {t:'Julius Caesar is killed',e:'🗡️',d:'44 BCE',y:-44},
+  {t:'Mount Vesuvius buries Pompeii',e:'🌋',d:'79 CE',y:79},
+  {t:'The Colosseum opens',e:'🏟️',d:'80 CE',y:80},
+  {t:'The Western Roman Empire falls',e:'🏚️',d:'476 CE',y:476}],
+ facts:['Roman roads were built so well that some are still used today!','Roman numerals have no zero — the Romans didn\'t use a symbol for it.']},
+
+{id:'vikings',name:'Vikings',emoji:'⛵',when:'Viking Age · about 1000 CE',short:'1000 CE',year:1000,
+ sky:['#7fa9cf','#e3ecf2'],ground:'snowgrass',gcol:'#8aa373',R:23,
+ npc:{name:'Astrid the Shipbuilder',face:'🛶',model:'person',hat:'braids',skin:'#f2cfae',shirt:'#2e86ab',pants:'#5d4037',dress:1,x:-4,z:4,
+  lines:['Hei! I\'m Astrid. I build longships from oak wood. ⛵',
+   'Vikings came from Scandinavia — today\'s Norway, Sweden and Denmark. Many of us were farmers, traders and explorers.',
+   'We sailed to Iceland around 874 CE, and Erik the Red started a settlement in Greenland around 985 CE.',
+   'People tell lots of stories about Vikings. Some are true, and some are myths! Can you tell which?']},
+ parts:[
+  {x:-17,z:-4,where:'behind the longhouse',q:'What were Viking ships called?',c:['Longships','Submarines','Steamboats'],f:'Longships were fast and shallow, so they could sail across oceans AND up rivers.'},
+  {x:8,z:-15,where:'among the pine trees',q:'What were the letters of the Viking alphabet called?',c:['Runes','Emojis','Hieroglyphs'],f:'Vikings carved runes into wood, bone and big standing stones called runestones.'},
+  {x:11,z:9,where:'by the barrels on the dock',q:'Which Viking explorer reached North America around 1000 CE?',c:['Leif Erikson','Christopher Columbus','Neil Armstrong'],f:'Leif Erikson reached a land he called Vinland — almost 500 years before Columbus!'}],
+ ch:{type:'tf',title:'Viking Fact or Myth?',intro:'Is each sentence TRUE or a MYTH?',
+  items:[{s:'Viking helmets had horns on them.',a:false,why:'Myth! No real Viking helmet with horns has been found. The horns came from costumes for operas in the 1800s.'},
+   {s:'Vikings came from Scandinavia — today\'s Norway, Sweden and Denmark.',a:true,why:'True! That\'s their homeland.'},
+   {s:'Thursday is named after the Norse god Thor.',a:true,why:'True! Thursday = "Thor\'s day". Wednesday comes from Odin (Woden) too.'},
+   {s:'Vikings only fought and never traded.',a:false,why:'Myth! Many Vikings were traders who travelled as far as the Middle East.'}]},
+ tl:[{t:'Vikings raid the monastery at Lindisfarne',e:'⚔️',d:'793 CE',y:793},
+  {t:'Vikings settle in Iceland',e:'🌋',d:'about 874 CE',y:874},
+  {t:'Erik the Red settles Greenland',e:'🧊',d:'about 985 CE',y:985},
+  {t:'Leif Erikson reaches North America',e:'🌲',d:'about 1000 CE',y:1000},
+  {t:'The Viking Age ends',e:'🛡️',d:'1066 CE',y:1066}],
+ facts:['Viking longships had a carved head on the front, and some could carry more than 60 people.','Vikings used sunstones, the Sun and the stars to help them find their way at sea.']},
+
+{id:'medieval',name:'Medieval Castle',emoji:'🏰',when:'The Middle Ages · about 1250 CE',short:'1250 CE',year:1250,
+ sky:['#6aa8e0','#eef2e0'],ground:'grass',gcol:'#78a64e',R:23,
+ npc:{name:'Sir Roland the Knight',face:'🛡️',model:'person',hat:'knight',skin:'#f0c8a0',shirt:'#1f4e9c',pants:'#7f8c8d',x:-4,z:4,
+  lines:['Well met, traveler! I am Sir Roland, a knight of this castle. 🛡️',
+   'I started as a page at age 7, then became a squire, and finally a knight!',
+   'In 1215, the barons of England made King John agree to the Magna Carta — even the king had to follow the law.',
+   'Hark! Strange objects from the future have appeared. Help me find them!']},
+ parts:[
+  {x:-16,z:-7,where:'behind a castle tower',q:'What was the ditch of water around a castle called?',c:['A moat','A moon','A mall'],f:'Moats made it hard for attackers to reach the walls or dig tunnels underneath.'},
+  {x:17,z:8,where:'behind a tournament tent',q:'A boy training to be a knight was first a page, and then a…?',c:['Squire','Pirate','Pharaoh'],f:'Squires looked after a knight\'s armor and horse while they trained.'},
+  {x:-10,z:11,where:'next to the village well',q:'Which document from 1215 said even the king must obey the law?',c:['The Magna Carta','The Rosetta Stone','A pizza menu'],f:'"Magna Carta" is Latin for "Great Charter". Its ideas still shape laws around the world.'}],
+ ch:{type:'odd',title:'Spot the Time Mistakes!',intro:'Three objects from the future have appeared near the castle. Tap them! Careful — some things really belong in the Middle Ages.',
+  items:[{e:'📱',x:6,z:-4,bad:1,why:'A smartphone! Those were invented in the 2000s.'},
+   {e:'🎮',x:-12,z:0,bad:1,why:'A video game controller! Video games came in the 1970s.'},
+   {e:'🚁',x:12,z:-8,bad:1,why:'A helicopter! The first practical helicopters flew in the 1930s–40s.'},
+   {e:'🐎',x:3,z:-1,bad:0,why:'Horses belong! Knights rode warhorses.'},
+   {e:'🕯️',x:-6,z:-4,bad:0,why:'Candles belong! They lit castles at night.'}]},
+ tl:[{t:'Normans conquer England at the Battle of Hastings',e:'🏹',d:'1066 CE',y:1066},
+  {t:'Building starts on Notre-Dame cathedral in Paris',e:'⛪',d:'1163 CE',y:1163},
+  {t:'King John agrees to the Magna Carta',e:'📜',d:'1215 CE',y:1215},
+  {t:'The Black Death reaches Europe',e:'🐀',d:'1347 CE',y:1347},
+  {t:'Joan of Arc leads the French army',e:'⚜️',d:'1429 CE',y:1429}],
+ facts:['Castle toilets (called garderobes) often just dropped into the moat. Yuck!','Some cathedrals took more than 100 years to build.']},
+
+{id:'maya',name:'The Maya',emoji:'🌽',when:'Chichen Itza · about 950 CE',short:'950 CE',year:950,
+ sky:['#56a8d8','#e6f2d4'],ground:'jungle',gcol:'#4f8a3c',R:23,
+ npc:{name:'Kinich the Sky-Watcher',face:'🔭',model:'person',hat:'feathers',skin:'#b5794a',shirt:'#e67e22',pants:'#f1e0c5',x:-4,z:4,
+  lines:['Welcome to Chichen Itza! I\'m Kinich. I watch the Sun, Moon and stars. ✨',
+   'Maya astronomers made very accurate calendars. Big Maya cities like El Mirador were already thriving around 300 BCE!',
+   'The great pyramid here, El Castillo, honors Kukulcan, the feathered serpent. It was built roughly 900–1000 CE.',
+   'We write numbers with dots and bars — and we were one of the first peoples to use ZERO! Try reading some.']},
+ parts:[
+  {x:-16,z:-10,where:'deep in the jungle',q:'Maya astronomers were famous for making very accurate…?',c:['Calendars','Telescopes','Video games'],f:'Without telescopes, the Maya tracked the Sun, Moon and Venus with amazing accuracy.'},
+  {x:19,z:-8,where:'behind the ball court',q:'Which treat comes from the cacao beans the Maya loved?',c:['Chocolate','Pizza','Ice cream'],f:'The Maya made a frothy, spicy chocolate drink — and cacao beans were even used like money!'},
+  {x:-4,z:13,where:'at the base of a carved stela',q:'At El Castillo during the spring and fall equinox, what appears on the stairs?',c:['A shadow shaped like a snake','A rainbow','Snow'],f:'Triangles of sunlight and shadow make it look like a serpent slithering down the steps!'}],
+ ch:{type:'decode',kind:'maya',title:'Read the Maya Numbers!',intro:'A dot = 1, a bar = 5, and a shell = 0. Add them up!',
+  rounds:[{n:8,o:[8,6,13]},{n:0,o:[0,1,5]},{n:17,o:[17,12,22]}]},
+ tl:[{t:'Big Maya cities like El Mirador thrive',e:'🏙️',d:'about 300 BCE',y:-300},
+  {t:'Temple I is built in the city of Tikal',e:'🛕',d:'about 730 CE',y:730},
+  {t:'El Castillo rises at Chichen Itza',e:'🔺',d:'about 900–1000 CE',y:950},
+  {t:'Spanish ships reach the Yucatán',e:'⛵',d:'1517 CE',y:1517},
+  {t:'Millions of Maya people live in Mexico and Central America',e:'🌎',d:'today',y:2025}],
+ facts:['The Maya played a ball game where players hit a heavy rubber ball with their hips!','Maya people never disappeared — millions still live in Mexico, Guatemala and nearby, and many speak Mayan languages.']},
+
+
+{id:'renaissance',name:'The Renaissance',emoji:'🎨',when:'Florence, Italy · about 1503 CE',short:'1503 CE',year:1503,
+ sky:['#64a9e4','#fbe8cf'],ground:'plaza',gcol:'#c98d5a',R:23,
+ npc:{name:'Leonardo da Vinci',face:'🎨',model:'person',hat:'beret',beard:1,skin:'#efc9a4',shirt:'#7b2d26',pants:'#3d2b1f',dress:1,x:-4,z:4,
+  lines:['Buongiorno! I am Leonardo — painter, inventor and very curious person! 🎨',
+   'I was born in 1452. Today, in 1503, I am starting a portrait of a smiling lady. People will call it the Mona Lisa.',
+   'Books are spreading fast thanks to Gutenberg\'s printing press from about 1440. New ideas are everywhere!',
+   'My friends and rivals are famous too. Can you match each great mind to their work?']},
+ parts:[
+  {x:-15,z:-4,where:'behind the old houses',q:'"Renaissance" is a French word. What does it mean?',c:['Rebirth','Spaghetti','Castle'],f:'People rediscovered ideas from ancient Greece and Rome, so it felt like learning was being "reborn".'},
+  {x:16,z:-12,where:'behind Leonardo\'s workshop',q:'Which famous painting of a smiling woman did Leonardo paint?',c:['The Mona Lisa','The Starry Night','The Scream'],f:'The Mona Lisa hangs in the Louvre museum in Paris. Millions of people visit her every year!'},
+  {x:-8,z:12,where:'next to the fountain',q:'Which invention by Johannes Gutenberg helped books spread quickly?',c:['The printing press','The telephone','The light bulb'],f:'Before printing presses, books were copied by hand — one could take months!'}],
+ ch:{type:'match',title:'Match the Great Minds!',intro:'Tap a person, then tap their famous work.',
+  pairs:[['🖼️ Leonardo da Vinci','Painted the Mona Lisa'],['⛪ Michelangelo','Painted the Sistine Chapel ceiling'],['📚 Gutenberg','Built a printing press with movable type'],['🔭 Galileo','Spotted moons around Jupiter with a telescope']]},
+ tl:[{t:'Gutenberg\'s printing press starts printing',e:'📚',d:'about 1440 CE',y:1440},
+  {t:'Leonardo da Vinci is born',e:'👶',d:'1452 CE',y:1452},
+  {t:'Leonardo begins the Mona Lisa',e:'🖼️',d:'1503 CE',y:1503},
+  {t:'Michelangelo finishes the Sistine Chapel ceiling',e:'⛪',d:'1512 CE',y:1512},
+  {t:'Galileo discovers moons circling Jupiter',e:'🔭',d:'1610 CE',y:1610}],
+ facts:['Leonardo wrote many notes in mirror writing — from right to left!','Leonardo sketched flying machines about 400 years before the first airplane flew.']},
+
+{id:'explore',name:'Age of Exploration',emoji:'🧭',when:'Age of Exploration · about 1500 CE',short:'1500 CE',year:1500,
+ sky:['#4fb0e8','#e8f7ff'],ground:'beach',gcol:'#ecd8a0',R:18,
+ npc:{name:'Captain Isabel',face:'🧭',model:'person',hat:'tricorn',skin:'#e2b48c',shirt:'#1a5276',pants:'#ecf0f1',x:-4,z:4,
+  lines:['Ahoy! I\'m Captain Isabel, navigator of this ship! 🧭',
+   'Sailors use compasses, maps and the stars to find their way across huge oceans.',
+   'Long voyages are hard — but explorers from many lands are changing the map of the world!',
+   'Can you match each explorer to their famous voyage?']},
+ parts:[
+  {x:-13,z:-6,where:'under the palm trees',q:'Which tool uses a magnet to show which way is north?',c:['A compass','An hourglass','A telescope'],f:'The magnetic needle lines up with Earth\'s magnetic field, so it always points north.'},
+  {x:12,z:-9,where:'between the rocks',q:'In 1492, Christopher Columbus sailed across which ocean?',c:['The Atlantic','The Pacific','The Arctic'],f:'Columbus was hoping to reach Asia, but landed in the Caribbean instead.'},
+  {x:9,z:10,where:'beside the rowboat',q:'Sailors on long voyages got sick with scurvy. What prevents it?',c:['Vitamin C from fruits like lemons','Eating more cheese','Sleeping in hammocks'],f:'Later, British sailors drank lime juice to stay healthy — that\'s why they were nicknamed "limeys"!'}],
+ ch:{type:'match',title:'Match the Explorers!',intro:'Tap an explorer, then tap their famous voyage.',
+  pairs:[['🐉 Zheng He','Led giant Chinese treasure fleets'],['⛵ Christopher Columbus','Crossed the Atlantic Ocean in 1492'],['🌶️ Vasco da Gama','Sailed around Africa to reach India'],['🌍 Magellan\'s crew','First voyage all the way around the world']]},
+ tl:[{t:'Zheng He\'s treasure fleet sets sail',e:'🐉',d:'1405 CE',y:1405},
+  {t:'Columbus crosses the Atlantic',e:'⛵',d:'1492 CE',y:1492},
+  {t:'Vasco da Gama reaches India by sea',e:'🌶️',d:'1498 CE',y:1498},
+  {t:'Magellan\'s crew finishes sailing around the world',e:'🌍',d:'1522 CE',y:1522},
+  {t:'James Cook maps Australia\'s east coast',e:'🦘',d:'1770 CE',y:1770}],
+ facts:['Magellan himself died on the voyage — only 18 of about 270 sailors made it all the way around the world.','Zheng He\'s biggest ships may have been several times longer than Columbus\'s ships!']},
+
+{id:'industrial',name:'Industrial Revolution',emoji:'🚂',when:'Britain · 1843 CE',short:'1843 CE',year:1843,
+ sky:['#8fa7b8','#e4ddd0'],ground:'cobble',gcol:'#8d8f73',R:23,
+ npc:{name:'Ada Lovelace',face:'⚙️',model:'person',hat:'bun',skin:'#f3d3b8',shirt:'#5b2c6f',pants:'#5b2c6f',dress:1,x:-4,z:4,
+  lines:['Good day! I\'m Ada Lovelace. I love mathematics and machines! ⚙️',
+   'James Watt improved the steam engine in 1769, and in 1825 the first public steam railway opened in England.',
+   'In 1843 I wrote steps for Charles Babbage\'s Analytical Engine. Many people call it the first computer program!',
+   'Machines are changing everything. Can you spot the real inventions of the Industrial Age?']},
+ parts:[
+  {x:-17,z:-1,where:'behind the train station',q:'What powered the first trains?',c:['Steam from boiling water','Batteries','Solar panels'],f:'Fire boiled water into steam, and the steam pushed pistons that turned the wheels.'},
+  {x:15,z:1,where:'behind the coal pile',q:'Which fuel was burned to make the steam?',c:['Coal','Ice','Chocolate'],f:'Coal powered factories and trains — but its smoke made cities very dirty.'},
+  {x:-6,z:14,where:'by the brick houses',q:'Before the Industrial Revolution, most cloth was made…?',c:['By hand at home','By robots','In space'],f:'New spinning and weaving machines in factories made cloth much faster than by hand.'}],
+ ch:{type:'pick',title:'Industrial Age Inventions',intro:'Tap the 4 inventions from the Industrial Age (1700s–1800s).',
+  items:[{e:'🚂',t:'Steam train',ok:1,why:'The first public steam railway opened in 1825.'},{e:'🏭',t:'Factory',ok:1,why:'Factories with big machines spread across Britain.'},{e:'📞',t:'Telephone',ok:1,why:'Alexander Graham Bell patented the telephone in 1876.'},{e:'💡',t:'Light bulb',ok:1,why:'Thomas Edison made a long-lasting light bulb in 1879.'},
+   {e:'📱',t:'Smartphone',ok:0,why:'Smartphones are from the 2000s.'},{e:'💻',t:'Laptop',ok:0,why:'Laptops came in the 1980s.'},{e:'🎮',t:'Video game',ok:0,why:'Video games came in the 1970s.'},{e:'🛰️',t:'Satellite',ok:0,why:'The first satellite launched in 1957.'}]},
+ tl:[{t:'James Watt improves the steam engine',e:'♨️',d:'1769 CE',y:1769},
+  {t:'The first public steam railway opens',e:'🚂',d:'1825 CE',y:1825},
+  {t:'Ada Lovelace writes the first computer program',e:'🧮',d:'1843 CE',y:1843},
+  {t:'Bell patents the telephone',e:'📞',d:'1876 CE',y:1876},
+  {t:'Edison\'s light bulb glows',e:'💡',d:'1879 CE',y:1879}],
+ facts:['Sadly, many children worked long hours in factories — new laws slowly made that safer and fairer.','Railways made travel so fast that Britain had to create one standard "railway time" for the whole country.']},
+
+{id:'moon',name:'Moon Landing',emoji:'🚀',when:'Apollo 11 · July 20, 1969',short:'1969 CE',year:1969,
+ sky:['#000006','#0b0b1c'],ground:'moon',gcol:'#9a9a9a',R:23,
+ npc:{name:'Astro Sam',face:'👩‍🚀',model:'person',hat:'astro',skin:'#f0c8a0',shirt:'#f4f4f4',pants:'#f4f4f4',x:-4,z:4,
+  lines:['Hello from the Moon! I\'m Astro Sam from Mission Control\'s time-help team. 🚀',
+   'On July 20, 1969, Apollo 11\'s lunar module "Eagle" landed here. Neil Armstrong and Buzz Aldrin walked on the Moon!',
+   'The Space Race began in 1957 with Sputnik 1, the first satellite. In 1961, Yuri Gagarin became the first person in space.',
+   'Let\'s check your space smarts — true or false?']},
+ parts:[
+  {x:-14,z:-8,where:'behind a big moon boulder',q:'Who was the first person to walk on the Moon?',c:['Neil Armstrong','Yuri Gagarin','Amelia Earhart'],f:'"That\'s one small step for man, one giant leap for mankind." — Neil Armstrong'},
+  {x:15,z:-14,where:'past the lunar module',q:'Why can astronaut footprints last a very long time on the Moon?',c:['There is no wind or rain to wipe them away','The Moon is made of cheese','Guards protect them'],f:'With no air or weather, footprints may last for millions of years!'},
+  {x:-7,z:11,where:'at the edge of a crater',q:'What was the name of Apollo 11\'s lunar module that landed?',c:['Eagle','Falcon','Columbia'],f:'"The Eagle has landed!" Columbia was the command module that stayed in orbit with Michael Collins.'}],
+ ch:{type:'tf',title:'Moon Facts: True or False?',intro:'Is each sentence TRUE or FALSE?',
+  items:[{s:'The Moon has no air, so astronauts need spacesuits to breathe.',a:true,why:'True! Spacesuits carry oxygen and protect from heat and cold.'},
+   {s:'You would weigh the same on the Moon as on Earth.',a:false,why:'False! Moon gravity is about 1/6 of Earth\'s — you could jump much higher!'},
+   {s:'Twelve astronauts walked on the Moon between 1969 and 1972.',a:true,why:'True! Six Apollo missions landed, with two moonwalkers each.'},
+   {s:'The Moon makes its own light, like the Sun.',a:false,why:'False! Moonlight is sunlight bouncing off the Moon.'}]},
+ tl:[{t:'Sputnik 1, the first satellite, launches',e:'🛰️',d:'1957 CE',y:1957},
+  {t:'Yuri Gagarin becomes the first person in space',e:'👨‍🚀',d:'1961 CE',y:1961},
+  {t:'Apollo 11 lands on the Moon',e:'🌕',d:'1969 CE',y:1969},
+  {t:'Apollo 17: the last Moon walk (so far!)',e:'👣',d:'1972 CE',y:1972},
+  {t:'The first crew moves into the International Space Station',e:'🏠',d:'2000 CE',y:2000}],
+ facts:['The computer that guided Apollo 11 had far less memory than a modern calculator!','Apollo astronauts left mirrors on the Moon — scientists still bounce lasers off them to measure the distance.']}
+];
+
+
+// ===== Engine: renderer, scene, helpers =====
+const $=id=>document.getElementById(id);
+const GFX_KEY='timeTraveler_gfx', SAVE_KEY='timeTraveler_progress_v1', MUTE_KEY='timeTraveler_mute';
+let gfxMode=localStorage.getItem(GFX_KEY)||'auto';
+const weakHw=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
+const isLow=()=>gfxMode==='low'||(gfxMode==='auto'&&weakHw);
+let gfxLow=isLow();
+const renderer=new THREE.WebGLRenderer({antialias:!gfxLow,powerPreference:'high-performance'});
+renderer.setPixelRatio(gfxLow?1:Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.98;
+renderer.shadowMap.enabled=!gfxLow;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+$('world').appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(50,1,.1,500);
+const hemi=new THREE.HemisphereLight(0xdff1ff,0x5a4a3a,1.1);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1d6,1.8);sun.position.set(18,30,14);sun.castShadow=!gfxLow;
+sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-30,right:30,top:30,bottom:-30,near:1,far:90});sun.shadow.bias=-.0006;sun.shadow.normalBias=.03;
+scene.add(sun);scene.add(sun.target);
+// sky dome
+const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{top:{value:new THREE.Color()},bot:{value:new THREE.Color()}},
+ vertexShader:'varying vec3 vp;void main(){vp=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ fragmentShader:'uniform vec3 top;uniform vec3 bot;varying vec3 vp;void main(){float h=clamp(vp.y*1.6+.08,0.,1.);gl_FragColor=vec4(mix(bot,top,pow(h,.8)),1.);}'});
+const sky=new THREE.Mesh(new THREE.SphereGeometry(220,48,24),skyMat);scene.add(sky);
+scene.fog=new THREE.Fog(0xffffff,45,140);
+let world=new THREE.Group();scene.add(world);
+let anims=[], colliders=[], clickables=[];
+// seeded random
+let seed=1;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
+const rr=(a,b)=>a+rnd()*(b-a);
+// materials (cached)
+let MC={};
+function mat(c,o){const k=c+(o?JSON.stringify(o):'');if(!MC[k])MC[k]=new THREE.MeshLambertMaterial(Object.assign({color:c,flatShading:true},o||{}));return MC[k]}
+function add(m,p){m.castShadow=m.receiveShadow=!gfxLow;(p||world).add(m);return m}
+function M(geo,c,x,y,z,p){const m=new THREE.Mesh(geo,(c&&c.isMaterial)?c:mat(c));m.position.set(x||0,y||0,z||0);return add(m,p)}
+// box with bottom at y
+function B(w,h,d,c,x,y,z,p,ry){const m=M(new THREE.BoxGeometry(w,h,d),c,x,(y||0)+h/2,z,p);if(ry)m.rotation.y=ry;return m}
+function C(rt,rb,h,c,x,y,z,p,seg){return M(new THREE.CylinderGeometry(rt,rb,h,seg||10),c,x,(y||0)+h/2,z,p)}
+function K(r,h,c,x,y,z,p,seg){return M(new THREE.ConeGeometry(r,h,seg||8),c,x,(y||0)+h/2,z,p)}
+function S(r,c,x,y,z,p,sx,sy,sz){const m=M(new THREE.IcosahedronGeometry(r,1),c,x,y,z,p);m.scale.set(sx||1,sy||1,sz||1);return m}
+function G(x,y,z,p){const g=new THREE.Group();g.position.set(x||0,y||0,z||0);(p||world).add(g);return g}
+// colliders
+const solid=(x,z,r)=>colliders.push({t:'c',x,z,r});
+const solidBox=(x,z,w,d)=>colliders.push({t:'b',x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2});
+function blockedAt(x,z,pr){for(const c of colliders){if(c.t==='c'){if(Math.hypot(x-c.x,z-c.z)<c.r+pr)return true}else if(x>c.x0-pr&&x<c.x1+pr&&z>c.z0-pr&&z<c.z1+pr)return true}return false}
+function resolve(p,pr){for(let it=0;it<2;it++)for(const c of colliders){if(c.t==='c'){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+pr;if(d<m){if(d<1e-4){p.x+=m;continue}p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}else{
+ const cx=Math.max(c.x0,Math.min(p.x,c.x1)),cz=Math.max(c.z0,Math.min(p.z,c.z1));const dx=p.x-cx,dz=p.z-cz,d=Math.hypot(dx,dz);
+ if(d>1e-4){if(d<pr){p.x=cx+dx/d*pr;p.z=cz+dz/d*pr}}else{const l=p.x-c.x0,r=c.x1-p.x,t=p.z-c.z0,b=c.z1-p.z,mn=Math.min(l,r,t,b);
+  if(mn===l)p.x=c.x0-pr;else if(mn===r)p.x=c.x1+pr;else if(mn===t)p.z=c.z0-pr;else p.z=c.z1+pr}}}}
+// canvas textures
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');draw(g,w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep)}t.anisotropy=4;return t}
+function speckle(g,w,h,cols,n,s){for(let i=0;i<n;i++){g.fillStyle=cols[i%cols.length];const r=Math.random()*s+1;g.globalAlpha=.25+Math.random()*.45;g.beginPath();g.arc(Math.random()*w,Math.random()*h,r,0,7);g.fill()}g.globalAlpha=1}
+const GROUNDS={
+ grass:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#5c9a3a','#8cc45e','#4d8530','#a3d16f'],900,3)},
+ sand:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);g.strokeStyle='#cfa962';g.lineWidth=3;g.globalAlpha=.5;for(let y=0;y<h;y+=22){g.beginPath();for(let x=0;x<=w;x+=8)g.lineTo(x,y+Math.sin(x/30+y)*5);g.stroke()}g.globalAlpha=1;speckle(g,w,h,['#f0d595','#c9a35c'],500,2)},
+ dry:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#9c9a52','#cfc98a','#8f7a4a','#d8d3a0'],900,3)},
+ stone:(g,w,h,c)=>{g.fillStyle='#a8977a';g.fillRect(0,0,w,h);const s=32;for(let y=0;y<h;y+=s)for(let x=(y/s%2)*s/2-s;x<w;x+=s){const v=Math.random()*30-15;g.fillStyle=`rgb(${200+v},${182+v},${148+v})`;g.fillRect(x+2,y+2,s-4,s-4)}},
+ snowgrass:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#6f8a5c','#a4b98f','#ffffff','#eef4f7'],1100,4)},
+ jungle:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#3c6e2c','#6aa04a','#7a5a32','#2f5a24'],1100,4)},
+ plaza:(g,w,h,c)=>{g.fillStyle='#b88458';g.fillRect(0,0,w,h);const s=42;for(let y=0;y<h;y+=s)for(let x=0;x<w;x+=s){const v=Math.random()*24-12;g.fillStyle=`rgb(${208+v},${150+v},${104+v})`;g.fillRect(x+2,y+2,s-4,s-4)}},
+ beach:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#f7e7b8','#d9c182','#fff3cf'],900,2)},
+ cobble:(g,w,h,c)=>{g.fillStyle='#6c6a5c';g.fillRect(0,0,w,h);for(let i=0;i<260;i++){const v=Math.random()*30-15;g.fillStyle=`rgb(${128+v},${126+v},${110+v})`;g.beginPath();g.ellipse(Math.random()*w,Math.random()*h,9+Math.random()*6,7+Math.random()*4,Math.random()*3,0,7);g.fill()}},
+ moon:(g,w,h,c)=>{g.fillStyle=c;g.fillRect(0,0,w,h);speckle(g,w,h,['#7d7d7d','#b4b4b4','#8a8a8a','#c8c8c8'],1400,3);for(let i=0;i<14;i++){const x=Math.random()*w,y=Math.random()*h,r=6+Math.random()*16;g.strokeStyle='#777';g.globalAlpha=.5;g.lineWidth=3;g.beginPath();g.arc(x,y,r,0,7);g.stroke();g.globalAlpha=1}}
+};
+function emojiTex(e,size){size=size||128;return canvasTex(size,size,(g)=>{g.font=`${size*.74}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(e,size/2,size*.56)})}
+function emojiSprite(e,s){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTex(e),transparent:true,depthWrite:false}));sp.scale.set(s,s,1);return sp}
+function labelSprite(text,bg,fg){const fs=40;const c=document.createElement('canvas');const g=c.getContext('2d');g.font=`900 ${fs}px Nunito,"Segoe UI",sans-serif`;const w=Math.ceil(g.measureText(text).width)+44;c.width=w;c.height=64;
+ g.font=`900 ${fs}px Nunito,"Segoe UI","Segoe UI Emoji",sans-serif`;g.fillStyle=bg||'#2b2350e0';g.beginPath();g.roundRect(2,2,w-4,60,26);g.fill();g.fillStyle=fg||'#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(text,w/2,34);
+ const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,depthTest:false}));sp.scale.set(w/64*.55,.55,1);sp.renderOrder=5;return sp}
+const glowTex=canvasTex(64,64,(g)=>{const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.4,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64)});
+// particles
+const parts=[];
+function emit(x,y,z,o){o=o||{};const n=o.n||10;for(let i=0;i<n;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:o.color||0xffd166,transparent:true,depthWrite:false,blending:o.smoke?THREE.NormalBlending:THREE.AdditiveBlending,opacity:o.smoke?.55:1}));
+ const s=(o.size||.5)*(.6+Math.random()*.8);sp.scale.set(s,s,1);sp.position.set(x+(Math.random()-.5)*(o.spread||.3),y,z+(Math.random()-.5)*(o.spread||.3));scene.add(sp);
+ const sp0=o.speed||3;parts.push({sp,v:new THREE.Vector3((Math.random()-.5)*sp0,(o.up||0)+Math.random()*sp0*.6,(Math.random()-.5)*sp0),life:o.life||1,max:o.life||1,g:o.g||0,grow:o.grow||0,s})}}
+function updateParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;if(p.life<=0){scene.remove(p.sp);p.sp.material.dispose();parts.splice(i,1);continue}
+ p.v.y-=p.g*dt;p.sp.position.addScaledVector(p.v,dt);const k=p.life/p.max;p.sp.material.opacity=(p.sp.material.blending===THREE.NormalBlending?.5:1)*k;if(p.grow){const s=p.s*(1+(1-k)*p.grow);p.sp.scale.set(s,s,1)}}}
+function smoker(x,y,z,col,rate,size){let acc=0;anims.push((t,dt)=>{acc+=dt;if(acc>rate){acc=0;emit(x,y,z,{n:1,smoke:1,color:col,size:size||1.2,speed:.4,up:1.4,life:2.6,grow:2.2,spread:.3})}})}
+
+// ===== Characters =====
+function person(o){const g=new THREE.Group();const skin=o.skin||'#f1c27d',shirt=o.shirt||'#06d6a0',pants=o.pants||'#3a3f6b';
+ const legL=G(-.15,.72,0,g),legR=G(.15,.72,0,g);
+ for(const L of [legL,legR]){B(.22,.62,.24,pants,0,-.72,0,L);B(.24,.12,.32,o.shoes||'#4a3424',0,-.72,.04,L)}
+ if(o.dress)C(.3,.46,.85,shirt,0,.3,0,g,8);
+ B(.64,.74,.38,shirt,0,.72,0,g);
+ const armL=G(-.42,1.4,0,g),armR=G(.42,1.4,0,g);
+ for(const A of [armL,armR]){B(.18,.6,.2,o.sleeve||shirt,0,-.62,0,A);S(.11,skin,0,-.66,0,A)}
+ const head=G(0,1.5,0,g);S(.32,skin,0,.24,0,head);
+ S(.045,'#1b1b2b',-.11,.27,.29,head);S(.045,'#1b1b2b',.11,.27,.29,head);
+ const smile=M(new THREE.TorusGeometry(.08,.018,4,8,Math.PI),'#7a2e2e',0,.15,.3,head);smile.rotation.z=Math.PI;
+ const h=o.hat;if(h!=='astro'&&h!=='knight')S(.33,o.hair||'#4a2a12',0,.36,-.04,head,1,.62,1);
+ if(h==='goggles'){M(new THREE.TorusGeometry(.33,.04,5,16),'#7a5230',0,.38,0,head).rotation.x=Math.PI/2;for(const s of [-1,1]){const l=M(new THREE.CylinderGeometry(.1,.1,.08,10),'#c98d2a',s*.13,.42,.28,head);l.rotation.x=Math.PI/2;M(new THREE.CircleGeometry(.075,10),mat('#7ff6ff',{emissive:'#2ad4e0'}),s*.13,.42,.33,head)}}
+ if(h==='nemes'){B(.72,.34,.62,'#2a5db0',0,.3,-.05,head);B(.74,.08,.64,'#f2c230',0,.56,-.05,head);for(const s of [-1,1])B(.16,.5,.2,'#f2c230',s*.3,-.15,.1,head)}
+ if(h==='wreath'){const w=M(new THREE.TorusGeometry(.31,.06,5,12),'#4f9a3a',0,.45,0,head);w.rotation.x=Math.PI/2}
+ if(h==='conical'){K(.62,.3,'#d9b45a',0,.5,0,head,10)}
+ if(h==='bun'){S(.16,o.hair||'#3b2414',0,.48,-.22,head)}
+ if(h==='braids'){for(const s of [-1,1])C(.06,.06,.6,'#d9a441',s*.26,-.25,-.05,head,5)}
+ if(h==='knight'){C(.34,.34,.5,'#a9b2bb',0,.08,0,head,10);K(.35,.18,'#a9b2bb',0,.58,0,head,10);B(.4,.05,.05,'#222',0,.3,.33,head);K(.06,.35,'#d62839',0,.76,0,head,5)}
+ if(h==='feathers'){B(.7,.14,.66,'#2c9a6b',0,.42,0,head);for(let i=-2;i<=2;i++){const f=B(.09,.7,.04,['#1fa36f','#e74c3c','#f1c40f','#1fa36f','#2e86de'][i+2],i*.12,.48,-.1,head);f.rotation.z=i*.18}}
+ if(h==='beret'){C(.36,.3,.12,'#7b1f1f',0,.48,0,head,10)}
+ if(h==='tricorn'){K(.55,.3,'#222',0,.45,0,head,3);B(.2,.05,.02,'#f2c230',0,.6,.33,head)}
+ if(h==='astro'){const hm=S(.48,mat('#ffffff',{transparent:true,opacity:.35}),0,.22,0,head);hm.castShadow=false;M(new THREE.SphereGeometry(.42,12,8,0,Math.PI*2,0,Math.PI/2),mat('#f2c230',{emissive:'#553300'}),0,.25,.08,head).rotation.x=Math.PI/2.3;B(.6,.8,.32,'#e8e8e8',0,.6,-.32,g)}
+ if(o.beard){K(.24,.5,'#cfcfcf',0,-.25,.18,head,6).rotation.x=Math.PI}
+ if(o.pack){B(.46,.58,.24,'#7b3fe4',0,.78,-.3,g);const ant=C(.02,.02,.4,'#ccc',.14,1.32,-.32,g,4);const bulb=S(.08,mat('#7ff6ff',{emissive:'#2ad4e0'}),.14,1.75,-.32,g);g.userData.bulb=bulb}
+ g.userData={...g.userData,legL,legR,armL,armR,head};return g}
+function animPerson(p,phase,amp){const u=p.userData;const s=Math.sin(phase)*amp;u.legL.rotation.x=s;u.legR.rotation.x=-s;u.armL.rotation.x=-s*.8;u.armR.rotation.x=s*.8}
+function babyTrike(){const g=new THREE.Group();const c='#6fbf73',d='#3f8f4f';
+ S(.8,c,0,.95,0,g,1,.75,1.25);S(.45,c,0,1.05,1.05,g,1,.9,1.1);
+ const fr=M(new THREE.CylinderGeometry(.7,.7,.12,12),'#e8a33d',0,1.35,.8,g);fr.rotation.x=1.2;
+ for(const [x,y,z,r] of [[-.2,1.45,1.35,.5],[.2,1.45,1.35,.5],[0,1.0,1.55,.9]]){const h=K(.07,.4,'#fff6d5',x,y-.2,z,g,6);h.rotation.x=r+.3}
+ S(.06,'#111',-.22,1.25,1.4,g);S(.06,'#111',.22,1.25,1.4,g);
+ for(const [x,z] of [[-.45,.6],[.45,.6],[-.45,-.6],[.45,-.6]])C(.17,.2,.62,d,x,0,z,g,6);
+ const t=K(.32,1.1,c,0,.85,-1.3,g,6);t.rotation.x=-Math.PI/2-.25;return g}
+// ===== Time machine =====
+const tm=new THREE.Group();scene.add(tm);
+const tmGlow=mat('#7ff6ff',{emissive:'#25c8ff',emissiveIntensity:.4});
+const tmSlots=[];let tmRing,tmCore;
+(function buildTM(){C(1.6,1.8,.35,'#5a5f7a',0,0,0,tm,16);C(1.3,1.3,.08,mat('#2a2f4a'),0,.35,0,tm,16);
+ tmRing=M(new THREE.TorusGeometry(1.25,.16,8,28),'#c9a14a',0,1.75,0,tm);tmRing.rotation.y=Math.PI/2;
+ const inner=M(new THREE.TorusGeometry(1.0,.06,6,28),tmGlow,0,1.75,0,tm);inner.rotation.y=Math.PI/2;
+ tmCore=new THREE.Mesh(new THREE.CircleGeometry(.98,28),new THREE.MeshBasicMaterial({color:0x7ff6ff,transparent:true,opacity:.0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));tmCore.position.y=1.75;tmCore.rotation.y=Math.PI/2;tm.add(tmCore);
+ for(const s of [-1,1])B(.25,1.0,.3,'#c9a14a',0,.35,s*1.2,tm);
+ const con=G(1.4,0,0,tm);B(.6,.9,.6,'#5a5f7a',0,0,0,con);const sc=B(.5,.32,.06,mat('#123',{emissive:'#0a6a8a'}),0,.95,.1,con);sc.rotation.x=-.5;
+ for(let i=0;i<3;i++){const s=S(.13,mat('#444'),-.18+i*.18,.92,-.18,con);tmSlots.push(s)}
+ const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x55e6ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.5}));gl.scale.set(4,4,1);gl.position.y=1.75;tm.add(gl);tm.userData.glow=gl;
+ tm.traverse(o=>{if(o.isMesh)o.userData.tap='tm'})})();
+const slotOn=mat('#ffd166',{emissive:'#ff9f1c',emissiveIntensity:1});
+// ===== Part (gear) model =====
+function gearMesh(){const g=new THREE.Group();const m=mat('#ffcf3f',{emissive:'#a66a00',emissiveIntensity:.6});
+ const d=M(new THREE.CylinderGeometry(.42,.42,.16,14),m,0,0,0,g);d.rotation.x=Math.PI/2;
+ for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const t=B(.16,.18,.16,m,Math.cos(a)*.5,Math.sin(a)*.5-.09,0,g);t.rotation.z=a}
+ const hub=M(new THREE.CylinderGeometry(.14,.14,.2,8),'#7b3fe4',0,0,0,g);hub.rotation.x=Math.PI/2;
+ const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd166,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.8}));gl.scale.set(2.2,2.2,1);g.add(gl);return g}
+// ===== Audio =====
+let AC=null,muted=localStorage.getItem(MUTE_KEY)==='1';
+function ac(){if(muted)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,t0,dur,type,vol,f2){const a=ac();if(!a)return;const t=a.currentTime+t0;const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.12,t+.015);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.05)}
+function noise(t0,dur,vol,f1,f2,q){const a=ac();if(!a)return;const t=a.currentTime+t0;const b=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+ const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='bandpass';f.Q.value=q||1;f.frequency.setValueAtTime(f1,t);f.frequency.exponentialRampToValueAtTime(f2||f1,t+dur);const g=a.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f).connect(g).connect(a.destination);s.start(t)}
+const sfx={click(){tone(700,0,.06,'square',.04)},
+ pick(){[880,1175,1568,2093].forEach((f,i)=>tone(f,i*.07,.22,'triangle',.1))},
+ ok(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.08,.25,'triangle',.11))},
+ bad(){tone(240,0,.2,'sawtooth',.06,160);tone(180,.13,.25,'sawtooth',.06,120)},
+ step(){noise(0,.05,.03,500)},
+ talk(){tone(520,0,.06,'sine',.05,640);tone(600,.07,.06,'sine',.05,520)},
+ zap(){tone(1200,0,.25,'square',.05,200);noise(0,.25,.08,3000,400)},
+ power(){tone(110,0,1.4,'sawtooth',.06,880);tone(220,.1,1.3,'triangle',.05,1760);noise(.2,1.2,.05,300,4000)},
+ warp(){tone(80,0,2.6,'sawtooth',.05,1400);tone(160,.2,2.4,'sine',.07,2400);noise(0,2.6,.09,200,6000,.7)},
+ win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.11,.3,'triangle',.1))}};
+const SCALES=[[0,3,7,10,12,15],[0,1,4,5,7,8],[0,2,4,7,9,12],[0,2,4,7,9,12],[0,2,4,5,7,9],[0,2,3,5,7,10],[0,2,3,5,7,8],[0,3,5,7,10,12],[0,2,4,5,7,11],[0,2,4,7,9,11],[0,2,4,5,7,9],[0,4,7,11,14,16]];
+function eraTune(i){const sc=SCALES[i%12];const base=[196,233,262,262,220,247,220,233,262,247,294,262][i%12];const seq=[0,2,1,3,2,4,5];seq.forEach((k,j)=>tone(base*Math.pow(2,sc[k%sc.length]/12),j*.16,.3,j%2?'triangle':'sine',.09))}
+
+
+// ===== Scenery helpers =====
+let deco=1, avoid=[];
+function far(x,z,r){for(const a of avoid)if(Math.hypot(x-a[0],z-a[1])<a[2]+r)return false;return true}
+function scatter(fn,n,r0,r1,minGap){n=Math.round(n*deco);let placed=0,tries=0;while(placed<n&&tries<n*30){tries++;const a=rnd()*Math.PI*2,r=r0+Math.sqrt(rnd())*(r1-r0);const x=Math.cos(a)*r,z=Math.sin(a)*r;
+ if(!far(x,z,minGap||1.2)||blockedAt(x,z,minGap||1))continue;fn(x,z,.8+rnd()*.5);placed++;if(r<27)avoid.push([x,z,(minGap||1.2)*.6])}}
+function trunk(x,z,h,c,r){return C((r||.18)*.75,r||.18,h,c||'#7a5230',x,0,z,null,6)}
+function palm(x,z,s){const g=G(x,0,z);g.scale.setScalar(s);let px=0,py=0;const lean=rr(-.3,.3);for(let i=0;i<5;i++){C(.15,.19,1,'#8a6a3e',px,py,0,g,6);px+=lean*.25;py+=.95}
+ for(let i=0;i<7;i++){const l=G(px,py,0,g);l.rotation.y=i/7*Math.PI*2;const f=B(.32,.05,1.7,'#3f9a3a',0,0,.85,l);f.rotation.x=.35}S(.18,'#6b4a1f',px,py-.1,0,g);if(x*x+z*z<27*27)solid(x,z,.45*s);return g}
+function pine(x,z,s,snow){const g=G(x,0,z);g.scale.setScalar(s);C(.15,.22,1,'#6b4a2a',0,0,0,g,6);for(let i=0;i<3;i++){K(1.3-i*.32,1.5,'#2f6b3f',0,.8+i*.85,0,g,7);if(snow)K((1.3-i*.32)*.55,.5,'#f4f8fb',0,1.9+i*.85,0,g,7)}if(x*x+z*z<27*27)solid(x,z,.5*s);return g}
+function roundTree(x,z,s,col){const g=G(x,0,z);g.scale.setScalar(s);C(.16,.24,1.4,'#6b4a2a',0,0,0,g,6);S(1.0,col||'#4f9a3a',0,2.1,0,g);S(.7,col||'#4f9a3a',.55,1.8,.2,g);if(x*x+z*z<27*27)solid(x,z,.45*s);return g}
+function cypress(x,z,s){const g=G(x,0,z);g.scale.setScalar(s);C(.1,.14,.5,'#5a3a1a',0,0,0,g,5);S(.55,'#2f5a2a',0,2,0,g,1,3.2,1);if(x*x+z*z<27*27)solid(x,z,.4*s);return g}
+function fern(x,z,s,col){const g=G(x,0,z);g.scale.setScalar(s);for(let i=0;i<6;i++){const l=G(0,0,0,g);l.rotation.y=i/6*Math.PI*2+rnd();const f=B(.25,.04,1.1,col||'#3d8b37',0,.25,.5,l);f.rotation.x=-.5}return g}
+function rock(x,z,s,col,sol){const m=M(new THREE.DodecahedronGeometry(s*.7,0),col||'#8c8273',x,s*.35,z);m.scale.set(rr(.8,1.4),rr(.6,1),rr(.8,1.3));m.rotation.y=rnd()*6;if(sol)solid(x,z,s*.75);return m}
+function bush(x,z,s,col){S(.6*s,col||'#3f8a3a',x,.35*s,z,null,1.2,.8,1.1)}
+function waterPlane(w,d,x,z,col,y){const tex=canvasTex(128,128,(g)=>{g.fillStyle=col||'#2f8fd0';g.fillRect(0,0,128,128);g.strokeStyle='#ffffff55';g.lineWidth=2;for(let i=0;i<10;i++){g.beginPath();const yy=Math.random()*128,xx=Math.random()*128;g.moveTo(xx,yy);g.quadraticCurveTo(xx+8,yy-4,xx+16,yy);g.stroke()}},1);
+ tex.repeat.set(w/6,d/6);const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshLambertMaterial({map:tex,transparent:true,opacity:.92}));m.rotation.x=-Math.PI/2;m.position.set(x,y||.04,z);m.receiveShadow=!gfxLow;world.add(m);
+ anims.push((t,dt)=>{tex.offset.x+=dt*.03;tex.offset.y+=dt*.015});return m}
+function torch(x,z){C(.06,.08,1.6,'#5a3a1a',x,0,z);const f=S(.16,mat('#ffb347',{emissive:'#ff7b00',emissiveIntensity:1}),x,1.7,z);anims.push((t)=>{f.scale.setScalar(1+Math.sin(t*14+x)*.15)})}
+function flag(x,y,z,col,p,w){const g=G(x,y,z,p);C(.04,.04,2,'#ddd',0,0,0,g,5);const f=B(w||1,.6,.03,col,(w||1)/2,1.4,0,g);anims.push((t)=>{f.rotation.y=Math.sin(t*3+x)*.25});return g}
+function prism(w,h,len,c,x,y,z,p,ry){const sh=new THREE.Shape();sh.moveTo(-w/2,0);sh.lineTo(w/2,0);sh.lineTo(0,h);sh.closePath();const geo=new THREE.ExtrudeGeometry(sh,{depth:len,bevelEnabled:false});geo.translate(0,0,-len/2);const m=M(geo,c,x,y,z,p);m.rotation.y=ry===undefined?Math.PI/2:ry;return m}
+function stairs(x,y,z,w,h,d,n,col,p){for(let i=0;i<n;i++)B(w,h/n,d*(1-i/n),col,x,y+i*h/n,z+d*i/n/2,p)}
+
+// ===== Era scenes =====
+const SCENES={
+dino(E){waterPlane(9,7,10,-4,'#3f8fa8');solid(10,-4,3.4);
+ const v=G(-16,0,-19);K(9,10,'#6b4a3a',0,0,0,v,9);C(2.2,3,1,'#3a2420',0,9.2,0,v,9);C(2,2,.2,mat('#ff6a00',{emissive:'#ff3d00',emissiveIntensity:1}),0,10.1,0,v,9);solid(-16,-19,8.4);smoker(-16,11,-19,0x555555,.35,2.5);
+ // sauropod
+ const sp=G(-2,0,-13);S(2,'#7f9c6a',0,3.2,0,sp,1.5,1,1);for(const [x,z] of [[-1.6,-.9],[1.6,-.9],[-1.6,.9],[1.6,.9]])C(.4,.45,2.6,'#6f8a5c',x,0,z,sp,7);
+ const neck=G(2.4,3.8,0,sp);const nk=C(.35,.55,5,'#7f9c6a',0,0,0,neck,7);neck.rotation.z=-.7;S(.5,'#7f9c6a',0,5.2,0,neck,1.4,.8,.9);S(.08,'#111',.35,5.4,.35,neck);
+ const tl=K(.6,5,'#7f9c6a',-4.4,2.2,0,sp,7);tl.rotation.z=1.75;solid(-2,-13,3.4);anims.push((t)=>{neck.rotation.z=-.7+Math.sin(t*.8)*.12;neck.rotation.y=Math.sin(t*.5)*.3});
+ // T. rex
+ const tr=G(15,0,-15);tr.rotation.y=-.8;const bd=S(1.2,'#8a5a3c',0,2.6,0,tr,1,.9,1.6);bd.rotation.x=-.3;
+ const hd=G(0,3.7,1.8,tr);B(1,1,1.6,'#8a5a3c',0,-.5,.4,hd);B(.9,.3,1.3,'#a06a48',0,-.75,.45,hd);for(let i=0;i<4;i++)K(.05,.15,'#fff',-.3+i*.2,-.55,1.1,hd,4).rotation.x=Math.PI;S(.1,'#ff0',.45,.2,.6,hd);S(.1,'#ff0',-.45,.2,.6,hd);
+ for(const s of [-1,1]){C(.35,.3,2,'#7a4a30',s*.6,0,0,tr,6);B(.15,.5,.15,'#7a4a30',s*.6,2,1.2,tr)}const tt=K(.6,3.2,'#8a5a3c',0,2.4,-2.6,tr,6);tt.rotation.x=-Math.PI/2-.1;solid(15,-15,2.2);
+ anims.push((t)=>{hd.rotation.x=Math.sin(t*1.3)*.15;hd.rotation.y=Math.sin(t*.7)*.3});
+ // nest
+ C(1,1.2,.3,'#8a6a3e',-9,0,-6,null,9);for(let i=0;i<4;i++)S(.25,'#f3ecd2',-9+Math.cos(i*1.6)*.4,.42,-6+Math.sin(i*1.6)*.4,null,1,1.3,1);solid(-9,-6,1.1);
+ for(const [x,z] of [[-11,-3],[-7.5,-3.5]])rock(x,z,1.2,'#8c8273',1);
+ fern(13,-8,1.5);fern(11,-10,1.4);fern(-16,6,1.6);fern(-14,7.5,1.5);
+ scatter((x,z,s)=>palm(x,z,s*1.2),14,9,22,2);scatter((x,z,s)=>fern(x,z,s),22,5,22,1);scatter((x,z,s)=>rock(x,z,s,'#8c8273'),10,6,22,1);
+ scatter((x,z,s)=>palm(x,z,s*1.4),20,24,40,2);
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;K(rr(8,14),rr(10,20),'#6d8b5a',Math.cos(a)*60,0,Math.sin(a)*60,null,6)}},
+egypt(E){waterPlane(10,90,-21,0,'#2e7fb8');solidBox(-21,0,8,90);
+ for(let z=-30;z<=30;z+=4){fern(-16.3,z+rr(-1,1),1.4,'#5f9a3a')}
+ const pyr=(x,z,r,h,c)=>{const p=K(r,h,c||'#e3c27a',x,0,z,null,4);p.rotation.y=Math.PI/4;return p};
+ pyr(4,-17,9,10);solid(4,-17,6.8);const cap=K(1.3,1.5,mat('#ffd76a',{emissive:'#8a6a00'}),4,8.5,-17,null,4);cap.rotation.y=Math.PI/4;
+ pyr(-7,-22,6.5,7);solid(-7,-22,4.9);pyr(15,-24,5,5.5);solid(15,-24,3.8);
+ // sphinx
+ const sx=G(-7,0,-8);B(2.2,1.6,5,'#d8b46a',0,0,0,sx);B(1.6,1.7,1.5,'#d8b46a',0,1.2,2.2,sx);B(2,1.3,1.4,'#3f6fb5',0,1.9,1.9,sx);B(1.2,1.1,.4,'#c9a25a',0,1.3,3,sx);
+ for(const s of [-1,1])B(.5,.4,2.2,'#d8b46a',s*.75,0,3.2,sx);solidBox(-7,-7.4,2.8,6.6);
+ const ob=G(10,0,1);B(1.2,.5,1.2,'#bb9a5a',0,0,0,ob);const o2=K(.6,6,'#d9bb7a',0,.5,0,ob,4);o2.scale.set(1,1,1);o2.rotation.y=Math.PI/4;solid(10,1,.9);
+ // market pots near part
+ for(const [x,z] of [[12,-5],[14,-5.2],[13.5,-7],[11.6,-6.8]]){S(.4,'#b5653a',x,.4,z,null,1,1.2,1);C(.15,.2,.25,'#b5653a',x,.8,z)}
+ const tent=G(11,0,-2);for(const [x,z] of [[-1,-1],[1,-1],[-1,1],[1,1]])C(.06,.06,2,'#7a5230',x,0,z,tent,5);B(2.4,.1,2.4,'#c0392b',0,2,0,tent);solid(11,-2,1.3);
+ for(const [x,z] of [[-11,10],[-9,10.6],[-11.6,8]])fern(x,z,1.6,'#6aa84f');
+ scatter((x,z,s)=>palm(x,z,s*1.2),7,8,22,2);scatter((x,z,s)=>rock(x,z,s*.7,'#c9a56a'),8,5,22,1);
+ for(let i=0;i<5;i++)pyr(rr(-40,40),rr(-70,-45),rr(5,10),rr(6,11),'#d9b46a')},
+greece(E){const hill=G(0,0,-15);B(18,2.2,11,'#cdbb8a',0,0,0,hill);B(16,.5,9,'#efe9dc',0,2.2,0,hill);solidBox(0,-15,18,11);
+ stairs(0,0,-8.6,6,2.2,2.6,6,'#e9e1cf');
+ const par=G(0,2.7,-15);B(14,.4,7,'#f4efe4',0,0,0,par);const col='#f6f2e9';
+ for(let i=0;i<8;i++)for(const z of [-3,3])C(.32,.38,4,col,-6.1+i*1.74,.4,z,par,10);for(let i=1;i<4;i++)for(const x of [-6.1,6.1])C(.32,.38,4,col,x,.4,-3+i*1.5,par,10);
+ B(13.4,.7,7,'#ece4d4',0,4.4,0,par);B(13.4,.25,7,'#5a7fbf',0,5.1,0,par);
+ prism(7,1.5,13.4,'#f4efe4',0,5.35,0,par);
+ // track
+ const trk=new THREE.Mesh(new THREE.PlaneGeometry(16,4),new THREE.MeshLambertMaterial({map:canvasTex(256,64,(g)=>{g.fillStyle='#c46a43';g.fillRect(0,0,256,64);g.fillStyle='#fff';for(let y=0;y<=64;y+=16)g.fillRect(0,y-1,256,2);g.fillRect(4,0,4,64)})}));trk.rotation.x=-Math.PI/2;trk.position.set(9,.03,3);trk.receiveShadow=true;world.add(trk);
+ // statue
+ B(1.2,1.2,1.2,'#e9e1cf',-10,0,1);const st=person({skin:'#eee',shirt:'#eee',pants:'#eee',hair:'#eee',shoes:'#eee'});st.position.set(-10,1.2,1);st.userData.armR.rotation.x=-2.2;st.userData.armL.rotation.z=.6;world.add(st);solid(-10,1,.9);
+ // fallen columns
+ for(const [x,z,r] of [[14,-8,.3],[16.5,-12,1.2]]){const c=M(new THREE.CylinderGeometry(.38,.38,2.6,10),'#ece4d4',x,.38,z);c.rotation.z=Math.PI/2;c.rotation.y=r;solid(x,z,1.3)}C(.38,.42,2.5,'#ece4d4',17.5,0,-9,null,10);solid(17.5,-9,.6);
+ for(const [x,z] of [[-5,14],[-7.3,14.5],[-4.2,12.4]]){S(.35,'#c0662f',x,.5,z,null,1,1.5,1);C(.12,.18,.3,'#c0662f',x,.95,z,null,8)}
+ for(const [x,z] of [[-15,-11],[-12,-10],[-16.5,-6],[-11,-6.5]])roundTree(x,z,1.1,'#8aa06a');
+ scatter((x,z,s)=>roundTree(x,z,s,'#8aa06a'),10,10,22,2);scatter((x,z,s)=>cypress(x,z,s*1.2),8,10,22,1.5);scatter((x,z,s)=>rock(x,z,s*.6,'#bfb59a'),8,5,22,1);
+ for(let i=0;i<8;i++){const a=Math.PI+i/7*Math.PI;S(rr(10,16),'#9fae7a',Math.cos(a)*62,-4,Math.sin(a)*62,null,1.4,.5,1)}},
+china(E){const pts=[[-34,-4],[-18,-9],[-6,-13],[6,-10],[18,-15],[34,-10]];
+ const wallM='#a89a84';for(let i=0;i<pts.length-1;i++){const [x1,z1]=pts[i],[x2,z2]=pts[i+1];const L=Math.hypot(x2-x1,z2-z1),a=Math.atan2(z2-z1,x2-x1);const g=G((x1+x2)/2,0,(z1+z2)/2);g.rotation.y=-a;
+  B(L,3,2.6,wallM,0,0,0,g);B(L,.15,2.2,'#7d725f',0,3,0,g);for(let k=-L/2+.4;k<L/2;k+=1){B(.5,.5,.3,wallM,k,3,1.15,g);B(.5,.5,.3,wallM,k,3,-1.15,g)}
+  for(let k=0;k<=L;k+=1.4)solid(x1+(x2-x1)*k/L,z1+(z2-z1)*k/L,1.5)}
+ for(const [x,z] of pts.slice(1,-1)){const tw=G(x,0,z);B(3.6,4.6,3.6,'#9c8e78',0,0,0,tw);B(4,.4,4,'#7d725f',0,4.6,0,tw);const r=K(3.2,1.6,'#5d4037',0,5,0,tw,4);r.rotation.y=Math.PI/4;solid(x,z,2.4)}
+ for(let i=0;i<9;i++){const x=-40+i*10;S(rr(8,12),'#5e8f4a',x,-3,rr(-34,-26),null,1,.8,1)}
+ // pagoda
+ const pg=G(-12,0,3);for(let i=0;i<4;i++){B(2.6-i*.4,1.1,2.6-i*.4,i%2?'#c0392b':'#b03a2e',0,i*1.6,0,pg);const r=K(2.6-i*.35,.7,'#2e4a3a',0,i*1.6+1.05,0,pg,4);r.rotation.y=Math.PI/4}K(.15,1,'#f2c230',0,6.9,0,pg,6);solid(-12,3,2);
+ // terracotta army
+ for(let r=0;r<2;r++)for(let c=0;c<4;c++){const s=person({skin:'#b0714a',shirt:'#9a5f3e',pants:'#8a5333',hair:'#7a4a2a',shoes:'#7a4a2a'});s.position.set(10+c*1.3,0,-3+r*1.5);s.scale.setScalar(.9);world.add(s)}solidBox(12,-2.25,5.6,3.6);
+ // bamboo
+ const bamboo=(x,z,s)=>{for(let i=0;i<5;i++){const bx=x+rr(-.6,.6),bz=z+rr(-.6,.6),h=rr(3,5)*s;C(.08,.08,h,'#7cb342',bx,0,bz,null,5);S(.35,'#5c9a32',bx,h,bz,null,1,1.6,1)}solid(x,z,.7)};
+ for(const [x,z] of [[-9,15],[-5,16],[-8.6,12.4],[-4.6,13]])bamboo(x,z,1);
+ for(const [x,z] of [[-3,8],[6,7]]){C(.05,.05,2.2,'#5a3a1a',x,0,z,null,5);S(.3,mat('#ff4d3d',{emissive:'#a01b10'}),x,2.3,z,null,1,1.3,1)}
+ scatter((x,z,s)=>bamboo(x,z,s),6,10,22,2);scatter((x,z,s)=>roundTree(x,z,s,'#4f8f3a'),8,9,22,2);scatter((x,z,s)=>rock(x,z,s*.6),6,5,22,1)},
+rome(E){const co=G(0,0,-16);const R=8.5,n=gfxLow?20:28;
+ for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=Math.cos(a)*R,z=Math.sin(a)*R;for(let t=0;t<3;t++){const p=B(.7,2.2,.9,'#d8c39a',x,t*2.6,z,co);p.rotation.y=-a;const b=B(2.2,.4,.9,'#cdb68a',x,t*2.6+2.2,z,co);b.rotation.y=-a+Math.PI/2}}
+ C(R+.4,R+.4,.6,'#cdb68a',0,7.8,0,co,n);const inner=C(R-.4,R-.4,7.4,mat('#b9a27a',{side:THREE.BackSide}),0,0,0,co,n);C(R-1,R-1,.1,'#e0c58e',0,.02,0,co,n);
+ solid(0,-16,R+.8);
+ // aqueduct
+ const aq=G(-19,0,-2);for(let i=0;i<6;i++){B(.9,5,1.2,'#c9b48e',-9+i*3,0,0,aq);}B(17,1.3,1.4,'#bba47c',-1.5,5,0,aq);for(let i=0;i<5;i++){const ar=M(new THREE.TorusGeometry(1.05,.25,4,10,Math.PI),'#bba47c',-7.5+i*3,4,0,aq)}
+ for(let i=0;i<6;i++)solid(-28+i*3,-2,.8);
+ // temple
+ const tp=G(9,0,-3.5);B(5,.6,3.5,'#efe6d6',0,0,0,tp);for(let i=0;i<4;i++)C(.22,.25,3,'#f6f0e2',-1.8+i*1.2,.6,1.4,tp,8);B(5,.6,3.5,'#e3d8c2',0,3.6,0,tp);B(4.8,3,.2,'#e3d8c2',0,.6,-1.5,tp);solidBox(9,-3.5,5,3.5);
+ // market stall
+ const ms=G(12.5,0,-7.5);B(3,1,1.2,'#8a5a3a',0,0,0,ms);B(3.2,.08,1.8,'#c0392b',0,2.2,0,ms);for(const x of [-1.5,1.5])C(.05,.05,2.2,'#5a3a1a',x,0,.6,ms,5);for(let i=0;i<5;i++)S(.18,['#e74c3c','#f39c12','#8e44ad'][i%3],-1+i*.5,1.15,0,ms);solidBox(12.5,-7.5,3,1.4);
+ // fountain
+ C(1.6,1.7,.7,'#ddd1b8',10,0,12);waterPlane(2.8,2.8,10,12,'#4fa3d9',.72);C(.3,.4,1.6,'#ddd1b8',10,.7,12);solid(10,12,1.8);
+ const road=new THREE.Mesh(new THREE.PlaneGeometry(4,30),new THREE.MeshLambertMaterial({map:canvasTex(64,256,(g)=>{g.fillStyle='#8a7a62';g.fillRect(0,0,64,256);for(let i=0;i<60;i++){g.fillStyle=`hsl(35,12%,${35+Math.random()*20}%)`;g.fillRect(Math.random()*60,Math.random()*250,10,8)}})}));road.rotation.x=-Math.PI/2;road.position.set(0,.03,4);road.receiveShadow=true;world.add(road);
+ flag(-6,0,-6,'#a01b1b');scatter((x,z,s)=>cypress(x,z,s*1.3),12,9,22,1.5);scatter((x,z,s)=>roundTree(x,z,s,'#5a8a3a'),8,12,22,2);
+ for(let i=0;i<10;i++){const a=i/10*Math.PI*2;B(rr(4,7),rr(4,8),rr(4,7),['#d9a27a','#e0b98a','#c98d6a'][i%3],Math.cos(a)*36,0,Math.sin(a)*36)}},
+vikings(E){waterPlane(60,90,46,0,'#2a6f9a');solidBox(46,0,60,90);
+ B(6,.3,2.2,'#7a5a3a',13.5,.2,-4);for(let i=0;i<4;i++)C(.12,.12,1,'#5a3a1a',11+i*1.6,-.5,-5,null,5);
+ const sh=G(20,0,-4);sh.rotation.y=Math.PI/2;const hull=S(1.6,'#8a5a32',0,.4,0,sh,1,.55,5.2);B(2.4,.2,7.5,'#6a4426',0,.85,0,sh);
+ const head=G(0,1.2,7.6,sh);const nk=C(.18,.28,2,'#8a5a32',0,0,0,head,6);head.rotation.x=.5;S(.35,'#8a5a32',0,2.1,.2,head,1,1,1.6);
+ C(.12,.12,6,'#5a3a1a',0,.8,0,sh,6);const sail=B(4,3.2,.08,mat('#ffffff',{map:canvasTex(64,64,(g)=>{for(let i=0;i<8;i++){g.fillStyle=i%2?'#c0392b':'#f4efe4';g.fillRect(i*8,0,8,64)}})}),0,3.2,.2,sh);
+ for(let i=0;i<6;i++)for(const s of [-1,1])M(new THREE.CylinderGeometry(.45,.45,.08,10),['#f2c230','#2e86ab','#c0392b'][i%3],s*1.55,1.1,-3+i*1.2,sh).rotation.z=Math.PI/2;
+ anims.push((t)=>{sh.position.y=Math.sin(t*1.2)*.12;sh.rotation.z=Math.sin(t*.9)*.04});
+ // longhouse
+ const lh=G(-8,0,-12);B(12,2,5,'#7a5530',0,0,0,lh); prism(6,2.6,12.8,'#8a7a3a',0,2,0,lh);
+  B(1.2,1.6,.2,'#3a2414',0,0,2.55,lh);solidBox(-8,-12,12.4,5.4);smoker(-8,5,-12,0x9a9a9a,.6,1.4);
+ // runestone
+ const rs=G(4,0,-4);const st=B(1.1,2.6,.5,'#8d8d8d',0,0,0,rs);B(.12,1.8,.52,'#c0392b',0,.4,0,rs);for(let i=0;i<4;i++)B(.5,.08,.52,'#c0392b',.15,.7+i*.45,0,rs).rotation.z=.6;solid(4,-4,.8);
+ for(const [x,z] of [[10,8],[12,8.6],[10.6,10.2]]){C(.38,.38,.9,'#8a5a32',x,0,z,null,8);solid(x,z,.45)}
+ for(let i=0;i<4;i++)M(new THREE.CylinderGeometry(.45,.45,.08,10),['#f2c230','#2e86ab','#c0392b','#ffffff'][i],-1.5+i*1.1,1,-8.4).rotation.x=Math.PI/2;B(4.8,.15,.1,'#6a4426',0,.85,-8.5);B(4.8,.15,.1,'#6a4426',0,.45,-8.5);solidBox(0,-8.5,4.8,.4);
+ for(const [x,z] of [[7,-17],[10,-16.5],[6,-14.2],[9.6,-12.5]])pine(x,z,1.2,1);
+ scatter((x,z,s)=>pine(x,z,s*1.3,rnd()<.6),18,8,22,1.8);scatter((x,z,s)=>rock(x,z,s*.7,'#9aa0a6'),8,5,22,1);
+ for(let i=0;i<7;i++){const x=-40+i*12;K(rr(10,14),rr(16,24),'#6d7680',x,0,-48,null,6);K(rr(4,5),rr(5,7),'#f4f8fb',x,rr(11,16),-48,null,6)}},
+
+
+medieval(E){waterPlane(21,15,0,-15,'#3f7f9f');solidBox(0,-15,21,15);
+ const cs=G(0,0,-15);const wc='#9a958c';B(16.5,.3,10.5,'#78a64e',0,0,0,cs);
+ B(16,4,1,wc,0,0,-5,cs);B(1,4,10,wc,-8,0,0,cs);B(1,4,10,wc,8,0,0,cs);B(6,4,1,wc,-5,0,5,cs);B(6,4,1,wc,5,0,5,cs);
+ for(let x=-7.6;x<=7.6;x+=1.2){B(.6,.6,1.1,wc,x,4,5,cs);B(.6,.6,1.1,wc,x,4,-5,cs)}
+ for(const [x,z] of [[-8,-5],[8,-5],[-8,5],[8,5]]){C(1.6,1.7,6,'#8e897f',x,0,z,cs,10);K(2,2.6,'#2e4a8a',x,6,z,cs,10);flag(x,8.4,z,'#d62839',cs,.8)}
+ const gate=G(0,0,5,cs);B(4,5.5,1.6,'#8e897f',0,0,0,gate);B(2,3,1.7,'#3a2a1a',0,0,0,gate);for(let i=0;i<4;i++)B(.12,3,1.75,'#555',-.75+i*.5,0,0,gate);
+ const keep=G(0,0,-1.5,cs);B(5,8,4.5,'#a9a49a',0,0,0,keep);for(let x=-2.2;x<=2.2;x+=1.1)B(.5,.6,4.6,'#a9a49a',x,8,0,keep);flag(0,8.6,0,'#f2c230',keep,1.2);
+ for(let i=0;i<3;i++)B(.3,.7,.1,'#222',-1.5+i*1.5,5,2.26,keep);
+ const bridge=B(2.4,.25,3,'#7a5230',0,0,-6.6+15-15,null);bridge.position.set(0,.15,-6.8);
+ const tent=(x,z,c)=>{const g=G(x,0,z);C(1.8,1.8,1.6,'#f4efe4',0,0,0,g,8);K(2,1.8,c,0,1.6,0,g,8);flag(0,3.2,0,c,g,.6);solid(x,z,2)};tent(14,5,'#d62839');tent(16,-1,'#2e5aac');
+ const tgt=G(9,0,6);C(.08,.08,1.2,'#5a3a1a',0,0,0,tgt,5);const ring=M(new THREE.CylinderGeometry(.6,.6,.12,16),mat('#ffffff',{map:canvasTex(64,64,(g)=>{for(let r=32;r>0;r-=8){g.fillStyle=r%16?'#d62839':'#fff';g.beginPath();g.arc(32,32,r,0,7);g.fill()}})}),0,1.5,0,tgt);ring.rotation.x=Math.PI/2;solid(9,6,.6);
+ const well=G(-10,0,8.4);C(1,1,.9,'#8e897f',0,0,0,well,10);for(const s of [-1,1])C(.06,.06,1.8,'#5a3a1a',s*.9,.9,0,well,5);prism(2.4,.8,1.4,'#7a3a1a',0,2.6,0,well,0);solid(-10,8.4,1.1);
+ for(const [x,z] of [[11,11],[12.2,11.6]]){C(.6,.6,.8,'#e6c35a',x,0,z,null,10);solid(x,z,.6)}
+ for(const [x,z] of [[-15,-11],[-17.5,-9],[-13,-5.5]])roundTree(x,z,1.1,'#4f8a3a');
+ scatter((x,z,s)=>roundTree(x,z,s,'#4f8a3a'),14,10,22,2);scatter((x,z,s)=>bush(x,z,s),12,6,22,1);scatter((x,z,s)=>rock(x,z,s*.6),6,5,22,1);
+ for(let i=0;i<8;i++){const a=Math.PI*1.1+i/7*Math.PI*.8;S(rr(10,16),'#6f9a4a',Math.cos(a)*60,-4,Math.sin(a)*60,null,1.4,.5,1)}},
+maya(E){const py=G(0,0,-15);const pc='#cfc3a0';for(let i=0;i<9;i++){const w=12-i*1.15;B(w,.95,w,i%2?pc:'#c4b791',0,i*.95,0,py)}
+ const sw=2.6;
+ for(let i=0;i<18;i++){const y=i*.475,fz=6-.605*(y+.475)+.45;B(sw,.475,fz,i%2?'#e0d6b8':'#d6cbaa',0,y,fz/2,py)}
+ for(const s of [-1,1]){const h=S(.6,'#a89c7a',s*1.5,.5,6.8,py,1,1,1.4)}
+ const tmpl=G(0,8.55,0,py);B(3.2,2.2,3.2,'#d9cfae',0,0,0,tmpl);B(1,1.5,.2,'#2a2a2a',0,0,1.55,tmpl);B(3.6,.4,3.6,'#bfae80',0,2.2,0,tmpl);
+ solidBox(0,-15,12.4,12.4);solidBox(0,-8.4,3,1.2);
+ // ball court
+ const bc=G(13.5,0,-2);for(const s of [-1,1]){B(1.4,3.2,10,'#c4b791',s*2.8,0,0,bc);const r=M(new THREE.TorusGeometry(.5,.12,6,14),'#a89c7a',s*2.05,2.6,0,bc);r.rotation.y=Math.PI/2;solidBox(13.5+s*2.8,-2,1.4,10)}
+ const ball=S(.25,'#222',13.5,.25,-2);anims.push((t)=>{ball.position.x=13.5+Math.sin(t*1.5)*1.2;ball.position.y=.25+Math.abs(Math.sin(t*3))*.8});
+ // cenote
+ C(2.9,2.9,.25,'#8a7d62',-12,0,2,null,16);waterPlane(4.8,4.8,-12,2,'#2fa3a0',.27);solid(-12,2,2.8);
+ for(const [x,z] of [[-4,11],[6,9]]){const s=B(1,2.4,.5,'#b5a982',x,0,z);B(.7,.7,.52,'#8a7d62',x,1.3,z);solid(x,z,.7)}
+ const jtree=(x,z,s)=>{const g=G(x,0,z);g.scale.setScalar(s);C(.2,.3,4,'#6b4a2a',0,0,0,g,6);S(1.4,'#2f7a3a',0,4.4,0,g,1.3,.7,1.3);S(1,'#3f8f3a',.8,3.8,.4,g,1.2,.7,1.2);if(x*x+z*z<27*27)solid(x,z,.5*s);return g};
+ for(const [x,z] of [[-17,-13],[-14,-11.5],[-18,-7.5],[-13.5,-7.6]])jtree(x,z,1.1);
+ scatter((x,z,s)=>jtree(x,z,s*1.1),18,9,22,2);scatter((x,z,s)=>fern(x,z,s*1.3,'#2f7a3a'),18,5,22,1);scatter((x,z,s)=>jtree(x,z,s*1.4),24,24,40,2)},
+renaissance(E){const du=G(-9,0,-19);C(5,5,5,'#efe3cf',0,0,0,du,8);C(5.2,5.2,.5,'#3f7a5a',0,5,0,du,8);const dm=M(new THREE.SphereGeometry(4.6,8,6,0,Math.PI*2,0,Math.PI/2),'#c0603a',0,5.5,0,du);dm.scale.y=1.25;
+
+ C(.6,.8,1.6,'#efe3cf',0,11.2,0,du,8);K(.4,1,'#d9b45a',0,12.8,0,du,8);B(5,7,5,'#efe3cf',7,0,0,du);B(5.2,.6,5.2,'#c0603a',7,7,0,du);solid(-9,-19,5.6);solidBox(-2,-19,5,5);
+ // workshop
+ const ws=G(10,0,-8);B(8,4,.4,'#e8cfa4',0,0,-3,ws);B(.4,4,6,'#e8cfa4',-4,0,0,ws);B(.4,4,6,'#e8cfa4',4,0,0,ws);prism(6.8,2,8.6,'#b8532f',0,4,0,ws);
+ solidBox(10,-11,8.4,.8);solidBox(6,-8,.8,6.4);solidBox(14,-8,.8,6.4);
+ const easel=G(-1.5,0,-1,ws);for(const s of [-1,1]){const l=C(.05,.05,2.4,'#6b4a2a',s*.5,0,0,easel,4);l.rotation.z=s*.12}
+ const pic=B(1.3,1.7,.08,mat('#ffffff',{map:canvasTex(96,128,(g)=>{g.fillStyle='#5f6b3a';g.fillRect(0,0,96,128);const r=g.createLinearGradient(0,0,0,128);r.addColorStop(0,'#7d8a5a');r.addColorStop(1,'#3a3220');g.fillStyle=r;g.fillRect(0,0,96,128);g.fillStyle='#2a1a10';g.beginPath();g.ellipse(48,52,24,30,0,0,7);g.fill();g.fillRect(14,80,68,48);g.fillStyle='#d9a878';g.beginPath();g.ellipse(48,50,14,18,0,0,7);g.fill();g.fillRect(36,82,24,14);g.strokeStyle='#5a3020';g.lineWidth=1.5;g.beginPath();g.arc(48,56,6,.3,2.8);g.stroke()})}),0,1,.1,easel);
+ B(3,1,1.2,'#7a5230',1.5,0,-2,ws);for(let i=0;i<4;i++)S(.15,['#c0392b','#2e86de','#f1c40f','#27ae60'][i],.6+i*.5,1.1,-2,ws);
+ const fm=G(3,0,1.5);C(.08,.08,2.2,'#6b4a2a',0,0,0,fm,5);const wings=G(0,2.4,0,fm);for(const s of [-1,1]){const w=G(0,0,0,wings);w.rotation.z=s*.2;
+  const wm=new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(s*3,.3,-.6),new THREE.Vector3(s*2.6,0,.8),new THREE.Vector3(0,0,0),new THREE.Vector3(s*2.6,0,.8),new THREE.Vector3(s*.6,0,.6)]),new THREE.MeshLambertMaterial({color:'#f0e2c0',side:THREE.DoubleSide}));wm.geometry.computeVertexNormals();w.add(wm);
+  for(let k=1;k<=3;k++){const rib=C(.03,.03,1.2,'#6b4a2a',s*k*.8,0,0,w,4);rib.rotation.x=Math.PI/2}}
+ anims.push((t)=>{wings.children.forEach((w,i)=>w.rotation.z=(i?1:-1)*(.2+Math.sin(t*2)*.2))});solid(3,1.5,.5);
+ C(1.6,1.7,.7,'#e8dcc6',-8,0,9);waterPlane(2.8,2.8,-8,9,'#4fa3d9',.72);C(.25,.35,1.4,'#e8dcc6',-8,.7,9);solid(-8,9,1.8);
+ const house=(x,z,w,h,c,ry)=>{const g=G(x,0,z);g.rotation.y=ry||0;B(w,h,4,c,0,0,0,g);prism(4.4,1.4,w+.4,'#b8532f',0,h,0,g);for(let i=0;i<Math.floor(w/1.6);i++)B(.5,.8,.1,'#3a5a7a',-w/2+1+i*1.6,h-1.6,2.02,g)};
+ for(let i=0;i<5;i++){const z=-14+i*6;house(-21,z,5,rr(4,6),['#e6c49a','#f0d6aa','#d9a878'][i%3],Math.PI/2);solidBox(-21,z,4.4,5.4)}
+ for(let i=0;i<6;i++){house(-6+i*6,-26,5.4,rr(4,6.5),['#e6c49a','#f0d6aa','#d9a878'][i%3])}
+ scatter((x,z,s)=>cypress(x,z,s*1.3),12,8,22,1.6);scatter((x,z,s)=>bush(x,z,s*.8,'#5a8a3a'),8,6,22,1)},
+explore(E){waterPlane(240,240,0,0,'#1f7fc0',.01);const isl=M(new THREE.CylinderGeometry(20.5,22,.6,40),mat('#ffffff',{map:canvasTex(256,256,(g,w,h)=>GROUNDS.beach(g,w,h,E.gcol),3)}),0,-.28,0);isl.receiveShadow=true;
+ const dock=G(0,0,-19);for(let i=0;i<7;i++)B(2.4,.15,.9,'#8a6a40',0,.25,-i*1,dock);for(let i=0;i<4;i++)for(const s of [-1,1])C(.12,.12,1.2,'#6a4a2a',s*1.1,-.8,-i*2,dock,5);
+ const sh=G(0,0,-31);sh.rotation.y=Math.PI/2;const hullM='#7a4a24';S(2.2,hullM,0,.6,0,sh,1.4,.75,4.6);B(4.6,1.6,7,hullM,0,.6,-1.5,sh);B(4.4,1.4,1.6,'#6a3a1a',0,2,-4.2,sh);B(4.8,.2,7.4,'#a0703a',0,2.2,-1.2,sh);
+ for(let i=0;i<6;i++)for(const s of [-1,1]){const p=B(.35,.35,.1,'#222',s*2.31,1.3,-3.6+i*1.2,sh);p.rotation.y=Math.PI/2}
+ const sailT=canvasTex(64,64,(g)=>{g.fillStyle='#f6f0dc';g.fillRect(0,0,64,64);g.fillStyle='#c0392b';g.fillRect(27,8,10,48);g.fillRect(12,24,40,10)});
+ for(const [z,h] of [[3,8],[-1,10],[-4.5,7]]){C(.16,.2,h,'#5a3a1a',0,2.2,z,sh,6);for(let k=0;k<2;k++){const sl=B(4.2-k,2.2,.08,mat('#ffffff',{map:sailT,side:THREE.DoubleSide}),0,2.2+h*.35+k*2.6,z+.15,sh);sl.rotation.y=Math.PI/2*0}}
+ flag(0,2.2+10,-1,'#f2c230',sh,.8);anims.push((t)=>{sh.position.y=Math.sin(t)*.18;sh.rotation.x=Math.sin(t*.8)*.03});
+ for(const [x,z] of [[-13,-9],[-15.5,-5],[-11,-3.5],[-14,-2]])palm(x,z,1.2);
+ for(const [x,z,s] of [[13.5,-10.5,1.6],[10.8,-11.2,1.2],[14.5,-7.4,1.1]])rock(x,z,s,'#8c8273',1);
+ const rb=G(10.5,0,11.8);rb.rotation.y=.6;S(.9,'#9a6a3a',0,.3,0,rb,1,.45,2);solid(10.5,11.8,1.2);
+ const chest=G(4,0,-3);B(1.2,.7,.8,'#8a5a2a',0,0,0,chest);B(1.25,.1,.85,'#f2c230',0,.35,0,chest);const lid=M(new THREE.CylinderGeometry(.4,.4,1.2,8,1,false,0,Math.PI),'#8a5a2a',0,.7,0,chest);lid.rotation.z=Math.PI/2;
+ for(let i=0;i<6;i++)S(.12,mat('#ffd76a',{emissive:'#8a6a00'}),rr(-.4,.4),.8,rr(-.2,.2),chest);solid(4,-3,.9);
+ const tb=G(-6,0,-6);B(2,.1,1.2,'#8a6a40',0,1,0,tb);for(const [x,z] of [[-.9,-.5],[.9,-.5],[-.9,.5],[.9,.5]])C(.05,.05,1,'#6a4a2a',x,0,z,tb,4);
+ const globe=M(new THREE.SphereGeometry(.35,16,12),mat('#ffffff',{map:canvasTex(128,64,(g)=>{g.fillStyle='#3a7fd0';g.fillRect(0,0,128,64);g.fillStyle='#e0c070';for(let i=0;i<9;i++){g.beginPath();g.ellipse(Math.random()*128,10+Math.random()*44,8+Math.random()*12,5+Math.random()*10,Math.random(),0,7);g.fill()}})}),.5,1.5,0,tb);anims.push((t,dt)=>globe.rotation.y+=dt*.6);
+ B(1.3,.04,.9,'#f3e6c0',-.3,1.1,0,tb);solid(-6,-6,1.2);
+ for(const [x,z] of [[7,4],[7.9,4.6],[7.4,3.4]]){B(.8,.8,.8,'#a0703a',x,0,z);solid(x,z,.5)}
+ scatter((x,z,s)=>palm(x,z,s*1.2),10,9,18.5,2);scatter((x,z,s)=>rock(x,z,s*.6),6,6,18.5,1);
+ for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.6;const ix=Math.cos(a)*70,iz=Math.sin(a)*70;M(new THREE.CylinderGeometry(rr(6,10),rr(8,12),1,12),'#e8d49a',ix,0,iz);K(rr(4,7),rr(5,9),'#4f8f3a',ix,.5,iz,null,7)}},
+industrial(E){const trk=G(0,0,-6);for(let x=-40;x<=40;x+=1)B(.25,.1,2.4,'#5a3a2a',x,0,0,trk);for(const s of [-1,1])B(80,.14,.12,'#888',0,.1,s*.7,trk);
+ for(const s of [-1,1])for(let x=-30;x<=30;x+=3){C(.06,.06,.9,'#3a3a3a',x,0,-6+s*2,null,5)}for(const s of [-1,1])B(60,.08,.08,'#3a3a3a',0,.8,-6+s*2);solidBox(0,-6,80,4.6);
+ const train=G(0,0,-6);const lo=G(0,0,0,train);C(.75,.75,3.4,'#2c5f2d',0,0,0,lo,14).rotation.z=Math.PI/2;lo.children[0].position.set(.3,1.35,0);
+ B(1.4,2.2,1.6,'#2c5f2d',-1.9,.6,0,lo);B(1.6,.15,1.8,'#222',-1.9,2.8,0,lo);C(.22,.3,1.4,'#222',1.5,1.9,0,lo,8);K(.45,.4,'#222',1.5,3.3,0,lo,8);B(4.2,.3,1.8,'#333',0,.45,0,lo);
+ for(const [x,r] of [[1.2,.45],[-.2,.65],[-1.8,.45]])for(const s of [-1,1]){const w=M(new THREE.CylinderGeometry(r,r,.14,14),'#b03a2e',x,r,s*.82,lo);w.rotation.x=Math.PI/2}
+ for(let i=1;i<=2;i++){const cr=G(-3.4*i-.6,0,0,train);B(3,1.6,1.7,i%2?'#f2c230':'#7a3a2a',0,.6,0,cr);B(3.2,.15,1.9,'#333',0,2.2,0,cr);for(const s of [-1,1])for(const x of [-1,1]){const w=M(new THREE.CylinderGeometry(.35,.35,.12,10),'#222',x,.35,s*.82,cr);w.rotation.x=Math.PI/2}}
+ let tx=-30,dir=1,acc=0;anims.push((t,dt)=>{tx+=dir*dt*5;if(tx>34){dir=-1}if(tx<-26){dir=1}train.position.x=tx;train.rotation.y=dir>0?0:Math.PI;acc+=dt;if(acc>.18){acc=0;emit(tx+dir*1.5,3.6,-6,{n:1,smoke:1,color:0xdddddd,size:1.1,speed:.4,up:1.2,life:2,grow:2})}});
+ const st=G(-11,0,-2.6);B(6,2.6,2.4,'#9a4a32',0,0,0,st);B(6.6,.2,3.4,'#4a4a4a',0,2.6,.4,st);B(1,1.8,.1,'#3a2414',0,0,1.21,st);B(1.4,.4,.06,'#fff',1.6,1.8,1.22,st);solidBox(-11,-2.6,6,2.4);
+ const clk=M(new THREE.CircleGeometry(.4,16),'#fffbe8',0,3.5,1.25,st);B(.8,1,.3,'#9a4a32',0,2.8,1.1,st);
+ const factory=(x,z,w,d)=>{const g=G(x,0,z);B(w,4,d,'#8a3a2a',0,0,0,g);for(let i=0;i<w/2;i++){prism(1.9,1.2,d,'#555',-w/2+1+i*2,4,0,g,0)}C(.5,.7,9,'#6a2a1a',w/2-1,0,-d/2+1,g,10);smoker(x+w/2-1,9.3,z-d/2+1,0x666666,.3,2);for(let i=0;i<w/2;i++)B(.8,1,.1,mat('#ffd98a',{emissive:'#7a5a00'}),-w/2+1+i*2,1.5,d/2+.01,g)};
+ factory(-14,-15,10,5);factory(4,-16,12,6);factory(18,-13,8,5);
+ for(let i=0;i<4;i++){const x=-14+i*5.5;const g=G(x,0,18);B(5,4,3,['#9a4a32','#8a3f2a','#a5553a'][i%3],0,0,0,g);prism(3.4,1.4,5.2,'#4a4a4a',0,4,0,g);B(.4,1.2,.4,'#6a2a1a',1.6,4.6,0,g);B(.9,1.6,.1,'#3a2414',0,0,1.51,g);B(.7,.8,.1,mat('#ffd98a',{emissive:'#5a4000'}),-1.5,2,1.51,g);solidBox(x,18,5,3)}
+ const coal=S(1.4,'#222',13,-.1,-1,null,1.3,.8,1);solid(13,-1,1.6);B(1.2,.6,.8,'#5a3a2a',11.2,0,.6);
+ for(const [x,z] of [[-3,3],[6,6],[-9,10]]){C(.07,.09,3,'#222',x,0,z,null,6);S(.2,mat('#ffe7a0',{emissive:'#ffb000'}),x,3.1,z);solid(x,z,.3)}
+ scatter((x,z,s)=>roundTree(x,z,s,'#4f7a3a'),8,10,22,2);scatter((x,z,s)=>B(.8,.8,.8,'#8a6a40',x,0,z),5,6,20,1)},
+moon(E){scene.fog.near=60;scene.fog.far=200;
+ const star=new THREE.BufferGeometry();const pa=[];for(let i=0;i<(gfxLow?500:1200);i++){const v=new THREE.Vector3().randomDirection().multiplyScalar(180);if(v.y<5)v.y=Math.abs(v.y)+5;pa.push(v.x,v.y,v.z)}star.setAttribute('position',new THREE.Float32BufferAttribute(pa,3));world.add(new THREE.Points(star,new THREE.PointsMaterial({color:0xffffff,size:.7,fog:false})));
+ const earth=new THREE.Mesh(new THREE.SphereGeometry(7,32,20),new THREE.MeshLambertMaterial({map:canvasTex(256,128,(g)=>{g.fillStyle='#1f5fbf';g.fillRect(0,0,256,128);g.fillStyle='#3f9a4a';for(let i=0;i<14;i++){g.beginPath();g.ellipse(Math.random()*256,20+Math.random()*88,10+Math.random()*24,6+Math.random()*16,Math.random(),0,7);g.fill()}g.fillStyle='#ffffffcc';for(let i=0;i<20;i++){g.beginPath();g.ellipse(Math.random()*256,Math.random()*128,10+Math.random()*20,3,Math.random(),0,7);g.fill()}}),fog:false}));earth.position.set(-40,48,-110);world.add(earth);anims.push((t,dt)=>earth.rotation.y+=dt*.05);
+ const crater=(x,z,r)=>{const t=M(new THREE.TorusGeometry(r,r*.22,5,18),'#8d8d8d',x,0,z);t.rotation.x=Math.PI/2;t.scale.z=.5;const f=M(new THREE.CircleGeometry(r,18),'#7a7a7a',x,.02,z);f.rotation.x=-Math.PI/2};
+ crater(-7,8,2.4);crater(12,6,3);crater(-15,-16,4);crater(3,-17,2);
+ const lm=G(6,0,-8);const gold=mat('#d4a017',{emissive:'#4a3000'});C(1.6,1.6,1.4,gold,0,.9,0,lm,8);
+ for(let i=0;i<4;i++){const a=i/4*Math.PI*2+Math.PI/4;const l=C(.06,.06,2.3,'#bbb',Math.cos(a)*1.7,0,Math.sin(a)*1.7,lm,5);l.rotation.z=Math.cos(a)*.35;l.rotation.x=-Math.sin(a)*.35;l.position.set(Math.cos(a)*1.9,.0,Math.sin(a)*1.9);C(.35,.35,.08,'#ccc',Math.cos(a)*2.3,0,Math.sin(a)*2.3,lm,10)}
+ const asc=G(0,2.3,0,lm);B(2,1.4,1.8,'#c9c9c9',0,0,0,asc);B(1.4,.9,1.2,'#9a9a9a',0,1.4,-.2,asc);M(new THREE.CircleGeometry(.25,3),'#222',-.4,.8,.91,asc);M(new THREE.CircleGeometry(.25,3),'#222',.4,.8,.91,asc);C(.15,.15,.6,'#888',.6,1.8,0,asc,6);
+ const ldr=G(0,0,1.5,lm);for(let i=0;i<5;i++)B(.5,.04,.04,'#bbb',0,.3+i*.3,0,ldr);solid(6,-8,2.6);
+ const fl=G(1,0,-4);C(.04,.04,2.6,'#ddd',0,0,0,fl,5);B(1.4,.04,.04,'#ddd',.7,2.55,0,fl);B(1.4,.9,.02,mat('#ffffff',{map:canvasTex(76,40,(g)=>{for(let i=0;i<13;i++){g.fillStyle=i%2?'#fff':'#c0392b';g.fillRect(0,i*40/13,76,40/13+.5)}g.fillStyle='#2c3e8a';g.fillRect(0,0,32,22);g.fillStyle='#fff';for(let y=0;y<4;y++)for(let x=0;x<5;x++)g.fillRect(3+x*6,3+y*5,1.6,1.6)})}),.7,1.65,0,fl);solid(1,-4,.3);
+ const exp=G(-3,0,-9);B(1,.5,1,'#c9a14a',0,0,0,exp);for(const s of [-1,1]){const p=B(1.3,.04,.8,'#223a7a',s*1.2,.5,0,exp);p.rotation.z=s*.2}solid(-3,-9,1);
+ for(let i=0;i<14;i++){const x=rr(-3,10),z=rr(-6,6);const fp=M(new THREE.CircleGeometry(.13,8),'#6e6e6e',x,.03,z);fp.rotation.x=-Math.PI/2;fp.scale.set(1,1.8,1)}
+ rock(-15,-10.5,2.4,'#7d7d7d',1);rock(17,-11,1.8,'#7d7d7d',1);
+ scatter((x,z,s)=>rock(x,z,s*.8,'#8a8a8a',rnd()<.5),18,6,22,1.2);scatter((x,z,s)=>crater(x,z,s*2.2),6,9,22,3);
+ for(let i=0;i<10;i++){const a=i/10*Math.PI*2;K(rr(10,18),rr(5,10),'#6e6e6e',Math.cos(a)*70,0,Math.sin(a)*70,null,7)}}
+};
+
+
+// ===== Game state =====
+const N=ERAS.length;
+let prog;try{prog=JSON.parse(localStorage.getItem(SAVE_KEY))}catch(e){}
+if(!prog||!Array.isArray(prog.stars))prog={stars:[]};while(prog.stars.length<N)prog.stars.push(0);
+const saveProg=()=>localStorage.setItem(SAVE_KEY,JSON.stringify(prog));
+const unlocked=i=>i===0||prog.stars[i-1]>0||prog.stars[i]>0;
+let screen='title',li=0,E=ERAS[0],T=0;
+let st={};
+function resetState(){st={parts:[false,false,false],talked:false,npcDone:false,chActive:false,done:false,mistakes:0,peeks:0,oddFound:0}}
+resetState();
+let partObjs=[],npcObj=null,oddObjs=[],beam=null,marker=null,ground=null;
+const player=person({skin:'#f1c27d',shirt:'#ff8c42',sleeve:'#ff8c42',pants:'#3a3f6b',hair:'#5a3214',hat:'goggles',pack:1});scene.add(player);
+let target=null,pending=null,walkPhase=0,stuckT=0,stepAcc=0;
+const keys={};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function disposeTree(o){o.traverse(c=>{if(c.geometry)c.geometry.dispose();if(c.material&&c.material.map&&!Object.values(MC).includes(c.material))c.material.map.dispose()})}
+
+let occl=[];const _oc=new THREE.Vector3(),_od=new THREE.Vector3();
+function updateOccl(dt){const C=camera.position,P=player.position;_od.set(P.x,1.1,P.z).sub(C);const L=_od.length();_od.divideScalar(L);
+ for(const q of occl){_oc.copy(q.c).sub(C);const t=_oc.dot(_od);let hide=false;
+  if(t>0&&t<L-1){const d=Math.sqrt(Math.max(0,_oc.lengthSq()-t*t));hide=d<q.r*.8+.6}
+  const goal=hide?.18:1;if(q.a===goal)continue;q.a+=(goal-q.a)*Math.min(1,dt*8);if(Math.abs(q.a-goal)<.02)q.a=goal;
+  if(!q.ms){q.ms=[];q.o.traverse(m=>{if(m.isMesh){m.material=m.material.clone();q.ms.push(m.material)}})}
+  for(const m of q.ms){m.transparent=q.a<1;m.opacity=q.a;m.depthWrite=q.a>.9}}}
+function setOcclVisible(){for(const q of occl){if(q.ms&&q.a<1){q.a=1;for(const m of q.ms){m.transparent=false;m.opacity=1;m.depthWrite=true}}}}
+function buildLevel(i){li=i;E=ERAS[i];seed=1000+i*77;
+ scene.remove(world);disposeTree(world);world=new THREE.Group();scene.add(world);
+ for(const p of parts)scene.remove(p.sp);parts.length=0;
+ anims=[];colliders=[];avoid=[];oddObjs=[];beam=null;
+ gfxLow=isLow();deco=gfxLow?.45:1;
+ skyMat.uniforms.top.value.set(E.sky[0]);skyMat.uniforms.bot.value.set(E.sky[1]);scene.fog.color.set(E.sky[1]);scene.fog.near=45;scene.fog.far=140;
+ const moon=E.id==='moon';hemi.intensity=moon?.45:1.1;sun.intensity=moon?2.8:1.8;hemi.color.set(moon?'#9aa6c0':'#dff1ff');
+ if(E.id==='industrial'){scene.fog.near=30;scene.fog.far=95}
+ if(E.ground!=='beach'){const tex=canvasTex(256,256,(g,w,h)=>GROUNDS[E.ground](g,w,h,E.gcol),26);ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshLambertMaterial({map:tex}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=!gfxLow;world.add(ground)}
+ avoid.push([0,10,4.5],[4,10.5,2.6],[E.npc.x,E.npc.z,2.2]);E.parts.forEach(p=>avoid.push([p.x,p.z,2.2]));if(E.ch.type==='odd')E.ch.items.forEach(o=>avoid.push([o.x,o.z,1.2]));
+ SCENES[E.id](E);
+ tm.position.set(4,0,10.5);tm.rotation.y=-.5;solid(4,10.5,1.9);tmSlots.forEach(s=>s.material=mat('#444'));tmCore.material.opacity=0;
+ npcObj=E.npc.model==='dino'?babyTrike():person(E.npc);npcObj.position.set(E.npc.x,0,E.npc.z);world.add(npcObj);solid(E.npc.x,E.npc.z,.75);
+ const tag=labelSprite('💬 '+E.npc.name);tag.position.set(0,E.npc.model==='dino'?2.5:2.75,0);npcObj.add(tag);npcObj.userData.tag=tag;
+ npcObj.traverse(o=>{if(o.isMesh||o.isSprite)o.userData.tap='npc'});
+ partObjs=E.parts.map((p,k)=>{const g=gearMesh();g.position.set(p.x,1.1,p.z);g.traverse(o=>o.userData.tap='part'+k);world.add(g);return g});
+ marker=M(new THREE.RingGeometry(.35,.5,20),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}),0,.05,0);marker.rotation.x=-Math.PI/2;marker.castShadow=marker.receiveShadow=false;
+ player.position.set(0,0,10);player.rotation.y=Math.PI;target=pending=null;helpT=0;
+ world.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=!gfxLow}});ground&&(ground.castShadow=false);
+ occl=[];const skip=new Set([ground,npcObj,...partObjs]);world.updateMatrixWorld(true);for(const o of world.children){if(skip.has(o)||o.isSprite)continue;const bx=new THREE.Box3().setFromObject(o);if(bx.isEmpty())continue;const sp=bx.getBoundingSphere(new THREE.Sphere());if(sp.radius<10&&bx.max.y>1.4)occl.push({o,c:sp.center,r:sp.radius,top:bx.max.y,a:1})}
+ resetState();updateHud()}
+
+// ===== Camera / resize =====
+const camLook=new THREE.Vector3();let camYaw=0;
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.fov=w/h<.8?60:50;camera.updateProjectionMatrix();warpCam.aspect=w/h;warpCam.updateProjectionMatrix()}
+function camTarget(){const portrait=innerWidth/innerHeight<.8,d=portrait?13:11.5;return [Math.sin(camYaw)*d,portrait?16:11.5,Math.cos(camYaw)*d]}
+// ===== Warp tunnel scene =====
+const warpScene=new THREE.Scene();const warpCam=new THREE.PerspectiveCamera(80,1,.1,400);
+const tunTex=canvasTex(256,256,(g)=>{g.fillStyle='#25394c';g.fillRect(0,0,256,256);for(let i=0;i<24;i++){const y=i*256/24;g.fillStyle=i%2?'#354e60':'#3e5264';g.fillRect(0,y,256,5)}g.globalAlpha=.3;for(let i=0;i<45;i++){g.fillStyle=i%2?'#b8cbd0':'#8ba8b5';g.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*2,15+Math.random()*35)}},1);tunTex.repeat.set(4,3);
+const tunnel=new THREE.Mesh(new THREE.CylinderGeometry(6,6,300,40,1,true),new THREE.MeshBasicMaterial({map:tunTex,side:THREE.BackSide}));tunnel.rotation.x=Math.PI/2;warpScene.add(tunnel);
+const tEnd=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0x9ab3bd,transparent:true,opacity:.35,depthWrite:false}));tEnd.scale.set(30,30,1);tEnd.position.z=-140;warpScene.add(tEnd);
+const streakG=new THREE.BufferGeometry();const sp=[];for(let i=0;i<500;i++){const a=Math.random()*Math.PI*2,r=1+Math.random()*4.5;sp.push(Math.cos(a)*r,Math.sin(a)*r,-Math.random()*150)}streakG.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+const streaks=new THREE.Points(streakG,new THREE.PointsMaterial({color:0xa9bbc4,size:.12,transparent:true,opacity:.45,depthWrite:false}));warpScene.add(streaks);
+let warp=null;
+const fmtYear=y=>{const ago=2026-y;if(ago>=1e6)return `${Math.round(ago/1e6)} million years ago`;if(ago>=20000)return `${Math.round(ago/1000).toLocaleString()},000 years ago`;y=Math.round(y);if(y>=2026)return 'Today';return y<=0?`${Math.max(1,-y)} BCE`:`${y} CE`};
+function startWarp(fromY,toY,label,done){screen='warp';hideCard();hideDlg();setHud(false);warp={t:0,dur:3,fromY,toY,label,done};warpCam.rotation.z=0;sfx.warp();$('warpTxt').style.display='block'}
+function updateWarp(dt){const w=warp;w.t+=dt;const k=Math.min(1,w.t/w.dur);tunTex.offset.y-=dt*.35;
+ const pa=streakG.attributes.position;for(let i=0;i<pa.count;i++){let z=pa.getZ(i)+dt*25;if(z>2)z-=150;pa.setZ(i,z)}pa.needsUpdate=true;
+ warpCam.fov=75;warpCam.position.set(0,0,0);warpCam.updateProjectionMatrix();
+ const a0=Math.log(Math.max(1,2026-w.fromY)),a1=Math.log(Math.max(1,2026-w.toY));const e=k<.15?0:k>.85?1:(k-.15)/.7;const ago=Math.exp(a0+(a1-a0)*e);
+ $('warpTxt').innerHTML=`🌀 ${w.label}<small>${fmtYear(2026-ago)}</small>`;
+ if(w.t>=w.dur){warp=null;$('warpTxt').style.display='none';w.done&&w.done()}}
+function flash(){const f=$('flash');f.style.transition='none';f.style.opacity=.15;requestAnimationFrame(()=>{f.style.transition='opacity .6s';f.style.opacity=0})}
+
+// ===== Input =====
+const uiOpen=()=>!$('overlay').classList.contains('hide')||$('dlg').style.display==='flex';
+addEventListener('keydown',e=>{keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)&&e.target===document.body)e.preventDefault();
+ if(e.repeat)return;
+ if($('dlg').style.display==='flex'&&['Space','Enter','KeyE'].includes(e.code)){nextLine();return}
+ if(screen==='play'&&!uiOpen()&&e.code==='KeyR'){camYaw=0;return}
+ if(screen==='play'&&!uiOpen()&&['Space','Enter','KeyE'].includes(e.code))interact()});
+addEventListener('keyup',e=>{keys[e.code]=false});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;downAt=null});
+let downAt=null;
+renderer.domElement.addEventListener('pointerdown',e=>{if(screen!=='play'||uiOpen()||!e.isPrimary||e.button!==0)return;downAt={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,dragged:false};renderer.domElement.setPointerCapture(e.pointerId);ac()});
+renderer.domElement.addEventListener('pointermove',e=>{if(!downAt||downAt.id!==e.pointerId)return;if(screen!=='play'||uiOpen()){downAt=null;return}if(!downAt.dragged&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)>=14)downAt.dragged=true;
+ if(downAt.dragged){camYaw-=(e.clientX-downAt.lastX)*.006;downAt.lastX=e.clientX}});
+renderer.domElement.addEventListener('pointerup',e=>{if(!downAt||downAt.id!==e.pointerId)return;const d=Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y),dragged=downAt.dragged;downAt=null;if(!dragged&&d<14)tapAt(e.clientX,e.clientY)});
+renderer.domElement.addEventListener('pointercancel',e=>{if(downAt&&downAt.id===e.pointerId)downAt=null});
+renderer.domElement.addEventListener('lostpointercapture',e=>{if(downAt&&downAt.id===e.pointerId)downAt=null});
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2(),gPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
+function tapAt(cx,cy){if(screen!=='play'||uiOpen())return;ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
+ const cands=[...oddObjs.filter(o=>!o.userData.gone),npcObj,tm,...partObjs.filter((p,k)=>!st.parts[k])];const hits=ray.intersectObjects(cands,true);
+ for(const h of hits){const tap=h.object.userData.tap;if(!tap)continue;handleTap(tap);return}
+ const p=new THREE.Vector3();if(ray.ray.intersectPlane(gPlane,p)){target={x:p.x,z:p.z};pending=null;marker.position.set(p.x,.06,p.z);marker.material.opacity=.9;marker.scale.setScalar(1)}}
+function handleTap(tap){if(tap.startsWith('odd')){clickOdd(+tap.slice(3));return}
+ if(tap==='npc'){pending='npc';target={x:E.npc.x,z:E.npc.z};if(distTo(E.npc.x,E.npc.z)<2.9){pending=null;target=null;talk()}return}
+ if(tap==='tm'){pending='tm';target={x:tm.position.x,z:tm.position.z};if(distTo(tm.position.x,tm.position.z)<3.4){pending=null;target=null;useTM()}return}
+ if(tap.startsWith('part')){const k=+tap.slice(4);target={x:E.parts[k].x,z:E.parts[k].z};pending=null}}
+const distTo=(x,z)=>Math.hypot(player.position.x-x,player.position.z-z);
+function interact(){if(distTo(E.npc.x,E.npc.z)<3)talk();else if(distTo(tm.position.x,tm.position.z)<3.5)useTM();else showMsg('Walk up to a person or the time machine, then press E.')}
+$('act').onclick=()=>{sfx.click();interact()};
+
+// ===== Per-frame update =====
+const tmpV=new THREE.Vector3();
+let helpT=0;
+function update(dt){const p=player.position;let mx=0,mz=0;
+ if(screen==='play'&&!uiOpen()){helpT+=dt;const hv=helpT<14?'1':'0';if($('help').style.opacity!==hv)$('help').style.opacity=hv}
+ if(screen==='play'&&!uiOpen()){
+  if(keys.KeyW||keys.ArrowUp)mz-=1;if(keys.KeyS||keys.ArrowDown)mz+=1;if(keys.KeyA||keys.ArrowLeft)mx-=1;if(keys.KeyD||keys.ArrowRight)mx+=1;
+  if(mx||mz){const x=mx*Math.cos(camYaw)+mz*Math.sin(camYaw);mz=-mx*Math.sin(camYaw)+mz*Math.cos(camYaw);mx=x;target=null;pending=null}else if(target){const dx=target.x-p.x,dz=target.z-p.z,d=Math.hypot(dx,dz);const stop=pending?2.2:.2;if(d<stop){target=null}else{mx=dx/d;mz=dz/d}}
+ }
+ const moving=!!(mx||mz);
+ if(moving){const l=Math.hypot(mx,mz);mx/=l;mz/=l;const ox=p.x,oz=p.z;const spd=E.id==='moon'?5.2:6.2;p.x+=mx*spd*dt;p.z+=mz*spd*dt;resolve(p,.5);
+  const r=Math.hypot(p.x,p.z);if(r>E.R){p.x*=E.R/r;p.z*=E.R/r}
+  const want=Math.atan2(mx,mz);let dr=want-player.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));player.rotation.y+=dr*Math.min(1,dt*12);
+  walkPhase+=dt*11;stepAcc+=dt;if(stepAcc>.3){stepAcc=0;sfx.step()}
+  if(target){const moved=Math.hypot(p.x-ox,p.z-oz);if(moved<spd*dt*.25){stuckT+=dt;if(stuckT>.5){target=null;pending=null;stuckT=0}}else stuckT=0}
+ }
+ animPerson(player,walkPhase,moving?.7:0);if(!moving)walkPhase=0;
+ player.position.y=E.id==='moon'&&moving?Math.abs(Math.sin(walkPhase*.5))*.9:0;
+ if(player.userData.bulb)player.userData.bulb.material.emissiveIntensity=.6+Math.sin(T*6)*.4;
+ // camera
+ if(screen==='title'||screen==='menu'){const a=T*.12;camera.position.set(4+Math.sin(a)*16,9,10.5+Math.cos(a)*16);camera.lookAt(2,2,2);setOcclVisible()}
+ else{const o=camTarget();tmpV.set(p.x+o[0],o[1],p.z+o[2]);camera.position.lerp(tmpV,Math.min(1,dt*5));camLook.lerp(tmpV.set(p.x-Math.sin(camYaw),1,p.z-Math.cos(camYaw)),Math.min(1,dt*6));camera.lookAt(camLook);updateOccl(dt)}
+ sun.position.set(p.x+18,30,p.z+14);sun.target.position.set(p.x,0,p.z);
+ // objects
+ partObjs.forEach((g,k)=>{if(!g.userData.flying&&!st.parts[k]){g.rotation.y=T*2+k;g.position.y=1.1+Math.sin(T*2.5+k)*.18}});
+ tmRing.rotation.x=T*(st.done?4:.6);const ready=readyTM();tmCore.material.opacity=st.done?.85:ready?.35+Math.sin(T*5)*.2:.06;tm.userData.glow.material.opacity=ready||st.done?.8:.35;
+ if(npcObj){const d=distTo(E.npc.x,E.npc.z);npcObj.position.y=Math.abs(Math.sin(T*2.2))*.06;if(d<7){const want=Math.atan2(p.x-E.npc.x,p.z-E.npc.z);let dr=want-npcObj.rotation.y;dr=Math.atan2(Math.sin(dr),Math.cos(dr));npcObj.rotation.y+=dr*Math.min(1,dt*5)}
+  if(npcObj.userData.armR)npcObj.userData.armR.rotation.z=!st.talked?2.6+Math.sin(T*8)*.35:0}
+ oddObjs.forEach((o,k)=>{if(!o.userData.gone){o.position.y=1.6+Math.sin(T*2+k)*.15}});
+ if(marker&&marker.material.opacity>0){marker.material.opacity-=dt*1.2;marker.scale.multiplyScalar(1+dt*.8)}
+ if(beam){beam.userData.t-=dt;beam.material.opacity=Math.max(0,Math.min(.5,beam.userData.t/2))*(.7+Math.sin(T*8)*.3);if(beam.userData.t<=0){world.remove(beam);beam=null}}
+ // proximity
+ if(screen==='play'&&!uiOpen()){
+  for(let k=0;k<3;k++)if(!st.parts[k]&&!partObjs[k].userData.flying&&distTo(E.parts[k].x,E.parts[k].z)<1.7){target=null;openQuestion(k);break}
+  if(!uiOpen()){
+   if(pending==='npc'&&distTo(E.npc.x,E.npc.z)<2.9){pending=null;target=null;talk()}
+   else if(pending==='tm'&&distTo(tm.position.x,tm.position.z)<3.4){pending=null;target=null;useTM()}
+   else if(!st.talked&&distTo(E.npc.x,E.npc.z)<2.6){target=null;talk()}}
+  const a=$('act');let txt='';if(distTo(E.npc.x,E.npc.z)<3)txt='💬 Talk to '+E.npc.name.split(' ')[0];else if(distTo(tm.position.x,tm.position.z)<3.5)txt=readyTM()?'⚡ Power up the time machine!':'⏳ Time machine';
+  if(uiOpen())txt='';a.style.display=txt?'block':'none';if(txt&&a.textContent!==txt)a.textContent=txt}
+ else $('act').style.display='none'}
+const readyTM=()=>st.parts.every(Boolean)&&st.npcDone&&!st.done;
+let last=performance.now();
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;T+=dt;
+ if(warp){updateWarp(dt);renderer.render(warpScene,warpCam);return}
+ update(dt);for(const f of anims)f(T,dt);updateParts(dt);renderer.render(scene,camera)}
+
+
+// ===== UI helpers =====
+let msgTimer=0;
+function showMsg(t,cls,ms){const m=$('msg');m.textContent=t;m.className=cls||'';m.style.display='block';clearTimeout(msgTimer);msgTimer=setTimeout(()=>m.style.display='none',ms||3200)}
+function showCard(html,o){o=o||{};const c=$('card');c.className='card'+(o.wide?' wide':'');c.innerHTML=html;$('overlay').className=o.light?'light':'';c.scrollTop=0;$('act').style.display='none'}
+function hideCard(){$('overlay').className='hide'}
+const stars=n=>'★'.repeat(n)+'☆'.repeat(3-n);
+const totalStars=()=>prog.stars.reduce((a,b)=>a+b,0);
+function setHud(on){for(const id of ['top','task','help'])$(id).style.visibility=on?'visible':'hidden'}
+function updateHud(){const n=st.parts.filter(Boolean).length;$('eraName').textContent=E.emoji+' '+E.name;$('eraDate').textContent=E.when;
+ const gp=$('gParts');gp.textContent=`⚙️ ${n}/3`;gp.className=n===3?'done':'on';
+ const gn=$('gNpc');gn.textContent=st.npcDone?'💬 ✓':'💬 …';gn.className=st.npcDone?'done':'on';
+ const gm=$('gMach');gm.textContent=st.done?'⚡ ✓':'⚡';gm.className=st.done?'done':readyTM()?'on':'';
+ const nw=E.npc.name.split(' '),first=/^(Sir|Captain|Astro)$/.test(nw[0])?nw[0]+' '+nw[1]:nw[0];let t;
+ if(st.done)t='⚡ Time machine powered!';else if(st.chActive)t=`🔍 Tap the out-of-time things! (${st.oddFound}/3 found)`;
+ else if(readyTM())t='⚡ Go to the time machine and power it up!';
+ else if(!st.talked)t=`💬 Say hi to ${first}, and find 3 hidden ⚙️ parts`;
+ else{const a=[];if(n<3)a.push(`find ⚙️ parts (${n}/3)`);if(!st.npcDone)a.push(`help ${first}`);t='🎯 '+a.join(' and ').replace(/^./,c=>c.toUpperCase())}
+ $('task').textContent=t}
+// ===== Dialog =====
+let dlgQ=[],dlgDone=null;
+function say(lines,done){dlgQ=lines.slice();dlgDone=done;$('dlgFace').textContent=E.npc.face;$('dlgName').textContent=E.npc.name;$('dlg').style.display='flex';$('act').style.display='none';nextLine()}
+function nextLine(){if(!dlgQ.length){hideDlg();const f=dlgDone;dlgDone=null;f&&f();return}$('dlgText').textContent=dlgQ.shift();sfx.talk();$('dlgNext').textContent=dlgQ.length?'Next ▶':'OK ✓'}
+function hideDlg(){$('dlg').style.display='none'}
+$('dlgNext').onclick=()=>nextLine();
+function talk(){if(screen!=='play'||uiOpen())return;st.talked=true;updateHud();
+ if(st.done)return say(['The time machine is humming! Off you go, traveler!']);
+ if(st.npcDone){const n=st.parts.filter(Boolean).length;return say([n<3?`Thanks again! There are still ${3-n} ⚙️ part${3-n>1?'s':''} hidden around here. Press 💡 Hint if you get stuck.`:'You found all the parts! Go power up your time machine — it\'s the glowing ring!'])}
+ if(st.chActive)return say([`Keep looking! You have found ${st.oddFound} of 3 out-of-time things. Tap them when you see them!`]);
+ say(E.npc.lines,()=>startChallenge())}
+// ===== Part questions =====
+let curQ=null;
+function openQuestion(k){const P=E.parts[k];const order=shuffle([0,1,2]);curQ={type:'part',k,order};sfx.pick();
+ showCard(`<div class="emo">⚙️</div><h2>You found a time-machine part!</h2><p class="sub">It's stuck ${P.where}. Answer the question to pull it free:</p><div class="tfq">${P.q}</div>
+ <div class="choices">${order.map(j=>`<button class="ch" data-j="${j}">${P.c[j]}</button>`).join('')}</div><div class="fb" id="fb"></div><div id="after"></div>`,{light:1});
+ document.querySelectorAll('.ch').forEach(b=>b.onclick=()=>answerPart(b))}
+function answerPart(b){if(!curQ||curQ.type!=='part'||b.disabled)return;const P=E.parts[curQ.k];const j=+b.dataset.j;
+ if(j===0){document.querySelectorAll('.ch').forEach(x=>x.disabled=true);b.classList.add('right');sfx.ok();$('fb').className='fb good';$('fb').textContent='✅ Correct!';
+  $('after').innerHTML=`<div class="lesson"><b>Did you know?</b> ${P.f}</div><button id="collect">⚙️ Collect the part</button>`;const k=curQ.k;$('collect').onclick=()=>{curQ=null;collectPart(k)};$('collect').focus()}
+ else{b.classList.add('wrong');b.disabled=true;st.mistakes++;sfx.bad();$('fb').className='fb bad';$('fb').textContent='❌ Not quite — try another answer!';const c=$('card');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake')}}
+function collectPart(k){hideCard();st.parts[k]=true;const g=partObjs[k];g.userData.flying=true;sfx.pick();emit(g.position.x,g.position.y,g.position.z,{n:18,speed:4,color:0xffd166,life:.8});
+ const from=g.position.clone(),to=new THREE.Vector3(tm.position.x,1.8,tm.position.z);let t=0;
+ const f=(T0,dt)=>{t+=dt/1.1;const k2=Math.min(1,t);g.position.lerpVectors(from,to,k2);g.position.y+=Math.sin(k2*Math.PI)*4;g.rotation.y+=dt*10;g.scale.setScalar(1-k2*.6);
+  if(k2>=1){world.remove(g);anims.splice(anims.indexOf(f),1);const n=st.parts.filter(Boolean).length;tmSlots.slice(0,n).forEach(s=>s.material=slotOn);emit(to.x,to.y,to.z,{n:14,color:0x7ff6ff,speed:3,life:.7})}};anims.push(f);
+ const n=st.parts.filter(Boolean).length;updateHud();
+ showMsg(n<3?`⚙️ Part ${n} of 3 collected! It flew back to your time machine.`:st.npcDone?'⚙️ All 3 parts found! Head to the time machine!':`⚙️ All 3 parts found! Now help ${E.npc.name.split(' ')[0]}.`,'good')}
+// ===== Challenges =====
+let ch=null;
+function startChallenge(){const C=E.ch;ch={type:C.type,step:0,found:new Set()};
+ const head=`<button class="x" id="chClose">✕</button><div class="emo">${E.npc.face}</div><h2>${C.title}</h2><p class="sub">${C.intro}</p>`;
+ if(C.type==='odd'){showCard(head+`<button id="go">🔍 Let's find them!</button>`,{light:1});$('chClose').onclick=$('go').onclick=()=>{hideCard();beginOdd()};return}
+ if(C.type==='decode')return renderDecode(head);
+ if(C.type==='match')return renderMatch(head);
+ if(C.type==='pick')return renderPick(head);
+ if(C.type==='tf')return renderTF(head)}
+function closeable(){const x=$('chClose');if(x)x.onclick=()=>{hideCard();ch=null;showMsg(`Talk to ${E.npc.name.split(' ')[0]} again when you're ready.`)}}
+function wrongFx(t){st.mistakes++;sfx.bad();const fb=$('fb');if(fb){fb.className='fb bad';fb.textContent=t||'❌ Not quite — try again!'}const c=$('card');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake')}
+function finishChallenge(){st.npcDone=true;st.chActive=false;ch=null;sfx.win();updateHud();
+ const n=st.parts.filter(Boolean).length;
+ showCard(`<div class="emo">🎉</div><h2>Challenge complete!</h2><p class="sub">${E.npc.name}: “Thank you, time traveler! ${n<3?`Now find the other ${3-n} part${3-n>1?'s':''} for your machine.`:'Now go power up your time machine!'}”</p><button id="ok">Keep exploring ▶</button>`,{light:1});$('ok').onclick=()=>hideCard()}
+// --- odd one out (in the 3D scene) ---
+function beginOdd(){st.chActive=true;st.oddFound=0;updateHud();
+ oddObjs=E.ch.items.map((it,k)=>{const s=emojiSprite(it.e,1.7);s.position.set(it.x,1.6,it.z);s.userData.tap='odd'+k;s.userData.item=it;world.add(s);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(.6,.8,20),new THREE.MeshBasicMaterial({color:0xb388ff,transparent:true,opacity:.6,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.set(it.x,.06,it.z);world.add(ring);s.userData.ring=ring;return s});
+ showMsg('🔍 Look around and tap the things that don\'t belong!')}
+function clickOdd(k){const o=oddObjs[k];if(!o||o.userData.gone||o.userData.checked)return;const it=o.userData.item;
+ if(it.bad){o.userData.gone=true;st.oddFound++;sfx.zap();emit(o.position.x,o.position.y,o.position.z,{n:26,color:0xb388ff,speed:5,life:.9});world.remove(o);world.remove(o.userData.ring);showMsg('⚡ Zapped! '+it.why,'good',4200);updateHud();
+  if(st.oddFound>=3){setTimeout(()=>{oddObjs.forEach(x=>{if(!x.userData.gone){world.remove(x);world.remove(x.userData.ring)}});oddObjs=[];finishChallenge()},900)}}
+ else{o.userData.checked=true;o.userData.ring.material.color.set(0x06d6a0);st.mistakes++;sfx.bad();showMsg('🙅 '+it.why,'bad',4200)}}
+// --- decode ---
+function glyph(t){return canvasTex.cache=canvasTex.cache||{},(canvasTex.cache['g'+t]=canvasTex.cache['g'+t]||(()=>{const c=document.createElement('canvas');c.width=60;c.height=90;const g=c.getContext('2d');g.strokeStyle='#5b3a12';g.fillStyle='#5b3a12';g.lineWidth=7;g.lineCap='round';g.lineJoin='round';g.beginPath();
+ if(t===1){g.moveTo(30,14);g.lineTo(30,82)}else if(t===10){g.moveTo(12,82);g.lineTo(12,44);g.arc(30,44,18,Math.PI,0);g.lineTo(48,82)}
+ else if(t===100){for(let a=0;a<4.2*Math.PI;a+=.2){const r=3+a*1.75;g.lineTo(30+Math.cos(a)*r,52+Math.sin(a)*r)}g.lineTo(30,10)}
+ else{g.moveTo(30,86);g.lineTo(30,40);g.moveTo(30,62);g.quadraticCurveTo(48,58,50,42);g.stroke();g.beginPath();g.moveTo(30,40);g.quadraticCurveTo(10,30,16,10);g.quadraticCurveTo(30,22,30,6);g.quadraticCurveTo(30,22,44,10);g.quadraticCurveTo(50,30,30,40)}
+ g.stroke();return c.toDataURL()})())}
+function hieroHTML(n){let h='';for(const [v,c] of [[1000,Math.floor(n/1000)],[100,Math.floor(n/100)%10],[10,Math.floor(n/10)%10],[1,n%10]])for(let i=0;i<c;i++)h+=`<img src="${glyph(v)}" alt="">`;return h}
+function mayaImg(n){const c=document.createElement('canvas');c.width=120;c.height=150;const g=c.getContext('2d');g.fillStyle='#5b3a12';
+ if(n===0){g.beginPath();g.ellipse(60,80,46,26,0,0,7);g.fill();g.strokeStyle='#f6e7c1';g.lineWidth=4;for(let i=0;i<3;i++){g.beginPath();g.arc(60,98+i*0,36-i*10,Math.PI*1.15,Math.PI*1.85);g.stroke()}return c.toDataURL()}
+ const bars=Math.floor(n/5),dots=n%5;let y=146;for(let i=0;i<bars;i++){y-=22;g.beginPath();g.roundRect(8,y,104,16,8);g.fill();y-=6}
+ if(dots){y-=16;const w=dots*24;for(let i=0;i<dots;i++){g.beginPath();g.arc(60-w/2+12+i*24,y,9,0,7);g.fill()}}return c.toDataURL()}
+function decodeKey(kind){if(kind==='egypt')return `<div class="key">${[[1,'1'],[10,'10'],[100,'100'],[1000,'1,000']].map(([v,l])=>`<div><img src="${glyph(v)}" alt="">= ${l}</div>`).join('')}</div>`;
+ if(kind==='maya')return `<div class="key"><div><img src="${mayaImg(1)}" alt="">dot = 1</div><div><img src="${mayaImg(5)}" alt="">bar = 5</div><div><img src="${mayaImg(0)}" alt="">shell = 0</div></div>`;
+ return `<div class="key" style="font-family:Georgia,serif;font-size:20px">I = 1 · V = 5 · X = 10 · L = 50 · C = 100</div>`}
+function renderDecode(head){const C=E.ch,r=C.rounds[ch.step];const ans=r.a!==undefined?r.a:r.n;const opts=shuffle(r.o);
+ const show=C.kind==='egypt'?hieroHTML(r.n):C.kind==='maya'?`<img src="${mayaImg(r.n)}" style="height:110px" alt="">`:`<span class="rn">${r.n}</span>`;
+ showCard((head||ch.head)+decodeKey(C.kind)+`<b>Puzzle ${ch.step+1} of ${C.rounds.length}: what number is this?</b><div class="glyphs">${show}</div><div class="flex" id="opts">${opts.map(o=>`<button class="ch" data-v="${o}" style="min-width:90px;text-align:center">${o}</button>`).join('')}</div><div class="fb" id="fb"></div>`,{light:1});
+ if(head)ch.head=head;closeable();ch.ans=ans;
+ document.querySelectorAll('#opts .ch').forEach(b=>b.onclick=()=>{if(b.disabled)return;if(+b.dataset.v===ans){b.classList.add('right');document.querySelectorAll('#opts .ch').forEach(x=>x.disabled=true);sfx.ok();$('fb').className='fb good';$('fb').textContent=`✅ Yes! It's ${ans}.`;
+  setTimeout(()=>{if(!ch)return;ch.step++;if(ch.step>=C.rounds.length)finishChallenge();else renderDecode()},900)}else{b.classList.add('wrong');b.disabled=true;wrongFx()}})}
+// --- match ---
+function renderMatch(head){const C=E.ch;const rightOrder=shuffle(C.pairs.map((p,i)=>i));ch.sel=null;ch.done=new Set();
+ showCard(head+`<div class="match"><div>${C.pairs.map((p,i)=>`<button class="mi" data-s="L" data-i="${i}">${p[0]}</button>`).join('')}</div><div>${rightOrder.map(i=>`<button class="mi" data-s="R" data-i="${i}">${C.pairs[i][1]}</button>`).join('')}</div></div><div class="fb" id="fb"></div>`,{light:1});closeable();
+ document.querySelectorAll('.mi').forEach(b=>b.onclick=()=>matchClick(b))}
+function matchClick(b){if(!ch||ch.type!=='match'||b.classList.contains('done'))return;const s=b.dataset.s,i=+b.dataset.i;
+ if(!ch.sel||ch.sel.s===s){document.querySelectorAll('.mi.sel').forEach(x=>x.classList.remove('sel'));ch.sel={s,i,b};b.classList.add('sel');sfx.click();return}
+ const a=ch.sel;ch.sel=null;a.b.classList.remove('sel');
+ if(a.i===i){a.b.classList.add('done');b.classList.add('done');ch.done.add(i);sfx.ok();$('fb').className='fb good';$('fb').textContent='✅ Great match!';if(ch.done.size===E.ch.pairs.length)setTimeout(finishChallenge,800)}
+ else{for(const x of [a.b,b]){x.classList.add('wrong');setTimeout(()=>x.classList.remove('wrong'),600)}wrongFx('❌ Those two don\'t go together — try again!')}}
+// --- pick ---
+function renderPick(head){const C=E.ch;const items=shuffle(C.items.map((x,i)=>i));
+ showCard(head+`<div class="pick">${items.map(i=>`<button class="pk" data-i="${i}"><span class="e">${C.items[i].e}</span>${C.items[i].t}</button>`).join('')}</div><div class="fb" id="fb">Found 0 of 4</div>`,{light:1});closeable();
+ document.querySelectorAll('.pk').forEach(b=>b.onclick=()=>pickClick(b))}
+function pickClick(b){if(!ch||b.disabled)return;const it=E.ch.items[+b.dataset.i];b.disabled=true;
+ if(it.ok){b.classList.add('right');ch.found.add(+b.dataset.i);sfx.ok();const need=E.ch.items.filter(x=>x.ok).length;$('fb').className='fb good';$('fb').textContent=`✅ ${it.why} (${ch.found.size}/${need})`;if(ch.found.size===need){document.querySelectorAll('.pk').forEach(x=>x.disabled=true);setTimeout(finishChallenge,1100)}}
+ else{b.classList.add('wrong');wrongFx('❌ '+it.why)}}
+// --- true / false ---
+function renderTF(head){const C=E.ch,it=C.items[ch.step];if(head)ch.head=head;
+ showCard(ch.head+`<b>Statement ${ch.step+1} of ${C.items.length}</b><div class="tfq">“${it.s}”</div><div class="flex" id="tfb"><button class="ch" data-v="1" style="text-align:center">👍 True</button><button class="ch" data-v="0" style="text-align:center">👎 ${E.id==='vikings'?'Myth':'False'}</button></div><div class="fb" id="fb"></div><div id="after"></div>`,{light:1});closeable();
+ document.querySelectorAll('#tfb .ch').forEach(b=>b.onclick=()=>{if(b.disabled)return;document.querySelectorAll('#tfb .ch').forEach(x=>x.disabled=true);const ok=(b.dataset.v==='1')===it.a;
+  if(ok){b.classList.add('right');sfx.ok();$('fb').className='fb good';$('fb').textContent='✅ Correct!'}else{b.classList.add('wrong');wrongFx('❌ Not this time!')}
+  $('after').innerHTML=`<div class="lesson">${it.why}</div><button id="nx">${ch.step+1<C.items.length?'Next ▶':'Finish ✓'}</button>`;$('nx').onclick=()=>{if(!ch)return;ch.step++;if(ch.step>=C.items.length)finishChallenge();else renderTF()}})}
+// ===== Time machine + timeline =====
+function useTM(){if(screen!=='play'||uiOpen())return;if(st.done)return showMsg('⚡ Already powered! Use the buttons to warp on.');
+ const n=st.parts.filter(Boolean).length;
+ if(n<3&&!st.npcDone)return showMsg(`⏳ The time machine needs 3 ⚙️ parts (you have ${n}) and help from ${E.npc.name.split(' ')[0]}.`);
+ if(n<3)return showMsg(`⏳ Still missing ${3-n} ⚙️ part${3-n>1?'s':''}! Try the 💡 Hint button.`);
+ if(!st.npcDone)return showMsg(`⏳ First help ${E.npc.name} — go talk to them!`);openTimeline()}
+let tl=null;
+function openTimeline(){const n=E.tl.length;let o;do{o=shuffle([...Array(n).keys()])}while(o.every((v,i)=>v===i));tl={order:o,rev:new Set()};sfx.power();renderTimeline()}
+const correctOrder=()=>E.tl.map((e,i)=>i).sort((a,b)=>E.tl[a].y-E.tl[b].y);
+function renderTimeline(res){const bce=E.tl.some(e=>e.y<0&&e.y>-1e5);
+ showCard(`<button class="x" id="tlX">✕</button><div class="emo">⚡</div><h2>Power the Time Machine!</h2><p class="sub">Put the events in order, from <b>long ago</b> (top) to <b>more recent</b> (bottom). Drag the cards or use the arrows.</p>
+ ${bce?'<div class="lesson" style="font-size:14px">🧠 <b>BCE tip:</b> BCE years count DOWN toward year 1, so a bigger BCE number is LONGER ago (500 BCE is older than 100 BCE). CE years count up.</div>':''}
+ <div class="tl" id="tlList"><div class="tlh">⬆ Long ago</div>${tl.order.map((i,pos)=>{const e=E.tl[i];const st2=res?(res[pos]?'ok':'no'):'';return `<div class="tc ${st2}" data-i="${i}"><span class="grip">⠿</span><span class="e">${e.e}</span><span class="t">${e.t}<span class="d">${tl.rev.has(i)?e.d:'📅 ????'}</span></span><button data-m="-1">▲</button><button data-m="1">▼</button></div>`}).join('')}<div class="tlh">⬇ More recent</div></div>
+ <div class="fb" id="fb"></div><div class="flex"><button class="sec" id="peek">🔎 Peek at a date</button><button id="check">⚡ Check order</button></div>`,{light:1});
+ if(res){const k=res.filter(Boolean).length;$('fb').className='fb bad';$('fb').textContent=`${k} of ${res.length} cards are in the right spot. Green ones are correct — their dates are now shown!`}
+ $('tlX').onclick=()=>{hideCard();tl=null};$('check').onclick=checkTimeline;$('peek').onclick=peekDate;
+ document.querySelectorAll('.tc button').forEach(b=>b.onclick=e=>{e.stopPropagation();const i=+b.parentNode.dataset.i,p=tl.order.indexOf(i),q=p+ +b.dataset.m;if(q<0||q>=tl.order.length)return;[tl.order[p],tl.order[q]]=[tl.order[q],tl.order[p]];sfx.click();renderTimeline()});
+ document.querySelectorAll('.tc').forEach(el=>el.addEventListener('pointerdown',ev=>dragStart(ev,el)))}
+function dragStart(ev,el){if(ev.target.tagName==='BUTTON')return;ev.preventDefault();const list=$('tlList');let startY=ev.clientY;el.classList.add('drag');el.setPointerCapture(ev.pointerId);
+ const move=e=>{let dy=e.clientY-startY;el.style.transform=`translateY(${dy}px)`;const prev=el.previousElementSibling,next=el.nextElementSibling;
+  if(prev&&prev.classList.contains('tc')){const r=prev.getBoundingClientRect();if(e.clientY<r.top+r.height/2){const o=el.offsetTop;list.insertBefore(el,prev);startY+=el.offsetTop-o;}}
+  if(next&&next.classList.contains('tc')){const r=next.getBoundingClientRect();if(e.clientY>r.top+r.height/2){const o=el.offsetTop;list.insertBefore(next,el);startY+=el.offsetTop-o;}}
+  el.style.transform=`translateY(${e.clientY-startY}px)`};
+ const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.classList.remove('drag');el.style.transform='';
+  tl.order=[...list.querySelectorAll('.tc')].map(x=>+x.dataset.i);sfx.click();document.querySelectorAll('.tc').forEach(x=>x.classList.remove('ok','no'))};
+ el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
+function peekDate(){const hidden=tl.order.filter(i=>!tl.rev.has(i));if(!hidden.length)return;const i=hidden[Math.floor(Math.random()*hidden.length)];tl.rev.add(i);st.peeks++;sfx.click();renderTimeline()}
+function checkTimeline(){const c=correctOrder();const res=tl.order.map((v,p)=>v===c[p]);
+ if(res.every(Boolean)){tl.order.forEach(i=>tl.rev.add(i));renderTimeline(res);$('fb').className='fb good';$('fb').textContent='✅ Perfect order! The time machine is powering up…';document.querySelectorAll('#card button').forEach(b=>b.disabled=true);setTimeout(levelWon,1300);return}
+ res.forEach((ok,p)=>{if(ok)tl.rev.add(tl.order[p])});wrongFx();renderTimeline(res);sfx.bad()}
+function calcStars(){const s=st.mistakes+st.peeks*.5;return s<=1?3:s<=3?2:1}
+function levelWon(){hideCard();st.done=true;tl=null;const s=calcStars();const best=Math.max(prog.stars[li],s);prog.stars[li]=best;saveProg();updateHud();
+ sfx.power();emit(tm.position.x,1.8,tm.position.z,{n:50,color:0x7ff6ff,speed:7,life:1.2});flash();
+ setTimeout(()=>{sfx.win();const last=li===N-1;const sorted=correctOrder().map(i=>E.tl[i]);
+  showCard(`<div class="emo">${E.emoji}</div><h1>Era Complete!</h1><div class="big">${stars(s)}</div>
+  <div class="stats"><div>❌ Mistakes: ${st.mistakes}</div><div>🔎 Peeks: ${st.peeks}</div><div>⭐ Best: ${stars(best)}</div></div>
+  <div class="lesson"><b>Did you know?</b><br>• ${E.facts[0]}<br>• ${E.facts[1]}</div>
+  <div class="lesson" style="font-size:13px">${sorted.map(e=>`${e.e} <b>${e.d}</b> — ${e.t}`).join('<br>')}</div>
+  <button id="next">${last?'🏠 Warp home!':'🌀 Warp to '+ERAS[li+1].name}</button><br><button class="sec" id="again">🔁 Replay</button><button class="sec" id="tlv">🕰️ Timeline</button><button class="sec" id="lv">🗺️ Eras</button>`);
+  $('next').onclick=()=>last?goHome():playEra(li+1,true);$('again').onclick=()=>playEra(li,false);$('tlv').onclick=()=>masterTimeline();$('lv').onclick=()=>levelSelect()},1100)}
+function goHome(){const from=E.year;startWarp(from,2026,'Warping home to today…',()=>{screen='menu';setHud(false);buildLevel(N-1);
+ showCard(`<div class="emo">🏠⏳</div><h1>You Made It Home!</h1><p class="sub">You repaired your time machine by visiting all ${N} eras — from the dinosaurs to the Moon!</p><div class="big">★ ${totalStars()} / ${N*3}</div><div class="lesson">History is a story that is still being written — and YOU are part of it. What will people learn about <b>your</b> time someday?</div><button id="tlv">🕰️ See your Timeline</button><button class="sec" id="lv">🗺️ Eras</button>`);
+ sfx.win();$('tlv').onclick=()=>masterTimeline();$('lv').onclick=()=>levelSelect()})}
+// ===== Screens =====
+function playEra(i,doWarp,force){if(!force&&!unlocked(i))return;hideCard();hideDlg();const from=screen==='play'||screen==='menu'?E.year:2026;
+ const go=()=>{buildLevel(i);screen='play';setHud(true);const o=camTarget();camera.position.set(o[0],o[1],10+o[2]);camLook.set(-Math.sin(camYaw),1,10-Math.cos(camYaw));eraTune(i);
+  showCard(`<div class="emo">${E.emoji}</div><h1>${E.name}</h1><p class="sub" style="color:#7b3fe4;font-weight:900">${E.when}</p><div class="lesson">🎯 <b>Your mission</b><br>1. Find 3 hidden ⚙️ time-machine parts and answer their questions.<br>2. Talk to <b>${E.npc.name}</b> ${E.npc.face} and complete the challenge.<br>3. Power the ⚡ time machine by putting history in order!</div><button id="go">Let's explore! ▶</button>`,{light:1});$('go').onclick=()=>{hideCard();showMsg('Drag to look around; walk with WASD / arrows or tap the ground.')}};
+ if(doWarp)startWarp(from,ERAS[i].year,`Warping to ${ERAS[i].name}…`,go);else go()}
+function levelSelect(){if(screen==='play'&&!st.done)screen='play';hideDlg();
+ showCard(`<button class="x" id="lx">✕</button><h2>🗺️ Choose an Era</h2><p class="sub">⭐ ${totalStars()} / ${N*3} stars</p><div class="levels">${ERAS.map((e,i)=>`<button class="lv" data-i="${i}" ${unlocked(i)?'':'disabled'}><div class="n">${unlocked(i)?e.emoji:'🔒'}</div>${e.name}<small>${e.short}</small><div class="s">${stars(prog.stars[i])}</div></button>`).join('')}</div><button class="sec" id="tlv">🕰️ Timeline</button>`,{wide:1});
+ document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>playEra(+b.dataset.i,true));$('tlv').onclick=()=>masterTimeline();$('lx').onclick=()=>screen==='play'?hideCard():titleScreen()}
+function masterTimeline(){hideDlg();const order=ERAS.map((e,i)=>i).sort((a,b)=>ERAS[a].year-ERAS[b].year);let h='',ceDone=false;
+ order.forEach((i,k)=>{const e=ERAS[i];if(!ceDone&&e.year>0){h+=`<div class="ce">Year 1 CE</div>`;ceDone=true}const done=prog.stars[i]>0,un=unlocked(i);
+  h+=`<div class="node ${done?'done':un?'':'lock'}"><div class="dot">${done||un?e.emoji:'❓'}</div><div class="lbl">${done||un?e.name:'???'}</div><div class="yr">${e.short}</div><div class="st">${done?stars(prog.stars[i]):''}</div></div>`;
+  if(i===0)h+=`<div class="gap">〰️<br>66 million years go by!<br>〰️</div>`});
+ showCard(`<button class="x" id="mx">✕</button><h2>🕰️ Master Timeline</h2><p class="sub">Every era you complete lights up on the timeline. (${prog.stars.filter(s=>s>0).length} of ${N} restored)</p><div class="mt">${h}</div>
+ <div class="lesson"><b>BCE and CE:</b> We count years from a starting point called <b>year 1</b>. Years after it are <b>CE</b> (“Common Era”) and count UP: 80 CE, 1969 CE, 2026 CE… Years before it are <b>BCE</b> (“Before the Common Era”) and count DOWN toward year 1, so <b>2560 BCE is older than 432 BCE</b>. There is no year 0 — 1 BCE is followed right away by 1 CE!<br>Notice: the eras weren't played in date order. The Maya built Chichen Itza at about the same time the Vikings were sailing!</div><button id="mok">OK</button>`,{wide:1});
+ const back=()=>{if(screen==='play')hideCard();else titleScreen()};$('mx').onclick=$('mok').onclick=back}
+function titleScreen(){screen='title';setHud(false);hideDlg();const next=Math.max(0,prog.stars.findIndex(s=>s===0));const nx=prog.stars.every(s=>s>0)?0:next;
+ if(!world.children.length)buildLevel(nx);
+ showCard(`<div class="emo">⏳🌀</div><h1>Time Traveler</h1><p class="sub">Oh no! Your time machine broke, and its parts are scattered across history! Explore <b>${N} eras</b> — from dinosaurs to the Moon landing — find the missing parts, help the people (and dinosaurs!) you meet, and put history in order to warp home.</p>
+ <div class="stats"><div>⭐ ${totalStars()} / ${N*3}</div><div>🗺️ ${prog.stars.filter(s=>s>0).length} / ${N} eras</div></div>
+ <button id="play">▶ ${totalStars()?'Continue':'Play'}</button><button class="sec" id="lvls">🗺️ Eras</button><button class="sec" id="tlv">🕰️ Timeline</button>
+ <p class="sub" style="font-size:13px">Drag to look around · WASD / arrows or tap to walk · E to talk · R to reset view</p>`);
+ $('play').onclick=()=>{ac();sfx.click();playEra(nx,true)};$('lvls').onclick=()=>{ac();levelSelect()};$('tlv').onclick=()=>{ac();masterTimeline()}}
+// ===== Top buttons =====
+$('hintBtn').onclick=()=>{if(screen!=='play'||uiOpen())return;sfx.click();let tx,tz,what;
+ const remainingOdd=oddObjs.filter(o=>!o.userData.gone&&o.userData.item.bad);
+ if(st.chActive&&remainingOdd.length){const o=remainingOdd[0];tx=o.position.x;tz=o.position.z;what='Something out of time is under the beam — tap it!'}
+ else{const left=E.parts.map((p,k)=>({...p,k})).filter(p=>!st.parts[p.k]).sort((a,b)=>distTo(a.x,a.z)-distTo(b.x,b.z));
+  if(left.length&&(st.npcDone||st.talked)){tx=left[0].x;tz=left[0].z;what='A ⚙️ part is hidden where the golden beam shines!'}
+  else if(!st.npcDone){tx=E.npc.x;tz=E.npc.z;what=`Go talk to ${E.npc.name}!`}
+  else if(left.length){tx=left[0].x;tz=left[0].z;what='A ⚙️ part is hidden where the golden beam shines!'}
+  else{tx=tm.position.x;tz=tm.position.z;what='Walk to the glowing time machine!'}}
+ if(beam)world.remove(beam);beam=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,40,12,1,true),new THREE.MeshBasicMaterial({color:0xffd166,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));beam.position.set(tx,20,tz);beam.userData.t=7;world.add(beam);showMsg('💡 '+what)};
+$('tlBtn').onclick=()=>{sfx.click();if(uiOpen()&&screen==='play')return;masterTimeline()};
+$('lvlBtn').onclick=()=>{sfx.click();if(uiOpen()&&screen==='play'&&!$('overlay').classList.contains('hide'))return;levelSelect()};
+const sndLbl=()=>$('sndBtn').textContent=muted?'🔇':'🔊';sndLbl();
+$('sndBtn').onclick=()=>{muted=!muted;localStorage.setItem(MUTE_KEY,muted?'1':'0');sndLbl();if(!muted)sfx.click()};
+const gfxLbl=()=>$('gfxBtn').textContent='⚙️ '+{auto:'Auto',high:'High',low:'Low'}[gfxMode]+(gfxMode==='auto'?(gfxLow?' (Low)':' (High)'):'');
+function applyGfx(){gfxLow=isLow();renderer.setPixelRatio(gfxLow?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!gfxLow;sun.castShadow=!gfxLow;
+ scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=!gfxLow;[].concat(o.material).forEach(m=>m&&(m.needsUpdate=true))}});gfxLbl();resize()}
+$('gfxBtn').onclick=()=>{gfxMode={auto:'high',high:'low',low:'auto'}[gfxMode];localStorage.setItem(GFX_KEY,gfxMode);applyGfx();showMsg(`Graphics: ${gfxMode.toUpperCase()}${gfxLow?' — no shadows (fewer props from the next era)':' — shadows on'}`)};
+gfxLbl();
+addEventListener('resize',resize);resize();
+// ===== Test API =====
+window.__game={
+ get state(){return {screen,level:li,era:E.id,parts:st.parts.slice(),talked:st.talked,npcDone:st.npcDone,chActive:st.chActive,challenge:ch&&ch.type,oddFound:st.oddFound,done:st.done,mistakes:st.mistakes,peeks:st.peeks,stars:prog.stars.slice(),uiOpen:uiOpen(),cardText:$('overlay').classList.contains('hide')?'':$('card').innerText,dialog:$('dlg').style.display==='flex'?$('dlgText').textContent:'',gfx:gfxMode,gfxLow,warping:!!warp,player:{x:player.position.x,z:player.position.z}}},
+ get level(){return li},eras:ERAS,
+ loadLevel(i,warpIn){playEra(i,!!warpIn,true)},
+ finishWarp(){if(warp)warp.t=warp.dur},
+ closeCard(){const b=document.querySelector('#card #go,#card #ok,#card #collect');if(b)b.click();else hideCard()},
+ teleport(x,z){player.position.set(x,0,z);target=null;pending=null},
+ partPositions:()=>E.parts.map(p=>({x:p.x,z:p.z})),npcPosition:()=>({x:E.npc.x,z:E.npc.z}),machinePosition:()=>({x:tm.position.x,z:tm.position.z}),
+ blocked:(x,z)=>blockedAt(x,z,.5),
+ reachable(){const step=.5,R=E.R,key=(i,j)=>i+','+j,seen=new Set(),q=[[0,20]];seen.add(key(0,20));const ok=(i,j)=>{const x=i*step,z=j*step;return Math.hypot(x,z)<=R&&!blockedAt(x,z,.5)};
+  while(q.length){const [i,j]=q.shift();for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1]]){const n=[i+a,j+b];const k=key(...n);if(!seen.has(k)&&ok(...n)){seen.add(k);q.push(n)}}}
+  const near=(x,z,r)=>{for(const k of seen){const [i,j]=k.split(',').map(Number);if(Math.hypot(i*step-x,j*step-z)<r)return true}return false};
+  return {parts:E.parts.map(p=>near(p.x,p.z,1.6)),npc:near(E.npc.x,E.npc.z,2.8),tm:near(tm.position.x,tm.position.z,3.3)}},
+ collectPart(k){const p=E.parts[k];player.position.set(p.x+.8,0,p.z+.8);target=null;pending=null},
+ correctAnswer(){if(!curQ)return -1;return curQ.order.indexOf(0)},
+ answer(idx){const b=document.querySelectorAll('.choices .ch')[idx];if(b)b.click();return !!b},
+ answerCorrect(){const i=this.correctAnswer();if(i<0)return false;this.answer(i);const c=$('collect');if(c)c.click();return true},
+ talk(){player.position.set(E.npc.x+1.6,0,E.npc.z+1.2);target=null;talk()},
+ skipDialog(){let n=0;while($('dlg').style.display==='flex'&&n++<20)nextLine()},
+ anachronisms:()=>oddObjs.map((o,k)=>({k,emoji:o.userData.item.e,bad:!!o.userData.item.bad,gone:!!o.userData.gone,x:o.position.x,z:o.position.z})),
+ clickAnachronism(k){clickOdd(k)},
+ screenPosOf(k){const o=oddObjs[k];if(!o)return null;const v=o.position.clone().project(camera);return {x:(v.x+1)/2*innerWidth,y:(1-v.y)/2*innerHeight}},
+ solveChallenge(){if(!ch&&!st.chActive)return false;const C=E.ch;
+  if(st.chActive){oddObjs.forEach((o,k)=>{if(o.userData.item.bad)clickOdd(k)});return true}
+  if(C.type==='decode'){const run=()=>{if(!ch)return;const b=[...document.querySelectorAll('#opts .ch')].find(x=>+x.dataset.v===ch.ans);b&&b.click()};run();return 'async'}
+  if(C.type==='match'){C.pairs.forEach((p,i)=>{document.querySelector(`.mi[data-s="L"][data-i="${i}"]`).click();document.querySelector(`.mi[data-s="R"][data-i="${i}"]`).click()});return true}
+  if(C.type==='pick'){document.querySelectorAll('.pk').forEach(b=>{if(E.ch.items[+b.dataset.i].ok)b.click()});return true}
+  if(C.type==='tf'){const it=C.items[ch.step];const b=document.querySelector(`#tfb .ch[data-v="${it.a?1:0}"]`);b&&b.click();const nx=$('nx');nx&&nx.click();return 'async'}},
+ useMachine(){player.position.set(tm.position.x-1.5,0,tm.position.z-2);target=null;useTM()},
+ timelineOrder:()=>correctOrder(),currentTimelineOrder:()=>tl?tl.order.slice():null,
+ setTimelineOrder(o){if(!tl)return false;tl.order=o.slice();renderTimeline();return true},
+ checkTimeline(){if(tl)checkTimeline()},
+ hint(){$('hintBtn').click()},
+ masterTimeline(){masterTimeline()},levelSelect(){levelSelect()},title(){titleScreen()},
+ resetProgress(){prog={stars:Array(N).fill(0)};saveProg()}
+};
+// ===== Boot =====
+buildLevel(Math.max(0,prog.stars.findIndex(s=>s===0)));titleScreen();requestAnimationFrame(loop);
+</script></body></html>
+
