@@ -19,12 +19,13 @@ describe("subject modules", () => {
         expect(lesson.slug).toMatch(/^[a-z0-9-]+$/);
         expect(lesson.durationMinutes).toBeGreaterThan(0);
         if (lesson.frenchWords) {
-          expect(lesson.frenchWords).toHaveLength(10);
-          expect(new Set(lesson.frenchWords.map((word) => word.id)).size).toBe(10);
-          expect(new Set(lesson.frenchWords.map((word) => word.french)).size).toBe(10);
-          expect(new Set(lesson.frenchWords.map((word) => word.english)).size).toBe(10);
+          const count = lesson.slug === "classroom" ? 24 : 10;
+          expect(lesson.frenchWords).toHaveLength(count);
+          expect(new Set(lesson.frenchWords.map((word) => word.id)).size).toBe(count);
+          expect(new Set(lesson.frenchWords.map((word) => word.french)).size).toBe(count);
+          expect(new Set(lesson.frenchWords.map((word) => word.english)).size).toBe(count);
           for (const word of lesson.frenchWords) {
-            expect(word.french).toMatch(/^(le |la |l')/);
+            expect(word.french).toMatch(/^(le |la |les |un |une |des |l')/);
             expect(word.note.length).toBeGreaterThan(10);
           }
           continue;

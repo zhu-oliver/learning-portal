@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,22 +26,38 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      - run: npm test -- --maxWorkers=2 --testTimeout=15000
       - run: npm run build
       - name: Assemble standalone application
         run: |
           cp -r public .next/standalone/public
           cp -r .next/static .next/standalone/.next/static
+          for file in server.js node_modules/mssql/package.json \
+            src/games/math-army/index.html src/games/math-kart/index.html \
+            src/games/spelling-snake/index.html src/games/code-commander/index.html \
+            public/games/math-army/vendor/build/three.module.js \
+            public/games/math-army/vendor/utils/BufferGeometryUtils.js \
+            public/games/math-army/vendor/geometries/RoundedBoxGeometry.js \
+            public/games/math-army/vendor/LICENSE; do
+            test -f ".next/standalone/$file"
+          done
+          if find .next/standalone -type f -name '.env*' -print -quit | grep -q .; then
+            echo "::error::Environment files must not be included in the deployment artifact."
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: portal
           path: .next/standalone
           include-hidden-files: true
+          retention-days: 7
+          if-no-files-found: error
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: production
     permissions:
       contents: read
@@ -55,7 +72,24 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      - uses: azure/webapps-deploy@v3
+      - name: Deploy standalone application
+        id: deploy
+        uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          resource-group-name: ${{ vars.AZURE_RESOURCE_GROUP }}
           package: app
+      - name: Verify live health
+        env:
+          WEBAPP_URL: ${{ steps.deploy.outputs.webapp-url }}
+        run: |
+          for attempt in $(seq 1 30); do
+            if body=$(curl --fail --silent --show-error --max-time 15 "$WEBAPP_URL/api/health") \
+              && echo "$body" | node -e 'let text="";process.stdin.on("data",c=>text+=c);process.stdin.on("end",()=>{if(JSON.parse(text).status!=="ok")process.exit(1)})'; then
+              echo "Deployment is healthy."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::The deployed application did not pass its health check."
+          exit 1

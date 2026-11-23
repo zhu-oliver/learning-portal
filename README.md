@@ -362,20 +362,27 @@ For direct deployment from Windows, ZIP entries must use standard archive separa
 
 ### 4. Configure deployment from GitHub
 
-Push the project to your own GitHub repository with a `main` branch. No repository or commit is created by this starter.
+The project is tracked in the private [zhu-oliver/learning-portal](https://github.com/zhu-oliver/learning-portal) repository on `main`.
 
-Use [Azure's GitHub Actions OIDC setup](https://learn.microsoft.com/azure/app-service/deploy-github-actions?tabs=openid%2Caspnetcore) to create an Entra application/service principal with a federated credential for the repository's **`production` environment**. Grant deployment permissions scoped to this App Service (the built-in **Website Contributor** role is sufficient for deployment to an existing app).
+Use [infra/github-deploy.bicep](infra/github-deploy.bicep) to provision a separate user-assigned managed identity, `${appName}-github-deploy`, with GitHub OIDC federation for the repository's **`production` environment**. It receives **Website Contributor** only on the existing App Service, not the resource group or subscription. The template does not change the app's runtime identity, SQL permissions, plan, settings, or Google credentials.
 
-Create the `production` environment in GitHub, optionally requiring approval. Add these repository or production-environment **variables**:
+```powershell
+az deployment group create --resource-group learning-portal-rg --name github-deployment-access --template-file infra/github-deploy.bicep --parameters appName=littleoak-portal-2a3210e0
+```
+
+Create the `production` environment in GitHub, restricting deployment branches to `main` without requiring manual approval for automatic deployments. Add these production-environment **variables** from the template outputs:
 
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
 - `AZURE_WEBAPP_NAME`
+- `AZURE_RESOURCE_GROUP`
 
 Ensure the federated identity subject is `repo:<owner>/<repo>:environment:production`. No publish-profile secret is needed.
 
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml) validates pull requests and builds on `main`; only `main` deployments publish to Azure. It packages `.next/standalone`, including `.next/static` and `public`, and uses OIDC to deploy.
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml) validates pull requests; every normal push to `main` validates, builds, and deploys to Azure automatically. The initial repository import used `[skip ci]`; commits with that marker intentionally do not deploy. You can also run the workflow manually on `main` from GitHub Actions. The full test suite uses two workers and a 15-second default per-test timeout to avoid UI-test resource contention on shared runners; longer explicitly timed tests keep their own limits. No tests are skipped.
+
+The workflow packages `.next/standalone`, including `.next/static`, `public`, the SQL driver, and all four private game documents, and rejects artifacts containing environment files. It retains artifacts for seven days, logs into Azure with OIDC without a publish profile or Azure password, deploys, and polls `/api/health` until it returns `{"status":"ok"}`. Production deployments are serialized. Failed validation prevents deployment. Runtime credentials remain exclusively in App Service settings; no application credentials are supplied to GitHub builds.
 
 ### 5. Verify the deployed site
 
