@@ -15,7 +15,7 @@ export default async function MathArmyPage() {
       <p>Choose a level, then steer your army through the correct answers. Eight levels cover addition, subtraction, multiplication, division, and multi-step problems.</p>
     </div></header>
     <p className="small-note">Click or tap inside the game to play. Use arrow keys or WASD to steer, drag on a touch screen, and press P to pause. Fullscreen gives you more room; Escape exits fullscreen. Choose Low graphics in the game menu if needed.</p>
-    <p className="small-note">This arcade game includes cartoon battles and flashing effects. Ask an adult if it is right for you. Stars, last-played level, and graphics settings are stored only in this browser and shared by people using this browser profile, even after sign-out. Game results are not saved to your account or quiz history.</p>
+    <p className="small-note">This arcade game includes cartoon battles and flashing effects. Ask an adult if it is right for you. Stars and last-played level save privately to your account in Azure SQL; graphics settings stay on this device. Old shared-browser progress is imported only if you choose. Game progress is separate from quiz history.</p>
     <MathArmyGame />
   </div>;
 }

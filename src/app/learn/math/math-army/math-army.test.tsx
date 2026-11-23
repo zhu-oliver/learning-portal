@@ -8,6 +8,7 @@ import SubjectPage from "../../[subject]/page";
 
 const mocks = vi.hoisted(() => ({ user: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
 beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
 
@@ -22,14 +23,14 @@ describe("Math Army integration", () => {
     render(await MathArmyPage());
     expect(screen.getByRole("heading", { name: "Math Army" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to Math" })).toHaveAttribute("href", "/learn/math");
-    expect(screen.getByText(/shared by people using this browser profile/)).toBeInTheDocument();
+    expect(screen.getByText(/Stars and last-played level save privately to your account in Azure SQL/)).toBeInTheDocument();
   });
   it("serves the real game privately with local-only dependencies and same-origin framing", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
-    expect(response.headers.get("content-security-policy")).toContain("connect-src 'none'");
+    expect(response.headers.get("content-security-policy")).toContain("connect-src 'self'");
     const game = await response.text();
     expect(game).toContain("/games/math-army/vendor/build/three.module.js");
     expect(game).not.toContain("cdn.jsdelivr.net");

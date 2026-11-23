@@ -21,6 +21,6 @@ export default async function GamesPage() {
         <span className="card-action">Play {game.name} <ArrowRight size={19} /></span>
       </Link>,
     )}</div>
-    <p className="small-note">Game progress, where available, stays in this browser rather than account quiz history. Each game page explains its controls, storage, and parent notes.</p>
+    <p className="small-note">Game milestones save privately to your account across devices, separate from quiz history. Planet Hopper is unsaved exploration. Device settings stay local; each game page explains its controls and parent notes.</p>
   </div>;
 }

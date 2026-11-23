@@ -9,6 +9,7 @@ import SubjectPage from "../../[subject]/page";
 
 const mocks = vi.hoisted(() => ({ user: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
 beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
 
@@ -37,12 +38,31 @@ describe("Math Kart integration", () => {
     expect(screen.getByTitle("Math Kart: interactive learning game")).not.toBe(frame);
     expect(screen.getByRole("status")).toHaveTextContent("Loading Math Kart");
   });
+  it("accepts progress feedback only from the active same-origin iframe and exposes retry safely", async () => {
+    render(await MathKartPage());
+    const frame = screen.getByTitle<HTMLIFrameElement>("Math Kart: interactive learning game");
+    const source = frame.contentWindow;
+    const data = { type: "little-oak-progress", state: "error", message: "SQL unavailable" };
+    fireEvent(window, new MessageEvent("message", { source, origin: "https://other.example", data }));
+    fireEvent(window, new MessageEvent("message", { source: window, origin: window.location.origin, data }));
+    expect(screen.queryByText("SQL unavailable")).not.toBeInTheDocument();
+    fireEvent(window, new MessageEvent("message", { source, origin: window.location.origin, data }));
+    expect(screen.getByRole("alert")).toHaveTextContent("SQL unavailable");
+    expect(screen.getByRole("button", { name: "Restart game" })).toBeDisabled();
+    const post = vi.spyOn(source!, "postMessage");
+    await userEvent.setup().click(screen.getByRole("button", { name: "Retry saving" }));
+    expect(post).toHaveBeenCalledWith({ type: "little-oak-progress-command", action: "retry" }, window.location.origin);
+    fireEvent(window, new MessageEvent("message", { source, origin: window.location.origin, data: { ...data, state: "saved", message: "Saved" } }));
+    await userEvent.setup().click(screen.getByRole("button", { name: "Restart game" }));
+    fireEvent(window, new MessageEvent("message", { source, origin: window.location.origin, data }));
+    expect(screen.queryByText("SQL unavailable")).not.toBeInTheDocument();
+  });
   it("serves the original eight-track game privately with its matching self-hosted addon", async () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
-    expect(response.headers.get("content-security-policy")).toContain("connect-src 'none'");
+    expect(response.headers.get("content-security-policy")).toContain("connect-src 'self'");
     const game = await response.text();
     expect(game).not.toContain("cdn.jsdelivr.net");
     expect(game).toContain("/games/math-army/vendor/");

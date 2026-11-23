@@ -4,6 +4,7 @@
 </style><script type="importmap">{"imports":{"three":"/games/math-army/vendor/build/three.module.js","three/addons/":"/games/math-army/vendor/"}}</script></head><body>
 <div id="hud" class="hide"><div id="views"></div><button id="pauseBtn" class="pauseBtn">Ⅱ</button><div id="countdown"></div><div id="help">← → / A D steer · ↓ / S brake · Take the inside line on corners · Drive under the right answer!</div><div class="touch"><button id="leftBtn">◀</button><button id="brakeBtn" class="brake">BRAKE</button><button id="rightBtn">▶</button></div></div><div id="overlay" class="overlay show"><div class="card" id="card"></div></div>
 <script type="module">
+const localStorage = window.portalGameProgress;
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 const $=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rand=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];

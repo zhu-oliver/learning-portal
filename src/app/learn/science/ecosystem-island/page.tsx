@@ -15,8 +15,8 @@ export default async function EcosystemIslandPage() {
       <p>Grow a living island! Build habitats and follow food webs through ten missions about plants, pollination, predators, decomposers, drought, and biodiversity, or experiment in the open sandbox.</p>
     </div></header>
     <p className="small-note">Choose a mission, select a plant or animal, then tap the island to place it. Start runs the simulation; use the speed buttons and population graph to watch changes. Drag to orbit and pinch or use the camera buttons to zoom. The field journal explains your goal; Reset starts the current mission again. Fullscreen gives the island and journal more room.</p>
-    <p className="small-note">Mission stars, unlocks, and sound/graphics settings stay in this browser, shared within the browser profile even after sign-out. The current island is temporary; results are not saved to your account or quiz history. WebGL is required. This is a simplified simulation, not a guide to handling real wildlife; ask an adult before trying any outdoor activity.</p>
+    <p className="small-note">Mission stars and unlocks save privately to your account in Azure SQL; sound and graphics settings stay local. Old shared-browser progress is imported only if you choose. The current island is temporary and progress is separate from quiz history. WebGL is required. This is a simplified simulation, not a guide to handling real wildlife; outdoor activities need adult supervision.</p>
     <ArcadeGamePlayer name="Ecosystem Island" src="/learn/science/ecosystem-island/play" readySelector="#card [data-start]"
-      restartNote="Restart game returns to the title and discards the current island; saved device stars and unlocked missions are kept." />
+      restartNote="Restart game returns to the title and discards the current island; saved account stars and unlocked missions are kept." />
   </div>;
 }

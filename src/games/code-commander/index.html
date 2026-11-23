@@ -45,6 +45,7 @@ body.dragmove #trash{display:flex}#trash.over{background:#ffcfc5;transform:scale
 </style><script type="importmap">{"imports":{"three":"/games/math-army/vendor/build/three.module.js","three/addons/":"/games/math-army/vendor/"}}</script></head>
 <body><div id="world"></div><aside id="editor"><header><h2>🧩 Command Lab</h2><p>Drag blocks into your plan, then watch it roll!</p></header><div class="section" id="paletteSection"><h3>Drag (or tap) a command</h3><div id="palette" class="palette"></div><div id="trash">🗑 Drop here to delete</div></div><div class="section programHead"><h3 id="used">Your program</h3><button id="rootBtn">＋ Add to main</button></div><div class="workspace droplist" id="program" data-path="[]"></div><div class="controls"><button class="run" id="run">▶ RUN</button><button class="step" id="step">STEP</button><button class="reset" id="reset">RESET</button></div></aside><div id="hud"><div class="badge" id="levelLabel"></div><div class="hudbuttons"><button class="smallbtn" id="hint">💡 Hint</button><button class="smallbtn" id="pause">Ⅱ</button></div></div><div id="message"></div><div class="legend"><b>★</b> collect stars &nbsp; <b>⚑</b> reach the flag<br><i>Red tiles</i> = nest range (3 tiles)</div><div id="overlay"><div class="card" id="card"></div></div>
 <script type="module">
+const localStorage = window.portalGameProgress;
 import * as THREE from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 const $=id=>document.getElementById(id), clone=o=>JSON.parse(JSON.stringify(o));

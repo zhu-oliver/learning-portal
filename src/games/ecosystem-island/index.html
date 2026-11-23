@@ -19,6 +19,7 @@ header{height:70px;background:#123c35;color:#f6fff0;display:flex;align-items:cen
 <div class="overlay" id="overlay" hidden><section class="card" id="card" role="dialog" aria-modal="true" aria-label="Ecosystem Island menu"></section></div>
 <script>setTimeout(()=>{if(!window.__game)document.querySelector('#boot p').textContent='🌱 The island could not load. Refresh or ask a parent to check the game deployment.'},12000)</script>
 <script type="module">
+const localStorage = window.portalGameProgress;
 import * as THREE from 'three';
 
 const DAY=20, STEP=.25, R=17, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));

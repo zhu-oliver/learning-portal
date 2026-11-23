@@ -15,8 +15,8 @@ export default async function MathKartPage() {
       <p>Race through maths gates for turbo boosts! Eight tracks cover addition, subtraction, times tables, division, and multi-step problems. Play solo or race a friend on the same device in two-player split screen.</p>
     </div></header>
     <p className="small-note">Click or tap inside the game to play. Solo: arrow keys or A/D steer; Down or S brakes. Two players: Player 1 uses A/D and S, Player 2 uses Left/Right and Down. P pauses. Solo touch controls include steering and brake buttons. Fullscreen gives you more room; Escape exits fullscreen. Choose Low graphics in the game menu if needed.</p>
-    <p className="small-note">Stars, player-count preference, and graphics settings stay in this browser and are shared by people using this browser profile, even after sign-out. They are separate from Math Army progress. Game results are not saved to your account or quiz history. The game uses moving 3D graphics and flashing effects; ask an adult if it is right for you.</p>
+    <p className="small-note">Stars save privately to the signed-in account in Azure SQL, including rewards from same-device two-player races. Player-count and graphics preferences stay local. Old shared-browser progress is imported only if you choose. Progress is separate from Math Army and quiz history. Moving 3D graphics and flashing effects warrant adult review.</p>
     <ArcadeGamePlayer name="Math Kart" src="/learn/math/math-kart/play" readySelector=".lv"
-      restartNote="Restart game returns to the track menu and discards the current race; saved device stars are kept." />
+      restartNote="Restart game returns to the track menu and discards the current race; saved account stars are kept." />
   </div>;
 }

@@ -21,6 +21,7 @@ import nextConfig from "../../next.config";
 
 const mocks = vi.hoisted(() => ({ user: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
 beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
 
@@ -64,7 +65,7 @@ describe.each(games)("$name integration", (game) => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-frame-options")).toBe("SAMEORIGIN");
-    expect(response.headers.get("content-security-policy")).toContain("connect-src 'none'");
+    expect(response.headers.get("content-security-policy")).toContain(`connect-src '${game.slug === "planet-hopper" ? "none" : "self"}'`);
     const html = await response.text();
     expect(html).toContain(game.marker);
     expect(html).toContain("/games/vendor/three-0.160.0/three.module.js");

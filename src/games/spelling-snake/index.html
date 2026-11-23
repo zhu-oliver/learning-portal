@@ -11,6 +11,7 @@
 <body>
 <div id="hud"><div id="progress"><span></span></div><div id="stats"><div id="levelName"></div><div id="wordCount"></div><div>⭐ <strong id="score">0</strong></div><div id="lives"></div><div>🔥 <span id="streak">0</span></div></div><div id="wordbox"><div id="hint"></div><div id="slots"></div><div id="wordbuttons"><button id="hear">🔊 Hear again</button><button id="peek">👀 Peek −10</button></div></div><button id="pauseBtn" aria-label="Pause">⏸</button><div id="toast"></div><div id="help">Arrow keys / WASD to steer · H to hear · P to pause</div><div id="touchpad"><button data-dir="up" aria-label="Up">▲</button><button data-dir="left" aria-label="Left">◀</button><button data-dir="down" aria-label="Down">▼</button><button data-dir="right" aria-label="Right">▶</button></div></div><div id="flash"></div><div id="overlay" class="show"><div class="card" id="card"></div></div>
 <script type="module">
+const localStorage = window.portalGameProgress;
 import * as THREE from 'three';
 const $=id=>document.getElementById(id), rand=(a,b)=>a+Math.random()*(b-a), pick=a=>a[Math.floor(Math.random()*a.length)], clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const levels=[
