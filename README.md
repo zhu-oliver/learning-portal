@@ -378,7 +378,7 @@ Create the `production` environment in GitHub, restricting deployment branches t
 - `AZURE_WEBAPP_NAME`
 - `AZURE_RESOURCE_GROUP`
 
-Ensure the federated identity subject is `repo:<owner>/<repo>:environment:production`. No publish-profile secret is needed.
+Match Azure's federated identity subject to GitHub's exact OIDC `sub` claim. For this repository it is `repo:zhu-oliver@44208600/learning-portal@1468309284:environment:production`, including immutable owner and repository IDs. Do not replace it with the older name-only format or disable that immutable identity binding. For another repository, supply its exact subject through the template's `githubSubject` parameter. No publish-profile secret is needed.
 
 [.github/workflows/deploy.yml](.github/workflows/deploy.yml) validates pull requests; every normal push to `main` validates, builds, and deploys to Azure automatically. The initial repository import used `[skip ci]`; commits with that marker intentionally do not deploy. You can also run the workflow manually on `main` from GitHub Actions. The full test suite uses two workers and a 15-second default per-test timeout to avoid UI-test resource contention on shared runners; longer explicitly timed tests keep their own limits. No tests are skipped.
 

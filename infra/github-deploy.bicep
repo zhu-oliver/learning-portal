@@ -3,10 +3,8 @@ param appName string
 
 param location string = resourceGroup().location
 
-@description('GitHub owner/repository authorized to deploy.')
-param githubRepository string = 'zhu-oliver/learning-portal'
-
-param githubEnvironment string = 'production'
+@description('Exact GitHub OIDC subject claim, including immutable owner/repository IDs.')
+param githubSubject string = 'repo:zhu-oliver@44208600/learning-portal@1468309284:environment:production'
 
 resource app 'Microsoft.Web/sites@2024-04-01' existing = {
   name: appName
@@ -22,7 +20,7 @@ resource federation 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedI
   name: 'github-production'
   properties: {
     issuer: 'https://token.actions.githubusercontent.com'
-    subject: 'repo:${githubRepository}:environment:${githubEnvironment}'
+    subject: githubSubject
     audiences: ['api://AzureADTokenExchange']
   }
 }
