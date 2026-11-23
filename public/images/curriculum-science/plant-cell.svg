@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="img" aria-labelledby="title desc">
+  <title id="title">Original simplified plant-cell model</title>
+  <desc id="desc">A thick outer cell wall surrounds a thin membrane, pale cytoplasm, a central vacuole, a purple nucleus, and green oval chloroplasts. Relative sizes and locations are illustrative.</desc>
+  <rect width="600" height="360" rx="16" fill="#f8fafc"/>
+  <rect x="54" y="42" width="492" height="276" rx="40" fill="#d9edc8" stroke="#4c783b" stroke-width="12"/>
+  <rect x="65" y="60" width="470" height="240" rx="32" fill="#fff1cb" stroke="#ce7639" stroke-width="4"/>
+  <rect x="218" y="100" width="174" height="157" rx="35" fill="#dceefa" stroke="#6585ad" stroke-width="3"/>
+  <circle cx="168" cy="162" r="39" fill="#bd9bd7" stroke="#74568c" stroke-width="3"/>
+  <circle cx="171" cy="160" r="11" fill="#74568c"/>
+  <g fill="#86bd69" stroke="#447640" stroke-width="3">
+    <ellipse cx="456" cy="144" rx="31" ry="17"/>
+    <ellipse cx="454" cy="241" rx="31" ry="17"/>
+    <ellipse cx="133" cy="260" rx="31" ry="17"/>
+  </g>
+  <g fill="none" stroke="#447640" stroke-width="2">
+    <path d="M438 141h34m-34 6h34M437 238h34m-34 6h34M116 257h34m-34 6h34"/>
+  </g>
+  <g fill="#e6aa72" stroke="#a76d36" stroke-width="2">
+    <ellipse cx="164" cy="95" rx="24" ry="10"/>
+    <ellipse cx="300" cy="283" rx="24" ry="10"/>
+  </g>
+  <text x="300" y="342" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#334155">Model: not to scale; not every plant cell has chloroplasts</text>
+</svg>

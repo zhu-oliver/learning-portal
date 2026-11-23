@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 220">
+  <rect width="600" height="220" rx="16" fill="#eff6eb"/>
+  <g fill="none" stroke="#527c50" stroke-width="5" stroke-linecap="round">
+    <path d="M80 100Q70 60 60 45M90 100V35M100 100Q110 55 125 45M115 100Q130 75 142 75"/>
+    <path d="M170 75H220M208 65L220 75L208 85M375 75H425M413 65L425 75L413 85" stroke="#254c3a"/>
+  </g>
+  <g fill="#eee2d0" stroke="#526759" stroke-width="2">
+    <ellipse cx="300" cy="85" rx="35" ry="25"/><circle cx="328" cy="65" r="18"/>
+    <ellipse cx="319" cy="34" rx="7" ry="22"/><ellipse cx="337" cy="34" rx="7" ry="22"/>
+  </g>
+  <g fill="#d89557" stroke="#526759" stroke-width="2">
+    <ellipse cx="496" cy="82" rx="35" ry="22"/><path d="M520 78L535 38L557 61L548 88Z"/>
+    <path d="M464 80Q430 55 437 100L474 96Z"/><path d="M476 96V113M515 98V113"/>
+  </g>
+  <circle cx="334" cy="63" r="3" fill="#254c3a"/><circle cx="542" cy="68" r="3" fill="#254c3a"/>
+  <g font-family="sans-serif" font-size="18" text-anchor="middle" fill="#254c3a">
+    <text x="100" y="135">Grass</text><text x="300" y="135">Rabbit</text><text x="500" y="135">Fox</text>
+  </g>
+</svg>
