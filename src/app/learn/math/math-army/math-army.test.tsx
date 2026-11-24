@@ -6,11 +6,12 @@ import MathArmyPage from "./page";
 import { GET } from "./play/route";
 import SubjectPage from "../../[subject]/page";
 
-const mocks = vi.hoisted(() => ({ user: vi.fn() }));
+const mocks = vi.hoisted(() => ({ user: vi.fn(), auth: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
-beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
+beforeEach(() => { mocks.user.mockResolvedValue({ id: "google:owner" }); mocks.auth.mockResolvedValue({ user: { id: "google:owner" } }); });
 
 describe("Math Army integration", () => {
   it("adds the game to Math without replacing mental mathematics or grade navigation", async () => {
@@ -42,7 +43,7 @@ describe("Math Army integration", () => {
   it("requires authentication for both the page and raw game endpoint", async () => {
     mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
     await expect(MathArmyPage()).rejects.toThrow("AUTH_REDIRECT");
-    mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
-    await expect(GET()).rejects.toThrow("AUTH_REDIRECT");
+    mocks.auth.mockResolvedValueOnce(null);
+    expect((await GET()).status).toBe(200);
   });
 });

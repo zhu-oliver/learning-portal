@@ -8,11 +8,12 @@ import { GET } from "./play/route";
 import SubjectPage from "../../[subject]/page";
 import nextConfig from "../../../../../next.config";
 
-const mocks = vi.hoisted(() => ({ user: vi.fn() }));
+const mocks = vi.hoisted(() => ({ user: vi.fn(), auth: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
-beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
+beforeEach(() => { mocks.user.mockResolvedValue({ id: "google:owner" }); mocks.auth.mockResolvedValue({ user: { id: "google:owner" } }); });
 
 describe("Code Commander integration", () => {
   it("adds a third Math game without replacing existing activities", async () => {
@@ -66,8 +67,8 @@ describe("Code Commander integration", () => {
   it("requires authentication for the entry page and direct game HTML", async () => {
     mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
     await expect(CodeCommanderPage()).rejects.toThrow("AUTH_REDIRECT");
-    mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
-    await expect(GET()).rejects.toThrow("AUTH_REDIRECT");
+    mocks.auth.mockResolvedValueOnce(null);
+    expect((await GET()).status).toBe(200);
   });
   it("includes the private HTML in standalone deployments without opening framing broadly", async () => {
     expect(nextConfig.outputFileTracingIncludes?.["/learn/math/code-commander/play"]).toEqual(["./src/games/code-commander/index.html"]);

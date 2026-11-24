@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((url: string): never => { throw new Error(`redirect:${url}`); }),
 }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.requireUser }));
+vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue(null) }));
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound, redirect: mocks.redirect }));
 vi.mock("@/components/result-save", () => ({ ResultSave: () => <p>Result saving enabled</p> }));
 

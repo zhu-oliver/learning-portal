@@ -36,6 +36,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <Link className="text-link" href="/try">Take a peek at a sample lesson <ArrowRight size={16} /></Link>
           <br /><Link className="text-link" href="/try/spelling">Try the Spelling Bee <ArrowRight size={16} /></Link>
           <br /><Link className="text-link" href="/try/french">Say bonjour — try French <ArrowRight size={16} /></Link>
+          <br /><Link className="text-link" href="/games">Play games without signing in <ArrowRight size={16} /></Link>
         </div>
         <div className="hero-art" aria-label="A colorful collection of learning subjects">
           <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />

@@ -6,7 +6,7 @@ import { progressGames, type GameProgress, type ProgressGame } from "@/modules/g
 
 const script = await readFile(path.join(process.cwd(), "public", "games", "account-progress.js"), "utf8");
 const origin = "https://portal.example";
-function bridge(game: ProgressGame, progress: GameProgress = { stars: [] }, local: Record<string, string> = {}) {
+function bridge(game: ProgressGame, progress: GameProgress = { stars: [] }, local: Record<string, string> = {}, guest = false) {
   const stored = new Map(Object.entries(local));
   const listeners = new Map<string, (event: unknown) => void>();
   const parent = { postMessage: vi.fn() };
@@ -16,7 +16,7 @@ function bridge(game: ProgressGame, progress: GameProgress = { stars: [] }, loca
     addEventListener: (name: string, listener: (event: unknown) => void) => void;
     portalGameProgress?: { getItem(key: string): string; setItem(key: string, value: string): void; removeItem(key: string): void };
   } = {
-    __portalProgress: { game, progress, spec: progressGames[game], ownerToken: "a".repeat(64) },
+    __portalProgress: { game, progress, spec: progressGames[game], ownerToken: guest ? undefined : "a".repeat(64), guest },
     localStorage: { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value), removeItem: (key: string) => stored.delete(key) },
     parent, addEventListener: (name, listener) => { listeners.set(name, listener); },
   };
@@ -43,6 +43,26 @@ describe("game progress browser bridge", () => {
     await vi.advanceTimersByTimeAsync(500);
     expect(JSON.parse(String(game.fetch.mock.calls[0][1]?.body)).progress.stars.slice(0,2)).toEqual([3,2]);
     expect(game.stored.get("mathArmyStars")).toBe("[3,2]");
+  });
+  it("keeps guest progress in memory only, even when shared browser progress already exists", async () => {
+    const game = bridge("math-army", { stars: [] }, { mathArmyStars: "[3,3]", mathArmyGfx: "low" }, true);
+    expect(JSON.parse(game.storage.getItem("mathArmyStars")).every((stars: number) => stars === 0)).toBe(true);
+    game.command("status");
+    expect(game.parent.postMessage.mock.calls.at(-1)?.[0].legacyAvailable).toBe(false);
+    game.storage.setItem("mathArmyStars", "[2]");
+    await vi.advanceTimersByTimeAsync(500);
+    expect(JSON.parse(game.storage.getItem("mathArmyStars"))[0]).toBe(2);
+    expect(game.stored.get("mathArmyStars")).toBe("[3,3]");
+    expect(game.stored.get("mathArmyGfx")).toBe("low");
+    expect(game.fetch).not.toHaveBeenCalled();
+    expect(game.parent.postMessage.mock.calls.at(-1)?.[0]).toMatchObject({
+      state: "guest", message: "Progress is not saved while you are signed out.", legacyAvailable: false,
+    });
+    game.command("import");
+    game.command("retry");
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(game.fetch).not.toHaveBeenCalled();
+    expect(JSON.parse(game.storage.getItem("mathArmyStars"))[0]).toBe(2);
   });
   it.each(["ecosystem-island", "time-traveler", "fraction-factory", "typing-ninja", "map-quest"] as const)("translates %s's progress without saving device settings", async gameName => {
     const game = bridge(gameName);

@@ -7,11 +7,12 @@ import MathKartPage from "./page";
 import { GET } from "./play/route";
 import SubjectPage from "../../[subject]/page";
 
-const mocks = vi.hoisted(() => ({ user: vi.fn() }));
+const mocks = vi.hoisted(() => ({ user: vi.fn(), auth: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
-beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
+beforeEach(() => { mocks.user.mockResolvedValue({ id: "google:owner" }); mocks.auth.mockResolvedValue({ user: { id: "google:owner" } }); });
 
 describe("Math Kart integration", () => {
   it("lists both games without replacing mental mathematics or grade navigation", async () => {
@@ -77,7 +78,7 @@ describe("Math Kart integration", () => {
   it("keeps both the page and raw game behind login", async () => {
     mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
     await expect(MathKartPage()).rejects.toThrow("AUTH_REDIRECT");
-    mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
-    await expect(GET()).rejects.toThrow("AUTH_REDIRECT");
+    mocks.auth.mockResolvedValueOnce(null);
+    expect((await GET()).status).toBe(200);
   });
 });

@@ -24,7 +24,7 @@ export function ArcadeGamePlayer({ name, src, readySelector, restartNote }: Prop
     function receive(event: MessageEvent) {
       if (event.origin !== window.location.origin || event.source !== frame.current?.contentWindow
         || event.data?.type !== "little-oak-progress"
-        || !["loaded", "saving", "saved", "error"].includes(event.data.state) || typeof event.data.message !== "string") return;
+        || !["loaded", "saving", "saved", "error", "guest"].includes(event.data.state) || typeof event.data.message !== "string") return;
       setProgressMessage(event.data.message);
       setProgressError(event.data.state === "error");
       setLegacyAvailable(event.data.legacyAvailable === true);

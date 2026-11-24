@@ -19,11 +19,12 @@ import { GET as map } from "@/app/learn/science/map-quest/play/route";
 import { GET as planet } from "@/app/learn/science/planet-hopper/play/route";
 import nextConfig from "../../next.config";
 
-const mocks = vi.hoisted(() => ({ user: vi.fn() }));
+const mocks = vi.hoisted(() => ({ user: vi.fn(), auth: vi.fn() }));
 vi.mock("@/lib/session", () => ({ requireUser: mocks.user }));
+vi.mock("@/auth", () => ({ auth: mocks.auth }));
 vi.mock("@/lib/game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue({ stars: [] }), progressOwnerToken: () => "a".repeat(64) }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } }));
-beforeEach(() => mocks.user.mockResolvedValue({ id: "google:owner" }));
+beforeEach(() => { mocks.user.mockResolvedValue({ id: "google:owner" }); mocks.auth.mockResolvedValue({ user: { id: "google:owner" } }); });
 
 const games = [
   { name: "Planet Hopper", subject: "science", slug: "planet-hopper", page: PlanetHopperPage, get: planet, menu: '<button id="startBtn">Start exploring</button>', marker: "Solar System Explorer", existing: "Play Map Quest" },
@@ -73,11 +74,11 @@ describe.each(games)("$name integration", (game) => {
     if (game.slug !== "map-quest" && game.slug !== "planet-hopper") expect(html).not.toMatch(/https?:\/\//);
   });
 
-  it("protects both the entry and raw HTML and traces only the exact gameplay framing exception", async () => {
+  it("keeps learning entries protected, serves public gameplay and traces only the exact framing exception", async () => {
     mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
     await expect(game.page()).rejects.toThrow("AUTH_REDIRECT");
-    mocks.user.mockRejectedValueOnce(new Error("AUTH_REDIRECT"));
-    await expect(game.get()).rejects.toThrow("AUTH_REDIRECT");
+    mocks.auth.mockResolvedValueOnce(null);
+    expect((await game.get()).status).toBe(200);
     expect(nextConfig.outputFileTracingIncludes?.[`${route}/play`]).toEqual([`./src/games/${game.slug}/index.html`]);
     const rules = await nextConfig.headers!();
     expect(rules.find(rule => rule.source === `${route}/play`)?.headers).toContainEqual({ key: "X-Frame-Options", value: "SAMEORIGIN" });

@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const { game, progress: initial, spec, ownerToken } = window.__portalProgress;
+  const { game, progress: initial, spec, ownerToken, guest = false } = window.__portalProgress;
   const native = window.localStorage;
   let progress = { ...initial, stars: Array.from({ length: spec.levels }, (_, index) => initial.stars[index] ?? 0) };
   if (spec.coins) progress.coins ??= 0;
@@ -15,7 +15,7 @@
     message = text;
     window.parent.postMessage({
       type: "little-oak-progress", state, message, reopenRequired,
-      legacyAvailable: keys.some(key => native.getItem(key) !== null),
+      legacyAvailable: !guest && keys.some(key => native.getItem(key) !== null),
     }, location.origin);
   }
   function container(value) {
@@ -62,6 +62,7 @@
     return previous !== JSON.stringify(progress);
   }
   function changed() {
+    if (guest) { notify("guest", "Progress is not saved while you are signed out."); return; }
     revision++;
     notify("saving", "Saving progress to your account...");
     clearTimeout(timer);
@@ -69,7 +70,7 @@
   }
   async function flush() {
     clearTimeout(timer);
-    if (saving || savedRevision === revision || reopenRequired) return;
+    if (guest || saving || savedRevision === revision || reopenRequired) return;
     saving = true;
     const sentRevision = revision;
     try {
@@ -116,9 +117,9 @@
   };
   window.addEventListener("message", event => {
     if (event.origin !== location.origin || event.source !== window.parent || event.data?.type !== "little-oak-progress-command") return;
-    if (event.data.action === "status") notify(state, message);
-    if (event.data.action === "retry" && !reopenRequired) { notify("saving", "Retrying account progress save..."); flush(); }
-    if (event.data.action === "import") {
+    if (event.data.action === "status") notify(guest ? "guest" : state, guest ? "Progress is not saved while you are signed out." : message);
+    if (event.data.action === "retry" && !guest && !reopenRequired) { notify("saving", "Retrying account progress save..."); flush(); }
+    if (event.data.action === "import" && !guest) {
       try {
         for (const key of keys) { const value = native.getItem(key); if (value !== null) update(key, value); }
         changed();
