@@ -24,6 +24,10 @@ export async function serveArcadeGame(slug: keyof typeof arcadeGames) {
   const styleSources = slug === "planet-hopper" ? "'self' 'unsafe-inline'" : "'unsafe-inline'";
   try {
     let html = await readFile(path.join(process.cwd(), "src", "games", slug, "index.html"), "utf8");
+    if (["math-army", "math-kart", "code-commander", "spelling-snake", "map-quest", "planet-hopper"].includes(slug)) {
+      html = html.replace("<html", `<html data-portal-sound-game="${slug}"`);
+      html = html.replace("<head>", '<head><script src="/games/game-sound.js"></script>');
+    }
     if (slug !== "planet-hopper") {
       const game = progressGameSchema.parse(slug);
       const progress = userId

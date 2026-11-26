@@ -409,6 +409,7 @@ function confetti(){const p=tankMesh.position.clone().add(V(0,.8,0)),cols=[0xff4
 
 // ---------- run / flow ----------
 function finish(result,instant=true){running=false;active=null;
+ if(result.failure)window.portalSound?.play('bad');else if(result.win)window.portalSound?.play('win');
  if(result.failure){state='failed';showMessage(result.failure)}
  else if(result.win){state='won';const earned=countBlocks(program)<=optimal()?3:countBlocks(program)<=optimal()+2?2:1;stars[level]=Math.max(stars[level]||0,earned);localStorage.setItem('codeCommanderStars',JSON.stringify(stars));
   if(instant)showWin(earned);else{confetti();showMessage('🏁 Mission complete!');const tk=token;setTimeout(()=>{if(tk===token&&state==='won')showWin(earned)},1400)}}

@@ -492,7 +492,7 @@ function gearMesh(){const g=new THREE.Group();const m=mat('#ffcf3f',{emissive:'#
  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffd166,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.8}));gl.scale.set(2.2,2.2,1);g.add(gl);return g}
 // ===== Audio =====
 let AC=null,muted=localStorage.getItem(MUTE_KEY)==='1';
-function ac(){if(muted)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function ac(){if(muted)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){console.error('Game audio unavailable:',e);return null}}if(AC.state==='suspended')AC.resume().catch(e=>console.error('Game audio could not resume:',e));return AC}
 function tone(f,t0,dur,type,vol,f2){const a=ac();if(!a)return;const t=a.currentTime+t0;const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.12,t+.015);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.05)}
 function noise(t0,dur,vol,f1,f2,q){const a=ac();if(!a)return;const t=a.currentTime+t0;const b=a.createBuffer(1,a.sampleRate*dur,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
@@ -1067,7 +1067,7 @@ $('hintBtn').onclick=()=>{if(screen!=='play'||uiOpen())return;sfx.click();let tx
  if(beam)world.remove(beam);beam=new THREE.Mesh(new THREE.CylinderGeometry(.6,.6,40,12,1,true),new THREE.MeshBasicMaterial({color:0xffd166,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));beam.position.set(tx,20,tz);beam.userData.t=7;world.add(beam);showMsg('💡 '+what)};
 $('tlBtn').onclick=()=>{sfx.click();if(uiOpen()&&screen==='play')return;masterTimeline()};
 $('lvlBtn').onclick=()=>{sfx.click();if(uiOpen()&&screen==='play'&&!$('overlay').classList.contains('hide'))return;levelSelect()};
-const sndLbl=()=>$('sndBtn').textContent=muted?'🔇':'🔊';sndLbl();
+const sndLbl=()=>{$('sndBtn').textContent=muted?'🔇':'🔊';$('sndBtn').setAttribute('aria-label','Game sound');$('sndBtn').setAttribute('aria-pressed',String(!muted));$('sndBtn').title=muted?'Sound off':'Sound on'};sndLbl();
 $('sndBtn').onclick=()=>{muted=!muted;localStorage.setItem(MUTE_KEY,muted?'1':'0');sndLbl();if(!muted)sfx.click()};
 const gfxLbl=()=>$('gfxBtn').textContent='⚙️ '+{auto:'Auto',high:'High',low:'Low'}[gfxMode]+(gfxMode==='auto'?(gfxLow?' (Low)':' (High)'):'');
 function applyGfx(){gfxLow=isLow();renderer.setPixelRatio(gfxLow?1:Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=!gfxLow;sun.castShadow=!gfxLow;

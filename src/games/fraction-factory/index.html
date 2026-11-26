@@ -114,7 +114,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const ALLN=[2,3,4,5,6,8,10,12];
 // ================= audio =================
 let AC=null,muted=localStorage.getItem('fractionFactoryMute')==='1';
-function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function ac(){if(muted)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){console.error('Game audio unavailable:',e);return null}}if(AC.state==='suspended')AC.resume().catch(e=>console.error('Game audio could not resume:',e));return AC}
 function tone(f,dur,type='sine',vol=.2,when=0,slide=0){const a=ac();if(!a||muted)return;const t=a.currentTime+when;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(a.destination);o.start(t);o.stop(t+dur+.05)}
 let nbuf=null;
 function noise(dur,vol=.2,when=0,freq=3000,q=1){const a=ac();if(!a||muted)return;if(!nbuf){nbuf=a.createBuffer(1,a.sampleRate,a.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}const t=a.currentTime+when;const s=a.createBufferSource();s.buffer=nbuf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;const g=a.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(a.destination);s.start(t);s.stop(t+dur+.02)}
@@ -588,7 +588,7 @@ $('hintBtn').onclick=()=>{if(G.state!=='playing'||!G.order)return;const hb=$('hi
 $('lvlBtn').onclick=()=>{ac();if(G.state==='delivering'||G.state==='timeout')return;showLevels()};
 const gfxLabel=()=>'⚙️ '+gfxMode[0].toUpperCase()+gfxMode.slice(1);$('gfxBtn').textContent=gfxLabel();
 $('gfxBtn').onclick=()=>{gfxMode=gfxMode==='auto'?'high':gfxMode==='high'?'low':'auto';localStorage.setItem(GKEY,gfxMode);$('gfxBtn').textContent=gfxLabel();toast('Graphics: '+gfxMode+' — reloading…');setTimeout(()=>location.reload(),600)};
-$('sndBtn').textContent=muted?'🔇':'🔊';$('sndBtn').onclick=()=>{muted=!muted;localStorage.setItem('fractionFactoryMute',muted?'1':'0');$('sndBtn').textContent=muted?'🔇':'🔊';if(!muted)SFX.click()};
+function soundUI(){$('sndBtn').textContent=muted?'🔇':'🔊';$('sndBtn').setAttribute('aria-label','Game sound');$('sndBtn').setAttribute('aria-pressed',String(!muted));$('sndBtn').title=muted?'Sound off':'Sound on'}soundUI();$('sndBtn').onclick=()=>{muted=!muted;localStorage.setItem('fractionFactoryMute',muted?'1':'0');soundUI();if(!muted)SFX.click()};
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function pickAt(cx,cy){ndc.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(ndc,camera);const hits=ray.intersectObjects(bench.mode==='cmp'?crates:itemRoot.children,true);
  for(const h of hits){let o=h.object;while(o&&!(o.userData.piece||o.userData.ball||o.userData.crate||o.userData.plate))o=o.parent;if(o)return o}return null}

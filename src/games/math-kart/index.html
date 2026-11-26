@@ -422,6 +422,7 @@ function applyResult(k,correct){
 function crossStation(k,idx,laneOverride){
   const st=stations[idx%stations.length];let correct;
   if(k.isPlayer){const miss=laneOverride==null&&Math.abs(k.lat)>HALF+.3,lane=miss?-1:laneOverride??latLane(k.lat);correct=lane===st.q.correctLane;
+    window.portalSound?.play(correct?'good':'bad');
     // In split-screen the gate isn't revealed until both racers are clear of it, so nobody sees the other's answer.
     if(raceHumans===1)revealStation(st,lane,k.d);else st.pending=Math.max(st.pending??-1,idx);
     if(correct){k.streak++;showToast(k.hi,k.streak>=3?`🔥 ${k.streak} IN A ROW! TURBO!`:'⭐ YES! TURBO BOOST!');}

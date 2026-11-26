@@ -273,11 +273,11 @@ const getPlan=()=>plans[sim.state.level-1]||sandbox;
 const unlocked=()=>{let n=1;while(n<plans.length&&best[n])n++;return n};
 const trophy=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 function ping(note='place'){
- if(mute)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
- try{audio??=new AC();if(audio.state==='suspended')audio.resume().catch(()=>{});const now=audio.currentTime;
+ if(mute)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC){console.error('Game audio is not supported');return}
+ try{audio??=new AC();if(audio.state==='suspended')audio.resume().catch(e=>console.error('Game audio could not resume:',e));const now=audio.currentTime;
  const sequence={place:[523,659],run:[392,523],win:[523,659,784,1047],lose:[392,330,262],warn:[317],select:[555]}[note]||[550];
  sequence.forEach((hz,i)=>{const osc=audio.createOscillator(),amp=audio.createGain(),t=now+.075*i;osc.type='sine';osc.frequency.value=hz;amp.gain.setValueAtTime(.001,t);amp.gain.exponentialRampToValueAtTime(.11,t+.015);amp.gain.exponentialRampToValueAtTime(.001,t+.18);osc.connect(amp).connect(audio.destination);osc.start(t);osc.stop(t+.19)});
- }catch{}
+ }catch(e){console.error('Game audio unavailable:',e)}
 }
 function toast(text){clearTimeout(toastTimer);$('#notice').textContent=text;$('#notice').hidden=false;toastTimer=setTimeout(()=>$('#notice').hidden=true,2750)}
 const overlay=$('#overlay'), card=$('#card');

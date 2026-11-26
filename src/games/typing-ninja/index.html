@@ -79,7 +79,7 @@ const gfxModes=['auto','high','low'];let gfxMode=localStorage.getItem(LS+'Gfx')|
 const weakHw=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4;
 const LOW=gfxMode==='low'||(gfxMode==='auto'&&weakHw);
 $('gfxBtn').querySelector('.gl').textContent=gfxMode[0].toUpperCase()+gfxMode.slice(1)+(gfxMode==='auto'?(LOW?' (Low)':' (High)'):'');$('gfxBtn').title='Graphics: '+gfxMode+(LOW?' (low detail)':' (high detail)');
-let muted=localStorage.getItem(LS+'Mute')==='1';$('muteBtn').textContent=muted?'🔇':'🔊';
+let muted=localStorage.getItem(LS+'Mute')==='1';function soundUI(){$('muteBtn').textContent=muted?'🔇':'🔊';$('muteBtn').setAttribute('aria-label','Game sound');$('muteBtn').setAttribute('aria-pressed',String(!muted));$('muteBtn').title=muted?'Sound off':'Sound on'}soundUI();
 // ---------- renderer / scene ----------
 const renderer=new THREE.WebGLRenderer({antialias:!LOW,powerPreference:'high-performance'});
 renderer.setPixelRatio(LOW?1:Math.min(devicePixelRatio,2));
@@ -137,7 +137,7 @@ function resize(){const kb=$('kbwrap').offsetHeight;const W=innerWidth,H=Math.ma
 let viewW=innerWidth,viewH=innerHeight;
 // ---------- audio ----------
 let AC=null,master=null,noiseBuf=null;
-function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=muted?0:.8;master.connect(AC.destination);noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function ac(){if(muted)return null;if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=muted?0:.8;master.connect(AC.destination);noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){console.error('Game audio unavailable:',e);return null}}if(AC.state==='suspended')AC.resume().catch(e=>console.error('Game audio could not resume:',e));return AC}
 function tone(f,dur,type='sine',vol=.1,f2=0,when=0){const a=ac();if(!a||muted)return;const t=a.currentTime+when,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02)}
 function noise(dur,f1,f2,vol=.2,type='bandpass',q=1,when=0){const a=ac();if(!a||muted)return;const t=a.currentTime+when,s=a.createBufferSource(),bf=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuf;bf.type=type;bf.Q.value=q;bf.frequency.setValueAtTime(f1,t);bf.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(bf);bf.connect(g);g.connect(master);s.start(t,Math.random()*.5);s.stop(t+dur+.02)}
 const PENTA=[523,587,659,784,880,1047,1175,1319,1568,1760];
@@ -403,7 +403,7 @@ addEventListener('keydown',e=>{ac();if(e.getModifierState&&$('caps'))$('caps').s
  if(state!=='play'){if(e.key==='Enter'&&!overlay.classList.contains('hide')){const b=card.querySelector('button.gold')||card.querySelector('button');if(b){e.preventDefault();b.click()}}return}
  if(e.ctrlKey||e.metaKey||e.altKey)return;if(e.key.length!==1)return;e.preventDefault();inputChar(e.key)});
 $('pauseBtn').onclick=()=>{sfx.click();state==='paused'?resume():pause()};
-$('muteBtn').onclick=()=>{muted=!muted;localStorage.setItem(LS+'Mute',muted?'1':'0');$('muteBtn').textContent=muted?'🔇':'🔊';if(master)master.gain.value=muted?0:.8};
+$('muteBtn').onclick=()=>{muted=!muted;localStorage.setItem(LS+'Mute',muted?'1':'0');soundUI();if(master)master.gain.value=muted?0:.8;if(!muted)sfx.click()};
 $('gfxBtn').onclick=()=>{const m=gfxModes[(gfxModes.indexOf(gfxMode)+1)%3];localStorage.setItem(LS+'Gfx',m);location.reload()};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
 addEventListener('resize',()=>{resize();for(const o of active)o.w=0});

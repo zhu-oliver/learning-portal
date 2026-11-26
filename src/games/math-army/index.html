@@ -458,8 +458,67 @@ const gunMat = new THREE.MeshStandardMaterial({ color: 0x1e1f20, roughness: 0.45
 const packMat = new THREE.MeshStandardMaterial({ color: 0x3f3e2e, roughness: 0.95 });
 const dummy = new THREE.Object3D();
 
+function weaponGeometry(tier) {
+  const pieces = [];
+  const box = (w, h, d, x, y, z) => {
+    const shape = new THREE.BoxGeometry(w, h, d); shape.translate(x, y, z); pieces.push(shape);
+  };
+  const tube = (r1, r2, length, x, y, z) => {
+    const shape = new THREE.CylinderGeometry(r1, r2, length, 8);
+    shape.rotateX(Math.PI / 2); shape.translate(x, y, z); pieces.push(shape);
+  };
+  if (tier === 1) {
+    box(0.13, 0.13, 0.55, 0.03, 0.61, -0.3);
+    box(0.07, 0.12, 0.2, 0.03, 0.57, 0.06);
+    tube(0.045, 0.045, 0.48, 0.03, 0.62, -0.79);
+    const drum = new THREE.CylinderGeometry(0.1, 0.1, 0.1, 10);
+    drum.rotateZ(Math.PI / 2); drum.translate(0.03, 0.48, -0.34); pieces.push(drum);
+  } else if (tier === 2) {
+    box(0.07, 0.08, 0.72, 0.03, 0.6, -0.34);
+    box(0.07, 0.12, 0.22, 0.03, 0.57, 0.1);
+    tube(0.018, 0.018, 0.65, 0.03, 0.61, -0.99);
+    tube(0.045, 0.045, 0.22, 0.03, 0.72, -0.36);
+  } else if (tier === 3) {
+    tube(0.13, 0.13, 0.93, 0.03, 0.65, -0.34);
+    tube(0.04, 0.15, 0.27, 0.03, 0.65, -0.94);
+    box(0.07, 0.16, 0.1, 0.03, 0.48, -0.2);
+  } else {
+    box(0.16, 0.14, 0.62, 0.03, 0.61, -0.3);
+    box(0.1, 0.17, 0.2, 0.03, 0.57, 0.08);
+    tube(0.065, 0.065, 0.42, 0.03, 0.62, -0.8);
+    box(0.22, 0.08, 0.12, 0.03, 0.71, -0.5);
+  }
+  return mergeGeometries(pieces);
+}
+function gearGeometry(tier) {
+  const parts = [];
+  const plate = (w, h, d, x, y, z) => {
+    const shape = new THREE.BoxGeometry(w, h, d); shape.translate(x, y, z); parts.push(shape);
+  };
+  plate(0.34, 0.08, 0.17, 0, 0.86, 0.2);
+  plate(0.14, 0.08, 0.21, -0.23, 0.82, 0);
+  plate(0.14, 0.08, 0.21, 0.23, 0.82, 0);
+  if (tier === 1) plate(0.23, 0.16, 0.07, 0, 0.7, 0.3);
+  if (tier === 2) plate(0.27, 0.1, 0.07, 0, 0.76, 0.3);
+  if (tier === 3) plate(0.22, 0.3, 0.1, 0, 0.7, 0.3);
+  if (tier === 4) {
+    plate(0.23, 0.25, 0.08, 0, 0.7, 0.3);
+    plate(0.16, 0.04, 0.04, 0, 1.15, 0);
+  }
+  return mergeGeometries(parts);
+}
+const weaponLooks = [
+  { gun: rifleGeo, material: gunMat },
+  ...[0xe9a33b, 0xc6dbef, 0xf07339, 0x43e8f4].map((color, index) => ({
+    gun: weaponGeometry(index + 1),
+    material: new THREE.MeshStandardMaterial({ color: index === 3 ? 0x236b80 : 0x303438, roughness: 0.45, metalness: 0.6 }),
+    gear: gearGeometry(index + 1),
+    gearMaterial: new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.3, emissive: index === 3 ? 0x087682 : 0x000000 }),
+  })),
+];
+
 class Troops {
-  constructor(color, pantsColor, helmetColor, max) {
+  constructor(color, pantsColor, helmetColor, max, upgradable = false) {
     this.max = max; this.n = 0;
     const mk = (geo, mat) => {
       const m = new THREE.InstancedMesh(geo, mat, max);
@@ -467,15 +526,28 @@ class Troops {
       m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); return m;
     };
     const pants = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.9 });
+    this.gun = mk(rifleGeo, gunMat);
     this.body = [
       mk(torsoGeo, new THREE.MeshStandardMaterial({ color, roughness: 0.85 })),
       mk(headGeo, skinMat),
       mk(helmGeo, new THREE.MeshStandardMaterial({ color: helmetColor, roughness: 0.55, metalness: 0.25 })),
-      mk(rifleGeo, gunMat),
+      this.gun,
       mk(packGeo, packMat),
     ];
+    if (upgradable) {
+      this.gear = mk(weaponLooks[1].gear, weaponLooks[1].gearMaterial);
+      this.gear.visible = false;
+      this.body.push(this.gear);
+    }
     this.legL = mk(legLGeo, pants); this.legR = mk(legRGeo, pants);
     this.meshes = [...this.body, this.legL, this.legR];
+  }
+  setWeapon(tier) {
+    const look = weaponLooks[tier];
+    this.gun.geometry = look.gun;
+    this.gun.material = look.material;
+    this.gear.visible = tier > 0;
+    if (tier > 0) { this.gear.geometry = look.gear; this.gear.material = look.gearMaterial; }
   }
   begin() { this.n = 0; }
   add(x, y, z, ry, swing = 0) {
@@ -491,7 +563,7 @@ class Troops {
   }
   end() { for (const m of this.meshes) { m.count = this.n; m.instanceMatrix.needsUpdate = true; } }
 }
-const armyTroops = new Troops(0x4672bd, 0x2a3b60, 0x30466e, MAX_DRAW);
+const armyTroops = new Troops(0x4672bd, 0x2a3b60, 0x30466e, MAX_DRAW, true);
 const enemyTroops = new Troops(0xa8382b, 0x4d2620, 0x4a2b24, 900);
 
 // sunflower formation offsets
@@ -866,6 +938,7 @@ function setWeapon(i) {
   weapon = i;
   const w = WEAPONS[i];
   pBulletMesh.material.color.setHex(w.color);
+  armyTroops.setWeapon(i);
 }
 
 function fillSegments() {
@@ -1433,6 +1506,7 @@ function update(dt) {
     b.mesh.position.set(b.x, b.y, b.z);
     if (b.landed && count > 0 && phase === 'boss' && Math.hypot(b.x - px, b.z - pz) < pickR + 0.45) {
       if (b.correct) {
+        window.portalSound?.play('good');
         streak++; correctN++;
         const gain = Math.max(5 + Math.round(eL * 2), Math.round(count * 0.2)) + Math.min(streak - 1, 5);
         changeArmy(gain);
@@ -1442,6 +1516,7 @@ function update(dt) {
         clearBalls(true); wave = null; waveDelay = 1.2;
         break;
       } else {
+        window.portalSound?.play('bad');
         streak = 0; wrongN++;
         const loss = Math.max(3 + Math.round(eL * 1.5), Math.round(count * 0.15));
         changeArmy(-loss);
@@ -1468,6 +1543,7 @@ function update(dt) {
       }
       drawSign(G.signCanvas, `${G.p.text} = ${G.p.ans}`); G.signTex.needsUpdate = true;
       if (ok) {
+        window.portalSound?.play('good');
         streak++; correctN++;
         const gain = Math.min(Math.max(4 + Math.round(eL * 3), Math.round(count * 0.15)), 40 + L * 10) + Math.min(streak - 1, 5) * 2;
         changeArmy(gain);
@@ -1475,6 +1551,7 @@ function update(dt) {
         floatText(`+${gain}`, '#5dff8a', px, 2.5, pz);
         burst(px, 1, pz, cGreen, 30, 6);
       } else {
+        window.portalSound?.play('bad');
         streak = 0; wrongN++;
         const loss = Math.max(3 + Math.round(eL * 2), Math.round(count * 0.3));
         changeArmy(-loss);

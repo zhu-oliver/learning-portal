@@ -9,6 +9,12 @@ vi.mock("./game-progress", () => ({ loadGameProgress: vi.fn().mockResolvedValue(
 beforeEach(() => { vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: "google:owner" } }); });
 
 describe("shared arcade game delivery", () => {
+  it.each(["math-army", "math-kart", "code-commander", "spelling-snake", "map-quest", "planet-hopper"] as const)("loads sound controls before %s starts", async (slug) => {
+    mocks.read.mockResolvedValue('<html lang="en"><head></head><body><script type="module">game()</script></body></html>');
+    const html = await (await serveArcadeGame(slug)).text();
+    expect(html).toContain(`data-portal-sound-game="${slug}"`);
+    expect(html.indexOf("/games/game-sound.js")).toBeLessThan(html.indexOf("game()"));
+  });
   it("injects account state before game scripts and escapes script-closing passport content", async () => {
     mocks.auth.mockResolvedValue({ user: { id: "google:child-a" } });
     mocks.read.mockResolvedValue("<html><head></head><body><script>game()</script></body></html>");

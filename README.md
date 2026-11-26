@@ -55,6 +55,10 @@ Progress saves privately to Azure SQL, separate from quiz history. Restart disca
 
 ## Private account game progress
 
+Games provide an in-game sound on/off control, including in fullscreen. Sound settings are stored per game in the browser. Math Army, Math Kart, Code Commander, Map Quest and Planet Hopper use locally generated feedback sounds; Spelling Snake uses the browser's speech voice, which may depend on device and browser support. Audio starts after player interaction as required by browsers.
+
+In Math Army, weapon crates also change the army's equipment and coloured gear to match each weapon tier; starting a level restores the basic rifle appearance.
+
 The nine games with milestones save to `dbo.GameProgress` in the existing Azure SQL database, keyed by the authenticated `google:<providerAccountId>` and game slug. Planet Hopper remains unsaved exploration. Stored data is limited to stars, cumulative coins, best scores, earned passport stamps (place names or chapter/question identifiers), supported last-played levels, and an update timestamp. Graphics, sound and player-count preferences remain browser-local; current scenes, programs, flights and typed answers are not saved. Milestones are client-reported, not verified achievements.
 
 Authenticated HTML loads SQL progress before the game starts and injects an account/game-bound token and the self-hosted `public/games/account-progress.js` adapter. Each imported module scopes its `localStorage` binding to this adapter; only registered progress keys use account memory and SQL, while other settings use native local storage. This is not a global storage monkeypatch. Preserve that binding on future imports. Startup storage errors stop the game visibly instead of quietly creating empty progress. The bounded same-origin API never accepts an owner ID from the client and rejects stale iframe writes after an account change.

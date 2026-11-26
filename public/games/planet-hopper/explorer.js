@@ -576,7 +576,7 @@ function destinationButton(body) {
   const icon=document.createElement('span'); icon.className='destination-icon'; icon.textContent=body.icon;
   const name=document.createElement('span'); name.textContent=body.name;
   button.append(icon,name);
-  button.addEventListener('click',()=>setSelection(body));
+  button.addEventListener('click',()=>{window.portalSound?.play('select');setSelection(body)});
   return button;
 }
 function addDestination(body, container) {
@@ -630,6 +630,7 @@ function holdAtDestination() {
   updateStatus();
 }
 $('autopilotBtn').addEventListener('click',()=>{
+  window.portalSound?.play('select');
   autopilot=!autopilot; holding=null;
   controls.clear();
   document.querySelectorAll('[data-control]').forEach(button=>button.classList.remove('active'));
@@ -685,7 +686,7 @@ world.addEventListener('pointerup',event=>{
     pointer.set((event.clientX-rect.left)/rect.width*2-1,-((event.clientY-rect.top)/rect.height)*2+1);
     raycaster.setFromCamera(pointer,camera);
     const hit=raycaster.intersectObjects(pickable)[0];
-    if (hit) setSelection(hit.object.userData.body);
+    if (hit) { window.portalSound?.play('select'); setSelection(hit.object.userData.body); }
   }
   drag=null;
 });
