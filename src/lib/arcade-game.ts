@@ -8,7 +8,7 @@ export const arcadeGames = {
   "math-kart": { name: "Math Kart", subject: "Math", subjectSlug: "math", description: "Race through maths gates, solo or in same-device two-player split screen.", readySelector: ".lv" },
   "code-commander": { name: "Code Commander", subject: "Math", subjectSlug: "math", description: "Program a tank with sequences, loops, and conditions across 25 missions.", readySelector: "#play" },
   "spelling-snake": { name: "Spelling Snake", subject: "Language & Reading", subjectSlug: "reading", description: "Listen to words and collect their letters across seven spelling levels.", readySelector: ".lvbtn" },
-  "ecosystem-island": { name: "Ecosystem Island", subject: "Science", subjectSlug: "science", description: "Build habitats and watch food webs through ten missions and a sandbox.", readySelector: "#card [data-start]" },
+  "ecosystem-island": { name: "Ecosystem Island", subject: "Science", subjectSlug: "science", description: "Explore food webs in guided lessons, ten missions, and a sandbox.", readySelector: "#card [data-start]" },
   "time-traveler": { name: "Time Traveler", subject: "Science", subjectSlug: "science", description: "Explore 12 eras, solve challenges, and put historical events in order.", readySelector: "#play" },
   "map-quest": { name: "Map Quest", subject: "Science", subjectSlug: "science", description: "Explore the globe, answer geography clues, and collect passport stamps.", readySelector: "#play" },
   "fraction-factory": { name: "Fraction Factory", subject: "Math", subjectSlug: "math", description: "Slice and pack fractions for robots across 12 levels and Rush Mode.", readySelector: "#playBtn" },

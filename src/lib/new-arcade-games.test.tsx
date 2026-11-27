@@ -86,6 +86,51 @@ describe.each(games)("$name integration", (game) => {
   });
 });
 
+it("runs the prepared ecosystem lessons independently without mission endings or sandbox drought", async () => {
+  const html = await readFile(path.join(process.cwd(), "src", "games", "ecosystem-island", "index.html"), "utf8");
+  const start = html.indexOf("const DAY=");
+  const end = html.indexOf("const $=s=>", start);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  type Lesson = { id: string; icon: string; title: string; idea: string; cases: [string, Record<string, number>][] };
+  type Simulation = {
+    state: { status: string; drought: boolean; recycled: number; stars: number };
+    counts: () => Record<string, number>;
+    tick: () => void;
+  };
+  const { lessons, makeSim, kinds } = runInNewContext(`${html.slice(start, end)};({lessons,makeSim,kinds})`) as {
+    lessons: Lesson[];
+    makeSim: (level: number, low: boolean, plan: unknown[]) => Simulation;
+    kinds: Record<string, unknown>;
+  };
+  expect(lessons.map(lesson => lesson.id)).toEqual([
+    "producers", "consumers", "carnivores", "decomposers", "dependencies", "invasive", "biodiversity", "adaptations",
+  ]);
+  const results = new Map<string, { counts: Record<string, number>; recycled: number }[]>();
+  for (const lesson of lessons) {
+    expect(lesson.cases).toHaveLength(2);
+    results.set(lesson.id, lesson.cases.map(([, population]) => {
+      const sim = makeSim(0, false, [lesson.icon, lesson.title, lesson.idea, "", "", population, Object.keys(kinds), 150, Infinity]);
+      sim.state.status = "running";
+      for (let i = 0; i < 320; i++) sim.tick();
+      expect(sim.state.status).toBe("running");
+      expect(sim.state.stars).toBe(0);
+      const result = { counts: sim.counts(), recycled: sim.state.recycled };
+      for (let i = 0; i < 240; i++) sim.tick();
+      expect(sim.state.drought).toBe(false);
+      return result;
+    }));
+  }
+  const [withoutPredators, withPredators] = results.get("carnivores")!;
+  expect(withPredators.counts.rabbit).toBeLessThan(withoutPredators.counts.rabbit);
+  const [withoutRecyclers, withRecyclers] = results.get("decomposers")!;
+  expect(withoutRecyclers.recycled).toBe(0);
+  expect(withRecyclers.recycled).toBeGreaterThan(0);
+  const [withoutGoats, withGoats] = results.get("invasive")!;
+  const plants = (c: Record<string, number>) => c.grass + c.bush + c.tree + c.flower;
+  expect(plants(withGoats.counts)).toBeLessThan(plants(withoutGoats.counts));
+});
+
 it("Map Quest resolves all bundled images locally and preserves their attribution", async () => {
   const html = await (await map()).text();
   for (const asset of ["earth-texture", "country-borders", "wikipedia-descriptions", "place-media"]) {

@@ -54,7 +54,7 @@ export default async function SubjectPage({ params, searchParams }: { params: Pr
     </section>}
     {subject.slug === "science" && <section className="lesson-final-quiz">
       <h2>Science games</h2>
-      <p>Ecosystem Island: build habitats and watch a living food web. Explore plants, pollination, predators, decomposers, and biodiversity across ten missions and an open sandbox.</p>
+      <p>Ecosystem Island: build habitats and watch a living food web. Explore guided lessons, ten missions, and an open sandbox.</p>
       <Link className="button primary" href="/learn/science/ecosystem-island">Play Ecosystem Island <ArrowRight size={18} /></Link>
       <p>Time Traveler: repair your time machine across 12 eras, from dinosaurs to the Moon landing. Find parts, answer questions, meet characters, and put events in chronological order.</p>
       <Link className="button primary" href="/learn/science/time-traveler">Play Time Traveler <ArrowRight size={18} /></Link>
